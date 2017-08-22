@@ -1,0 +1,1 @@
+{"version":3,"file":"greeting.js","sourceRoot":"","sources":["../../../src/examples/controllers/greeting.ts"],"names":[],"mappings":";;;;;;;;;;;;;;;;;;;AAAA,qCAA+C;AAG/C,IAAa,kBAAkB,GAA/B;IAEU,IAAI,CAAC,OAAe,KAAK;;YAC3B,MAAM,CAAC,EAAE,OAAO,EAAE,cAAc,EAAE,CAAC;QACvC,CAAC;KAAA;CACJ,CAAA;AAHG;IADC,YAAK,EAAE;;;;8CAGP;AAJQ,kBAAkB;IAD9B,iBAAU,EAAE;GACA,kBAAkB,CAK9B;AALY,gDAAkB"}
