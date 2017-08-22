@@ -13,4 +13,4 @@
  * all copies or substantial portions of the Software.
  */
 
-export const VERSION = '0.2.0';
+export const VERSION = '0.2.1';

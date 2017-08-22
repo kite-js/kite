@@ -355,7 +355,7 @@ function Entry(rules) {
         let paramExp = '';
         // if `@In()` is applied to "_Param" class, this Kite model will have MK_KITE_INPUTS metadata, 
         // else the dynamically created class "_Param" does nothing, therefore this is an useless Kite model
-        if (model_1.hasModelInputs(_Param.prototype)) {
+        if (_Param && model_1.hasModelInputs(_Param.prototype)) {
             // "decoreate" the new created class as KiteModel, force it to create a _$filter() for this class
             model_1.Model()(_Param);
             paramExp = 'let param = new _Param()._$filter(inputs);';
