@@ -3,8 +3,7 @@
   "version": "0.2.0",
   "description": "Next generation, fast, flexible HTTP-JSON-RPC framework",
   "scripts": {
-    "example1": "node dist/examples/app.server.1.js",
-    "example2": "node dist/examples/app.server.2.js"
+    "example1": "node dist/examples/app.server.1.js"
   },
   "repository": {
     "type": "git",
