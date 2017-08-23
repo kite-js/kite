@@ -1,0 +1,1 @@
+{"version":3,"file":"echo.js","sourceRoot":"","sources":["../../../../src/examples/controllers/user/echo.ts"],"names":[],"mappings":";;;;;;;;;;;;;;;;;;;AAAA,wCAAkD;AAGlD,IAAa,cAAc,GAA3B;IAEU,IAAI,CAAC,IAAY;;YACnB,MAAM,CAAC,EAAE,OAAO,EAAE,aAAa,IAAI,GAAG,EAAE,CAAC;QAC7C,CAAC;KAAA;CACJ,CAAA;AAHG;IADC,YAAK,EAAE;;;;0CAGP;AAJQ,cAAc;IAD1B,iBAAU,EAAE;GACA,cAAc,CAK1B;AALY,wCAAc"}

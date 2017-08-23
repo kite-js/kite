@@ -18,21 +18,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const kite_1 = require("../../kite");
-let GreetingController = class GreetingController {
-    exec() {
+let TypesController = class TypesController {
+    exec(str, num, bool, date) {
         return __awaiter(this, void 0, void 0, function* () {
-            return { message: 'Hello world!' };
+            return { values: { str, num, bool, date } };
         });
     }
 };
 __decorate([
     kite_1.Entry(),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [String, Number, Boolean, Date]),
     __metadata("design:returntype", Promise)
-], GreetingController.prototype, "exec", null);
-GreetingController = __decorate([
+], TypesController.prototype, "exec", null);
+TypesController = __decorate([
     kite_1.Controller()
-], GreetingController);
-exports.GreetingController = GreetingController;
-//# sourceMappingURL=greeting.js.map
+], TypesController);
+exports.TypesController = TypesController;
+//# sourceMappingURL=types.js.map

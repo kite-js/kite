@@ -3,7 +3,7 @@ import { Controller, Entry } from '../../kite';
 @Controller()
 export class GreetingController {
     @Entry()
-    async exec(name: string = 'abc') {
+    async exec() {
         return { message: 'Hello world!' };
     }
 }

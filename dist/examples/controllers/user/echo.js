@@ -17,22 +17,22 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const kite_1 = require("../../kite");
-let GreetingController = class GreetingController {
-    exec() {
+const kite_1 = require("../../../kite");
+let EchoController = class EchoController {
+    exec(name) {
         return __awaiter(this, void 0, void 0, function* () {
-            return { message: 'Hello world!' };
+            return { message: `Good day, ${name}!` };
         });
     }
 };
 __decorate([
     kite_1.Entry(),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], GreetingController.prototype, "exec", null);
-GreetingController = __decorate([
+], EchoController.prototype, "exec", null);
+EchoController = __decorate([
     kite_1.Controller()
-], GreetingController);
-exports.GreetingController = GreetingController;
-//# sourceMappingURL=greeting.js.map
+], EchoController);
+exports.EchoController = EchoController;
+//# sourceMappingURL=echo.js.map

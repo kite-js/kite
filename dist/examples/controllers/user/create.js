@@ -17,22 +17,23 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const kite_1 = require("../../kite");
+const user_model_1 = require("./../../model/user.model");
+const kite_1 = require("../../../kite");
 let GreetingController = class GreetingController {
-    exec() {
+    exec(user) {
         return __awaiter(this, void 0, void 0, function* () {
-            return { message: 'Hello world!' };
+            return { user };
         });
     }
 };
 __decorate([
     kite_1.Entry(),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [user_model_1.UserModel]),
     __metadata("design:returntype", Promise)
 ], GreetingController.prototype, "exec", null);
 GreetingController = __decorate([
     kite_1.Controller()
 ], GreetingController);
 exports.GreetingController = GreetingController;
-//# sourceMappingURL=greeting.js.map
+//# sourceMappingURL=create.js.map

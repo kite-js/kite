@@ -1,5 +1,5 @@
 export declare class GreetingController {
-    exec(name?: string): Promise<{
+    exec(): Promise<{
         message: string;
     }>;
 }
