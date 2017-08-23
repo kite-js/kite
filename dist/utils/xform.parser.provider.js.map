@@ -1,0 +1,1 @@
+{"version":3,"file":"xform.parser.provider.js","sourceRoot":"","sources":["../../src/utils/xform.parser.provider.ts"],"names":[],"mappings":";AAAA;;;;;;;;;;;;;GAaG;;AAGH,2CAA2C;AAE3C,gDAAgD;AAChD;IACI,MAAM,CAAC;QACH,WAAW,EAAE,mCAAmC;QAChD,MAAM,EAAE,UAAU,IAAY;YAC1B,MAAM,CAAC,WAAW,CAAC,KAAK,CAAC,IAAI,CAAC,CAAC;QACnC,CAAC;KACJ,CAAA;AACL,CAAC;AAPD,kDAOC"}

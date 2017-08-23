@@ -1,37 +1,22 @@
 # Installation
-Kite is currently released as a Github repository, simply clone it to local:
+Kite requires [Node.js ver 8.0+](https://nodejs.org/) and [TypeScript](https://www.typescriptlang.org/) to work, please make sure you've these pacakges installed.
+
+Assuming you're working on MacOS or Linux bash system, make a directory for your 
+first Kite project:
+
 ```sh
-git clone https://github.com/kite-js/kite.git
+mkdir myapp
+cd myapp
 ```
 
-# Run examples
-In command line, change directory to Kite home and run example:
+Use npm to initialize your application, it'll create a `package.json` file for you.
 ```sh
-cd kite  
-npm run example1
+npm init
 ```
 
-if every thing goes OK, you'll get the following message:
-```
-2017-8-22 13:44:42 [ KITE  ] Kite framework ver 0.2.0  
-2017-8-22 13:44:42 [ KITE  ] Working at directory  /***/kite/dist/examples  
-2017-8-22 13:44:42 [ KITE  ] Loading configuration from object  
-2017-8-22 13:44:42 [ KITE  ] Creating server  
-2017-8-22 13:44:42 [ KITE  ] Ready to fly  
-2017-8-22 13:44:42 [ KITE  ] Flying! server listening at 127.0.0.1:4000  
-2017-8-22 13:44:42 [ INFO  ] Watching for file changes
-```
-if error occurred like:
-```
-*** ERROR *** listen EADDRINUSE 127.0.0.1:4000
-```
-this means Kite is failed to listen at "127.0.0.1:4000", you may need to check running proccesses and kill the one that listening at "127.0.0.1:4000"
-
-Now open your browser and visit "http://localhost:4000/greeting", you'll get this message from Kite:
-```json
-{
-    "message": "Hello world!"
-}
+Now install Kite framework:
+```sh
+npm i -s kite-framework
 ```
 
 # Write APIs
@@ -41,8 +26,8 @@ APIs is also called controllers in Kite, each controller is placed into a single
 + help you to keep projects be super simple and clean
 
 These thining should be done before you write APIs:
-+ Install [TypeScript](https://www.typescriptlang.org/), verstion >= 2.4
 + Install [NodeJs](https://nodejs.org/), version >= 8.0.0
++ Install [TypeScript](https://www.typescriptlang.org/), verstion >= 2.4
 + Get a TypeScript IDE, [Visual Studio Code](https://code.visualstudio.com/) is recommended here
 
 ## Kite application project structure
@@ -67,7 +52,7 @@ The source code is placed at "src" folder, and is compiled to "dist",
 "app.server.js" is the entry of application, to create a Kite application, 
 you should firstly write this entry application, it's quite simple:
 ```typescript
-import { Kite } from './../kite';
+import { Kite } from 'kite-framework';
 
 new Kite().fly();
 ```
@@ -85,7 +70,7 @@ should know what it means for URL and what it means for source.
 Our first API "greeting.ts" like this:
 
 ```typescript
-import { Controller, Entry } from '../../kite';
+import { Controller, Entry } from 'kite-framework';
 
 @Controller()
 export class GreetingController {
