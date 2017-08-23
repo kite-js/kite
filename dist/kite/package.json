@@ -1,9 +1,12 @@
 {
-    "name": "kitefw",
-    "version": "0.2.2",
+    "name": "kite-fw",
+    "version": "0.2.4",
     "description": "Next generation, fast, flexible HTTP-JSON-RPC framework",
     "scripts": {
-        "example1": "node dist/examples/app.server.1.js"
+        "example1": "node dist/examples/app.server.1.js",
+        "build": "tsc && cp ./{package.json,README.md} dist/kite/",
+        "pub": "cd dist/kite/ && npm publish && cd ../../",
+        "clean": "rm -rf ./dist"
     },
     "repository": {
         "type": "git",
