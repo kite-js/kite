@@ -4,7 +4,7 @@
     "description": "Next generation, fast, flexible HTTP-JSON-RPC framework",
     "scripts": {
         "example1": "node dist/examples/app.server.1.js",
-        "build": "tsc && cp ./{package.json,README.md} dist/",
+        "build": "tsc && cp ./package.json dist/",
         "pub": "cd dist/ && npm publish && cd ../../",
         "clean": "rm -rf ./dist"
     },

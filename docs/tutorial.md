@@ -1,15 +1,13 @@
 # Installation
-Kite requires [Node.js ver 8.0+](https://nodejs.org/) and [TypeScript](https://www.typescriptlang.org/) to work, please make sure you've these pacakges installed.
-
-Assuming you're working on MacOS or Linux bash system, make a directory for your 
-first Kite project:
+Assuming you're working on MacOS or Linux, make a directory from command line 
+for your first Kite project:
 
 ```sh
 mkdir myapp
 cd myapp
 ```
 
-Use npm to initialize your application, it'll create a `package.json` file for you.
+Use `npm` to initialize your application, it'll create a `package.json` file for you.
 ```sh
 npm init
 ```
@@ -20,17 +18,43 @@ npm i -s kite-framework
 ```
 
 # Write APIs
-APIs is also called controllers in Kite, each controller is placed into a single file, this is quite important:
-+ Kite only picks one "controller" from imported modules, if more than one Kite
-  controller is defined in a file, only the first one is used, others are ignored
-+ help you to keep projects be super simple and clean
-
-These thining should be done before you write APIs:
+Before you start writing Kite APIs, you should:
 + Install [NodeJs](https://nodejs.org/), version >= 8.0.0
 + Install [TypeScript](https://www.typescriptlang.org/), verstion >= 2.4
 + Get a TypeScript IDE, [Visual Studio Code](https://code.visualstudio.com/) is recommended here
 
-## Kite application project structure
+## Typescript environment configuration
+Now you need configure Visual Studio Code & TypeScript to enable some features 
+for your project, create a file `tsconfig.json` under project root, 
+and copy this content to it:
+
+```json
+{
+    "compilerOptions": {
+        "moduleResolution": "node",
+        "noImplicitAny": true,
+        "target": "ES6",
+        "lib": ["es2016"],
+        "module": "commonjs",
+        "sourceMap": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "declaration": false,
+        "rootDir": "./src/",
+        "outDir": "./dist/",
+        "types": [
+            "node"
+        ],
+        "typeRoots": ["node_modules/@types"]
+    },
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
+}
+```
+
+## Make Kite fly
 A Kite application project structure is generally like:
 ```
 project_home/
@@ -48,26 +72,54 @@ project_home/
 │           └── echo.js
 └── node_modules
 ```
-The source code is placed at "src" folder, and is compiled to "dist",
-"app.server.js" is the entry of application, to create a Kite application, 
-you should firstly write this entry application, it's quite simple:
+The source code is placed at "/src" folder, and is compiled to "/dist",
+"app.server.js" is the entry of application. 
+Create a file under "/src" and name it `app.server.ts`, then copy and paste the 
+following code to it:
+
 ```typescript
 import { Kite } from 'kite-framework';
 
 new Kite().fly();
 ```
-Kite maps client request to root folder "controllers" - which is a relative 
-directory to application entry "app.server.js". For example:
- + "http://localhost:4000/greeting" - "/greeting" - is mapped to "dist/controllers/greeting.js"
- + "http://localhost:4000/user/echo" - "/user/echo" - is mapped to "dist/controllers/user/echo.js"
 
-This is a default mapping mechanism in Kite, simply map URLs to some javascript files.
+now compile the source and run the application:
 
-A short URL like "/greeting" and "user/echo" will be introduced below; therefore, you
-should know what it means for URL and what it means for source.
+```sh
+tsc
+node dist/app.server.js
+```
+
+if everthing goes correctly you should get these message:
+
+```
+2017-8-23 23:26:01 [ KITE  ] Kite framework ver 0.2.4
+2017-8-23 23:26:01 [ KITE  ] Working at directory /Users/***/projects/myapp/dist
+2017-8-23 23:26:01 [ KITE  ] Loading configuration from object
+2017-8-23 23:26:01 [ KITE  ] Creating server
+2017-8-23 23:26:01 [ KITE  ] Ready to fly
+2017-8-23 23:26:01 [ KITE  ] Flying! server listening at 127.0.0.1:4000
+2017-8-23 23:26:01 [ INFO  ] Watching for file changes
+```
+
+Now open your browser and visit "http://localhost:4000/", you'll get an error message:
+
+```json
+{
+    "error": {
+        "code": 1100,
+        "msg": "Invalid request URL: failed to locate resource \"/\""
+    }
+}
+```
 
 ## Hello world API
-Our first API "greeting.ts" like this:
+APIs is also called controllers in Kite, each controller is placed into a single file, this is quite important:
++ Kite only picks one "controller" from imported modules, if more than one Kite
+  controller is defined in a single file, only the first one is used, others are ignored
++ "one file one API" help you to keep projects be super simple and clean
+
+Our first API `/greeting` is placed in `src/greeting.ts` like these:
 
 ```typescript
 import { Controller, Entry } from 'kite-framework';
@@ -87,7 +139,8 @@ this is a feature of ES7 and implemented by TypeScript (experimentally), Kite is
 decorators everywhere, it'll be explained in other documents, for now we just keep this
 guide simple.
 
-Then compile the source and run it:
+Press `Ctrl + C` to kill the previous Kite application if it's still running, 
+then compile and run it again:
 
 ```sh
 tsc
@@ -152,3 +205,5 @@ export class TypesController {
     }
 }
 ```
+
+# TO BE CONTINUED
