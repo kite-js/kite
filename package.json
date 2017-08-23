@@ -1,6 +1,6 @@
 {
     "name": "kite-fw",
-    "version": "0.2.2",
+    "version": "0.2.3",
     "description": "Next generation, fast, flexible HTTP-JSON-RPC framework",
     "scripts": {
         "example1": "node dist/examples/app.server.1.js",
