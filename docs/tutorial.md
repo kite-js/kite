@@ -161,6 +161,8 @@ many ways to access them, the most simple way is announcing each parameter in ar
 list of controllers entry point. Example '/user/echo' demonstrated this:
 
 ```typescript
+import { Controller, Entry } from 'kite-framework';
+
 @Controller()
 export class EchoController {
     @Entry()
