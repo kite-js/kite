@@ -158,6 +158,25 @@ export type FilterRule = {
      * ```
      */
     group?: string | string[];
+
+    /**
+     * accept empty string, default is `false`, this field is only works when `required` is set to `true`
+     * 
+     * `true` - allow empty string as input value
+     * `false` - disallow empty string as input value
+     * 
+     * By default, Kite filters out a string if it's empty; therefore "String" type input fields in
+     * Kite models are always set by a nonempty string.
+     * 
+     * In most cases, people do not want "required" fields are set by empty strings, just like 
+     * HTML <input> tag, if attribute "required" is set but nothing inputed, browser will warn you.
+     * 
+     * But sometimes people do, for example empty string is frequently used in database design, 
+     * empty fields do mean something in some cases, so set this field to `true` if you want
+     * Kite accept empty strings.
+     * 
+     */
+    empty?: boolean;
 }
 
 /**
@@ -249,10 +268,18 @@ function createFilterFn(target: KiteModel): void {
 
         // is required paramter
         if (rule.required) {
-            fnStack.push(
-                `if(inputs['${name}'] === undefined || inputs['${name}'] === null) { throw new KiteError(1020, '${name}'); } else `);
+            let condition;
+            if (rule.empty) {
+                condition = `inputs['${name}'] === undefined || inputs['${name}'] === null`;
+            } else {
+                condition = `inputs['${name}'] === undefined || inputs['${name}'] === '' || inputs['${name}'] === null`;
+            }
+            // throws error is input field is not given
+            fnStack.push(`if(${condition}) {
+                throw new KiteError(1020, '${name}');
+            } else `);
         } else {
-            fnStack.push(`if(inputs['${name}'])`);
+            fnStack.push(`if(inputs['${name}'] !== undefined)`);
         }
 
         // custom filters

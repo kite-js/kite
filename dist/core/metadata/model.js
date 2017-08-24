@@ -166,10 +166,20 @@ function createFilterFn(target) {
         }
         // is required paramter
         if (rule.required) {
-            fnStack.push(`if(inputs['${name}'] === undefined || inputs['${name}'] === null) { throw new KiteError(1020, '${name}'); } else `);
+            let condition;
+            if (rule.empty) {
+                condition = `inputs['${name}'] === undefined || inputs['${name}'] === null`;
+            }
+            else {
+                condition = `inputs['${name}'] === undefined || inputs['${name}'] === '' || inputs['${name}'] === null`;
+            }
+            // throws error is input field is not given
+            fnStack.push(`if(${condition}) {
+                throw new KiteError(1020, '${name}');
+            } else `);
         }
         else {
-            fnStack.push(`if(inputs['${name}'])`);
+            fnStack.push(`if(inputs['${name}'] !== undefined)`);
         }
         // custom filters
         if (rule.filter) {
