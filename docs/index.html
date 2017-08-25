@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Kite framework - Node.js web application framework, next generation, fast, flexible HTTP-JSON-RPC</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="./lib/highlight/styles/github.css">
+</head>
+
+<body>
+    <header>
+        <div class="logo">
+            Kite
+        </div>
+    </header>
+    <main class="index">
+        <div class="slogan">
+            <h1>Next generation framework for building APIs</h1>
+            <h3>Kite is designed to write APIs more efficiently with latest Javascript features</h3>
+        </div>
+        <h2>Installation</h2>
+        <p>
+            Kite requires <a href="https://nodejs.org/">Node.js v7.10.0</a> or higher to run. And for development, <a href="https://www.typescriptlang.org/">TypeScript v2.4.0+</a>            or higher is required, <a href="https://code.visualstudio.com/">Visual Studio Code</a> is recommended.
+        </p>
+        <p>If every is ready, install Kite from npm:</p>
+        <pre><code class="bash">npm i kite-framework</code></pre>
+        <h2>Configuration</h2>
+        <p>Create a file "tsconfig.json" in your project root directory and copy &amp; paste the following content to it, this
+            tells TypeScript compiler how to compile your project:</p>
+        <pre>
+        <code class="json">
+                
+{
+    "compilerOptions": {
+        "moduleResolution": "node",
+        "noImplicitAny": true,
+        "target": "ES6",
+        "lib": ["es2016"],
+        "module": "commonjs",
+        "sourceMap": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "declaration": false,
+        "rootDir": "./src/",
+        "outDir": "./dist/",
+        "types": [
+            "node"
+        ],
+        "typeRoots": ["node_modules/@types"]
+    },
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
+}
+                
+        </code>
+    </pre>
+        <h2>Application server</h2>
+        <p>Create a folder named "src" for holding your ".ts" source files, then create a file "app.server.ts", like this:</p>
+        <pre>
+        <code class="typescript">
+import { Kite } from 'kite-framework';
+
+new Kite().fly();
+        </code>
+    </pre>
+        <h2>Hello world</h2>
+        <p>Create a folder "controllers" under "src" for holding APIs, then create your first API source file "greeting.ts":
+        </p>
+        <pre>
+            <code class="typescript">
+import { Controller, Entry } from 'kite-framework';
+                    
+@Controller()
+export class GreetingController {
+    @Entry()
+    async exec() {
+        return { message: 'Hello world!' };
+    }
+}
+        </code>
+    </pre>
+    <h2>Compile &amp; run</h2>
+    <p>Run "tsc" command to compile the project:</p>
+    <pre>
+        <code class="bash">tsc</code>
+    </pre>
+    <p>After this step, your project structure should looks like:</p>
+    <pre>
+        <code class="bash">
+project_home/
+├── src
+│   ├── app.server.ts
+│   └── controllers
+│       └── greeting.ts
+├── dist
+│   ├── app.server.js
+│   └── controllers
+│       └── greeting.js
+└── node_modules
+        </code>
+    </pre>
+    <p>Now run your first Kite application:</p>
+    <pre>
+        <code>node dist/app.server.js</code>
+    </pre>
+    <p>Then open your browser and visit <a href="http://localhost:4000/greeting">http://localhost:4000/greeting</a>, you'll get this response:</p>
+    <pre>
+        <code class="json">
+{
+    "message": "Hello world!"
+}
+        </code>
+    </pre>
+    <h2>More examples</h2>
+    <p>Please visit this <a href="https://github.com/kite-js/kite/blob/master/docs/tutorial.md">tutorial</a> for more details.</p>
+    </main>
+    <footer>
+        Copyright &copy; 2017 Arthur Xie
+    </footer>
+</body>
+<script src="./lib/highlight/highlight.pack.js"></script>
+<script>
+    hljs.initHighlightingOnLoad();
+</script>
+
+</html>
