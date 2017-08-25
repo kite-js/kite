@@ -343,19 +343,23 @@ export class Kite {
             }
 
             let result = await api.$proxy(inputs, holder, context);
-            this.config.responder.write(result, response);
+            if (!response.headersSent) {
+                this.config.responder.write(result, response);
+            }
         } catch (err) {
             if (err instanceof Error) {
                 this.logService.error(err);
             }
 
-            // catch error if responder error happens
-            try {
-                this.config.responder.writeError(err, response, this.errorService);
-            } catch (err) {
-                this.logService.error(err);
-                let error = this.errorService.getError(1001);
-                response.write(JSON.stringify({ error }));
+            if (!response.headersSent) {
+                // catch error if responder error happens
+                try {
+                    this.config.responder.writeError(err, response, this.errorService);
+                } catch (err) {
+                    this.logService.error(err);
+                    let error = this.errorService.getError(1001);
+                    response.write(JSON.stringify({ error }));
+                }
             }
         }
 

@@ -1,3 +1,6 @@
+# 0.3.1
+- Fix error when controller called `response.write()`
+
 # 0.3.0
 - Fixed error when request content type is not set
 - Fixed bug when responder error handler throws error

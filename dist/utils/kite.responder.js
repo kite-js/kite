@@ -44,7 +44,9 @@ class KiteResponder {
             contentType = 'text/plain';
             content = JSON.stringify(msg);
         }
-        res.setHeader('Content-Type', `${contentType};charset=utf-8`);
+        if (!res.getHeader('content-type')) {
+            res.setHeader('Content-Type', `${contentType};charset=utf-8`);
+        }
         res.write(content);
     }
     writeError(err, res, errorService) {
@@ -60,7 +62,7 @@ class KiteResponder {
         }
         res.statusCode = 200;
         let content = JSON.stringify({ error });
-        res.setHeader('Content-Type', 'application/json;charset=UTF-8');
+        res.setHeader('Content-Type', 'application/json;charset=utf-8');
         res.write(content);
     }
 }
