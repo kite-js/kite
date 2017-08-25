@@ -19,32 +19,32 @@ import { IncomingMessage, ServerResponse } from 'http';
  * Kite middleware declaration
  * 
  * ## Description
- * Kite middleware functions are functions that have access to request object and reponse object,
- * it's an async function, must return a promise for Kite.
+ * Kite middleware functions are functions that able to access raw request object and reponse objects.
+ * A middleware must be an `async` function, or return a promise for Kite.
  * 
- * Kite middlewares are not watched by Kite in watching mode, you need restart Kite application to
- * load new middlewares.
+ * Kite middlewares are not watched by Kite in watching mode, you need restart Kite application if
+ * middlewares are changed.
  * 
- * Middlewares are invoked in queue, if any middleware throws an error, Kite will stop invoking the rest,
- * and handle the error to Kite responder.
+ * Middlewares are invoked in queue, if any of them throws an error, Kite will stop invoking the rest,
+ * errors were handled by a Kite responder.
  * 
  * ## How to use
- * Kite middlewares must explicitly return a boolean value in promise to tell Kite what will do next:
- * + __true__ - Kite will continue call next middleware if exsits, then continue to process the request
- * + __false__ - Kite will stop processing, session with client will be ended
+ * Kite middlewares return 'Promise<boolean | void>' to tell Kite what will do next:
+ * + __`true` or nothing__ - Kite will continue call next middleware if exsits, then continue to process the request
+ * + __false__ - explicitly returns false will force Kite stop calling other middlewares and ends the session
  * 
- * A Kite module generally returns `Promise.resolve(true)` to tell Kite to continue, for example, 
- * a middleware for setting response headers like this:
+ * A Kite module generally returns nothing (does not need a return statment) or `Promise.resolve(true)` 
+ * to tell Kite to continue, for example, a middleware for setting response headers like:
  * ```typescript
  * function setHeaderMiddleware(res: ServerResponse, req: IncomingMessage): Promise<boolean> {
  *     res.setHeader('Access-Control-Allow-Origin', '*');
  *     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
  *     res.setHeader('Access-Control-Allow-Headers', 'Origin,X-Requested-With,Content-Type,Accept,Access-Token');
- *     return Promise.resolve(true);
  * }
  * ```
  * 
- * If you want to end a session before Kite invokes a controller, you should throw an error:
+ * If you want to end a session before Kite invokes a controller, you should throw an error, then Kite will ends
+ * the respond an error message to client:
  * ```typescript
  * function someCheckingMiddleware(res: ServerResponse, req: IncomingMessage): Promise<boolean> {
  *     if(!req.headers['access-token']) {   // if there is not an 'access-token' in request header
@@ -53,7 +53,8 @@ import { IncomingMessage, ServerResponse } from 'http';
  * }
  * ```
  * 
- * Though Kite allows middlewares to return `Promise.resolve(false)` to end the session, it's not a recommended way.
- * If you prefer to do this, your middleware shall handle client request and server response.
+ * Kite allows middlewares return `Promise.resolve(false)` to end the session though, 
+ * but this is not recommended, it breaks the logic of Kite. If you really want to do in this way, 
+ * your middleware must handle client request and server response.
  */
-export type Middleware = (response: ServerResponse, request: IncomingMessage) => Promise<boolean>;
+export type Middleware = (response: ServerResponse, request: IncomingMessage) => Promise<boolean | void>;
