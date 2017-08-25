@@ -15,7 +15,7 @@
 import { Config } from './';
 import { HttpRouter } from './utils/http.router';
 import { JsonParserProvider } from './utils/json.parser.provider';
-import { JsonResponder } from './utils/json.responder';
+import { KiteResponder } from './utils/kite.responder';
 
 /**
  * Default settings for Kite
@@ -29,7 +29,7 @@ export const DefaultConfig: Config = {
         level: 7
     },
     // router: new HttpRouter(''),  /* Just because can not determin work dir at this file */
-    responder: new JsonResponder(),
+    responder: new KiteResponder(),
     parserProvider: JsonParserProvider
 
 };

@@ -1,3 +1,9 @@
+# 0.3.0
+- Fixed error when request content type is not set
+- Fixed bug when responder error handler throws error
+- Enhanced default responder, enables controllers return different types of results
+- Reviewed `middleware` js document, fixed some errors
+
 # 0.2.7
 - Republish to npm with "@types/node" dependency added
 

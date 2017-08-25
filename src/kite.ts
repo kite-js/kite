@@ -271,7 +271,7 @@ export class Kite {
 
             // Call middlewares
             for (let middleware of this.middlewares) {
-                if (!await middleware.call(null, response, request)) {
+                if (await middleware.call(null, response, request) === false) {
                     response.end();
                     return;
                 }
@@ -287,7 +287,7 @@ export class Kite {
                 && request.method !== 'TRACE'
                 && (request.headers['content-length'] || request.headers['transfer-encoding'])) {
 
-                let [contentType, encoding] = (<string>request.headers['content-type']).split(';');
+                let [contentType, encoding] = (<string>request.headers['content-type'] || '').split(';');
                 let entityBody = await this.getEntityBody(request);
 
                 if (!this.parsers[contentType]) {
@@ -343,13 +343,20 @@ export class Kite {
             }
 
             let result = await api.$proxy(inputs, holder, context);
-            // end with normal
             this.config.responder.write(result, response);
         } catch (err) {
             if (err instanceof Error) {
                 this.logService.error(err);
             }
-            this.config.responder.writeError(err, response, this.errorService);
+
+            // catch error if responder error happens
+            try {
+                this.config.responder.writeError(err, response, this.errorService);
+            } catch (err) {
+                this.logService.error(err);
+                let error = this.errorService.getError(1001);
+                response.write(JSON.stringify({ error }));
+            }
         }
 
         response.end();

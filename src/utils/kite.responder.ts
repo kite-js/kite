@@ -17,11 +17,33 @@ import * as http from 'http';
 import { Responder, KiteError, ErrorService } from '../';
 
 
-export class JsonResponder implements Responder {
+export class KiteResponder implements Responder {
+    private html = /^[\w\n\r]*<[a-z!]/m;
+
     write(msg: any, res: http.ServerResponse): void {
-        res.setHeader('Content-Type', 'application/json;charset=UTF-8');
         res.statusCode = 200;
-        res.end(JSON.stringify(msg));
+        let content, contentType;
+        if (typeof msg === 'object') {
+            contentType = 'application/json';
+            content = JSON.stringify(msg);
+        } else if (msg === undefined) {
+            contentType = 'text/plain';
+            content = '';
+        } else if (typeof msg === 'string') {
+            content = msg;
+            // it it starts with html tag, content type html
+            if (this.html.test(msg)) {
+                contentType = 'text/html';
+            } else {
+                contentType = 'text/plain';
+            }
+        } else {
+            contentType = 'text/plain';
+            content = JSON.stringify(msg);
+        }
+
+        res.setHeader('Content-Type', `${contentType};charset=utf-8`);
+        res.write(content);
     }
 
     writeError(err: any, res: http.ServerResponse, errorService: ErrorService): void {
@@ -35,8 +57,9 @@ export class JsonResponder implements Responder {
         }
 
         res.statusCode = 200;
+        let content = JSON.stringify({ error });
         res.setHeader('Content-Type', 'application/json;charset=UTF-8');
-        res.end(JSON.stringify({ error }));
+        res.write(content);
     }
 
 }

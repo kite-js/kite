@@ -15,11 +15,37 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 const _1 = require("../");
-class JsonResponder {
+class KiteResponder {
+    constructor() {
+        this.html = /^[\w\n\r]*<[a-z!]/m;
+    }
     write(msg, res) {
-        res.setHeader('Content-Type', 'application/json;charset=UTF-8');
         res.statusCode = 200;
-        res.end(JSON.stringify(msg));
+        let content, contentType;
+        if (typeof msg === 'object') {
+            contentType = 'application/json';
+            content = JSON.stringify(msg);
+        }
+        else if (msg === undefined) {
+            contentType = 'text/plain';
+            content = '';
+        }
+        else if (typeof msg === 'string') {
+            content = msg;
+            // it it starts with html tag, content type html
+            if (this.html.test(msg)) {
+                contentType = 'text/html';
+            }
+            else {
+                contentType = 'text/plain';
+            }
+        }
+        else {
+            contentType = 'text/plain';
+            content = JSON.stringify(msg);
+        }
+        res.setHeader('Content-Type', `${contentType};charset=utf-8`);
+        res.write(content);
     }
     writeError(err, res, errorService) {
         let error;
@@ -33,9 +59,10 @@ class JsonResponder {
             error = errorService.getError(1001);
         }
         res.statusCode = 200;
+        let content = JSON.stringify({ error });
         res.setHeader('Content-Type', 'application/json;charset=UTF-8');
-        res.end(JSON.stringify({ error }));
+        res.write(content);
     }
 }
-exports.JsonResponder = JsonResponder;
-//# sourceMappingURL=json.responder.js.map
+exports.KiteResponder = KiteResponder;
+//# sourceMappingURL=kite.responder.js.map

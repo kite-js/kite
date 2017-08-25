@@ -15,7 +15,8 @@
  */
 import * as http from 'http';
 import { Responder, ErrorService } from '../';
-export declare class JsonResponder implements Responder {
+export declare class KiteResponder implements Responder {
+    private html;
     write(msg: any, res: http.ServerResponse): void;
     writeError(err: any, res: http.ServerResponse, errorService: ErrorService): void;
 }
