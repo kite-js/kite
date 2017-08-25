@@ -1,3 +1,6 @@
+# 0.2.7
+- Republish to npm with "@types/node" dependency added
+
 # 0.2.6
 - New filter rule `empty` added, empty string filter is configurable
 - Remove unnecessary .js.map files
