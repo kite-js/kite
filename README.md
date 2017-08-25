@@ -1,7 +1,7 @@
 # Kite framework
 Next generation, fast, flexible HTTP-JSON-RPC framework
 
-Please visit [Kite Github page](https://github.com/kite-js/kite) for details
+Please visit [Kite Tutorial](https://github.com/kite-js/kite/blob/master/docs/tutorial.md) for more examples
 
 # Installation
 Assuming you're working on MacOS or Linux, make a directory from command line 

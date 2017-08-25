@@ -114,6 +114,7 @@ Now open your browser and visit "http://localhost:4000/", you'll get an error me
 ```
 
 ## Hello world API
+
 APIs is also called controllers in Kite, each controller is placed into a single file, this is quite important:
 + Kite only picks one "controller" from imported modules, if more than one Kite
   controller is defined in a single file, only the first one is used, others are ignored
@@ -156,6 +157,7 @@ Now open your browser and visit "http://localhost:4000/greeting", you'll get thi
 ```
 
 ## Get client inputs
+
 Client inputs data (query string, post data) can be easily accessed in Kite, there are
 many ways to access them, the most simple way is announcing each parameter in argument
 list of controllers entry point. Example '/user/echo' demonstrated this:
@@ -196,16 +198,199 @@ Yes, Kite checks "name" input field for you, a set of parameter checking methods
 built in to help you to validate client inputs, this will introduce in another section.
 
 ### Map client inputs to certain types
-TypeScript is a statically typed language, if parameters defined a type (not `any`) Kite will try to map original type - `String` in query string and url-encoded form - to declared types.
-Example "/types":
+
+TypeScript is a statically typed language, if parameters defined a type (not `any`) Kite will 
+try to map original type - `String` in query string and url-encoded form - to declared types.
+Example API "/types":
+
 ```typescript
+import { Controller, Entry } from 'kite-framework';
+
 @Controller()
 export class TypesController {
     @Entry()
     async exec(str: string, num: number, bool: boolean, date: Date) {
+        console.log('typeof "str" is', typeof str);
+        console.log('typeof "num" is', typeof num);
+        console.log('typeof "bool" is', typeof bool);
+        console.log('typeof "date" is', typeof date, ', "date" is instance of "Date":', date instanceof Date);
+
         return { values: { str, num, bool, date } };
     }
 }
 ```
+
+when request url is "http://localhost:4000/types?str=this%20is%20string&num=12345&bool=true&date=2017-08-22", 
+response from server is like:
+```json
+{
+    "values": {
+        "str": "this is string",
+        "num": 12345,
+        "bool": true,
+        "date": "2017-08-22T00:00:00.000Z"
+    }
+}
+```
+
+from server output log, you should get:
+
+```
+typeof "str" is string
+typeof "num" is number
+typeof "bool" is boolean
+typeof "date" is object , "date" is instance of "Date": true
+```
+
+Kite maps original type "String" to declared type automatically. Although javascript
+is untyped but this mapping is still useful for input filter (checking) and object 
+creation, you don't have to check and create objects of certain types in controllers.
+
+### Map client inputs to Kite models
+
+When APIs are design to process the input data that with lots of fields, 
+writing them in argument list becomes unfriendly, you can do in that way though, 
+but make your programme hard to read.
+
+And alternative way is to declare a Kite model class, now let's create a folder
+named `models` under project root directory, then create a model file `user.model.ts`
+below.
+
+```typescript
+import { Model, In } from 'kite-framework';
+
+@Model()
+export class UserModel {
+    _id: number;
+
+    @In({
+        required: true
+    })
+    name: string;
+
+    @In({
+        required: true
+    })
+    password: string;
+
+    @In()
+    email: string;
+
+    createdTime: Date;
+}
+```
+
+Every Kite model must annonced with "@Model()", inside the model, properties
+with '@In()' decorator tells Kite this is an input field, rules can be defined
+in this decorator, as the above code shows:
+
+```javascript
+{
+    required: true
+}
+```
+
+The above rule is applied to both "name" and "password", means these two
+fields are "required" and can not be emitted from request query string / post body.
+
+"email" property annonced as input without filter rule, Kite will fetch this
+field for you if it's exists in raw input data.
+
+Properties without "@In()" are ignored from mapping.
+
+"/user/create" API like this:
+
+```typescript
+import { UserModel } from './../../model/user.model';
+import { Controller, Entry } from 'kite-framework';
+
+/**
+ * Create a user with model mapping
+ */
+@Controller()
+export class UserGreateController {
+    @Entry()
+    async exec(user: UserModel) {
+        // save user to database
+        return { user };
+    }
+}
+```
+
+Open your browser and visit 
+"http://localhost:4000/user/create?name=Kite&password=APassword"
+you'll get this response:
+
+```json
+{
+    "user": {
+        "name": "Kite",
+        "password": "APassword"
+    }
+}
+```
+
+Properties with "@In()" are successfully set values except "email", because
+"email" is an optional input, the above URL does not contain "email" in query 
+string.
+
+Try these request to see response:
+- "http://localhost:4000/user/create?name=Kite&password=APassword&email=x@y.com"
+- "http://localhost:4000/user/create?name=Kite&password=APassword&_id=1231"
+
+### Mix inputs mapping
+
+Mixing declare basic types and Kite model in controller enty point is allowed.
+
+The above example demonstrates how to "create a user", property "_id" is designed
+to be a key and generated by database, so "_id" is excluded from inputs. 
+But "update" API is required "_id" to be inputted, in this case you can write 
+"/user/update" in this way:
+
+```typescript
+import { UserModel } from './../../model/user.model';
+import { Controller, Entry } from 'kite-framework';
+
+/**
+ * Create a user with model mapping
+ */
+@Controller()
+export class UserGreateController {
+    @Entry()
+    async exec(_id: number, user: UserModel) {
+        // todo: get data from db
+        // todo: update user to database
+        console.log("_id = ", _id);
+        console.log("user = ", user);
+        user._id = _id;
+        return { user };
+    }
+}
+```
+
+Mixed declaration `_id: number, user: UserModel` force Kite to treat "_id" as a required
+input field, and other input fields will be mapped to "UserModel".
+
+Let's take a look at response "http://localhost:4000/user/update?name=Kite&password=APassword&email=x@y.com&_id=1":
+
+```json
+{
+    "user": {
+        "name": "Kite",
+        "password": "APassword",
+        "email": "x@y.com",
+        "_id": 1
+    }
+}
+```
+
+console logs at server side:
+```
+_id =  1
+user =  UserModel { name: 'Kite', password: 'APassword', email: 'x@y.com' }
+```
+
+From console logs we can see "_id" from query string was mapped to parameter "_id", 
+and other fields were mapped to `UserModel`.
 
 # TO BE CONTINUED
