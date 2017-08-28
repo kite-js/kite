@@ -17,7 +17,7 @@ Now install Kite framework:
 npm i -s kite-framework
 ```
 
-# Write APIs
+# Writing APIs
 Before you start writing Kite APIs, you should:
 + Install [NodeJs](https://nodejs.org/), version >= 8.0.0
 + Install [TypeScript](https://www.typescriptlang.org/), verstion >= 2.4
@@ -54,7 +54,7 @@ and copy this content to it:
 }
 ```
 
-## Make Kite fly
+## Making Kite fly
 A Kite application project structure is generally like:
 ```
 project_home/
@@ -156,7 +156,7 @@ Now open your browser and visit "http://localhost:4000/greeting", you'll get thi
 }
 ```
 
-## Get client inputs
+## Accessing client inputs
 
 Client inputs data (query string, post data) can be easily accessed in Kite, there are
 many ways to access them, the most simple way is announcing each parameter in argument
@@ -197,7 +197,7 @@ If "name" is omitted from query string you'll get this error response:
 Yes, Kite checks "name" input field for you, a set of parameter checking methods is
 built in to help you to validate client inputs, this will introduce in another section.
 
-### Map client inputs to certain types
+### Mapping client inputs to certain types
 
 TypeScript is a statically typed language, if parameters defined a type (not `any`) Kite will 
 try to map original type - `String` in query string and url-encoded form - to declared types.
@@ -246,7 +246,7 @@ Kite maps original type "String" to declared type automatically. Although javasc
 is untyped but this mapping is still useful for input filter (checking) and object 
 creation, you don't have to check and create objects of certain types in controllers.
 
-### Map client inputs to Kite models
+### Mapping client inputs to Kite models
 
 When APIs are design to process the input data that with lots of fields, 
 writing them in argument list becomes unfriendly, you can do in that way though, 
@@ -338,7 +338,7 @@ Try these request to see response:
 - "http://localhost:4000/user/create?name=Kite&password=APassword&email=x@y.com"
 - "http://localhost:4000/user/create?name=Kite&password=APassword&_id=1231"
 
-### Mix inputs mapping
+### Mixing inputs mapping
 
 Mixing declare basic types and Kite model in controller enty point is allowed.
 
@@ -392,5 +392,64 @@ user =  UserModel { name: 'Kite', password: 'APassword', email: 'x@y.com' }
 
 From console logs we can see "_id" from query string was mapped to parameter "_id", 
 and other fields were mapped to `UserModel`.
+
+# Filtering input
+
+Client input filter is a very important feature provided by Kite.
+Unlike other frameworks, Kite provides built-in filters, by writing 
+filter rules for input fields you can easily get things done.
+
+Previous section mentioned a basic filter which tells Kite to check a "required" field:
+
+```typescript
+@In({
+    required: true
+})
+```
+
+Assuming API "/user/check\_and\_create" needs to check "name", "password" and "email", let's create a Kite model "user.model.rules.ts" under folder "/models":
+
+```typescript
+import { Model, In } from 'kite-framework';
+
+@Model()
+export class UserModel {
+    _id: number;
+
+    @In({
+        required: true,
+        min: 3,
+        max: 60
+    })
+    name: string;
+
+    @In({
+        required: true,
+        min: 6
+    })
+    password: string;
+
+    @In({
+        pattern: /^[a-z\d_\.\-]+@[a-z\d_\.\-]+\.[a-z]{2,}$/i
+    })
+    email: string;
+
+    @In()
+    dateOfBirth: Date;
+
+    createdTime: Date;
+}
+```
+
+means of each rule:
+
+* __rule for `name`__ - it's a required field; minimal length limited to 3; 
+    maximal length limited to
+* __rule for `password`__ it's a required field; minimal length limited to 6;
+* __rule for `email`__ it's an optional field; if it's set by client, check it by given pattern 
+    (a basic email regex)
+* __rule for `dateOfBirth`__ it's an optional field;
+
+For more details about filter rules, [please click here](./filter.rules.md)
 
 # TO BE CONTINUED
