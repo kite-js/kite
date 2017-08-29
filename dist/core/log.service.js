@@ -26,12 +26,10 @@ exports.LogFlags = {
  */
 class LogService {
     constructor(level, stdout, stderr) {
-        if (level) {
-            this.info = exports.LogFlags.info ? this._info : this._dummy;
-            this.access = exports.LogFlags.info ? this._access : this._dummy;
-            this.warn = exports.LogFlags.warn ? this._warn : this._dummy;
-            this.error = exports.LogFlags.error ? this._error : this._dummy;
-        }
+        this.info = exports.LogFlags.info & level ? this._info : this._dummy;
+        this.access = exports.LogFlags.info & level ? this._access : this._dummy;
+        this.warn = exports.LogFlags.warn & level ? this._warn : this._dummy;
+        this.error = exports.LogFlags.error & level ? this._error : this._dummy;
         let out = process.stdout;
         let err = process.stderr;
         if (stdout) {

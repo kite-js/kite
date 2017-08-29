@@ -61,23 +61,38 @@ export declare function Model(): (constructor: Function) => void;
  */
 export declare type FilterRule = {
     /**
-     * Set to "true" to mark parameter as required,
-     * "false" or not set marks as optional
+     * type: boolean - indicates a input field is required or not, default is "false"
+     * + `true` - the field is required, if it's omitted from input, Kite will throw an
+     * + `fasle` - the field is optional, on error will be thrown even if it's omitted
+     *
+     * @type boolean
      */
     required?: boolean;
     /**
-     * Value list, input parameter should be one of these values
+     * available values for this input field, default is `undefined` - no value
+     * checking for this field. If an array is given, Kite will check input value
+     * by searching given array, for example:
+     * ```typescript
+     * @In({
+     *     values: ['Java', 'Javascript', 'PHP', 'GO', 'Python']
+     * })
+     * language: string;
+     * ```
+     * means input parameter "language" should be one of
+     * _'Java', 'Javascript', 'PHP', 'GO', *  'Python'_.
+     * If only one value is given to this array, the input field is limmited to
+     * this value.
+     *
      */
     values?: string[] | number[];
     /**
-     * Different behavior will be took in filter:
+     * different behavior will be took in filter:
      * - model property type is "String": define the minimal length of input string
      * - model property type is "Number": define the minimal value of input number
      * - others: ignored
      */
     min?: number;
     /**
-     * Tell Kite to check string's length or number,
      * different behavior will be took in filter:
      * - model property type is "String": define the maximal length of input string
      * - model property type is "Number": define the maximal value of input number
@@ -85,46 +100,69 @@ export declare type FilterRule = {
      */
     max?: number;
     /**
-     * Tell Kite to check string length, the length of string is limited to this value
+     * limit input string with special length, example:
+     * ```typescript
+     * @In({
+     *     len: 2
+     * })
+     * state: string;  // state length is restricted to 2
+     * ```
      */
     len?: number;
     /**
-     * Tell Kite to check input string matches the pattern or not, only affected on "String" properties
+     * test input string with special pattern, example:
+     * ```typescript
+     * @In({
+     *     pattern: /^[a-z\d_\.\-]+@[a-z\d_\.\-]+\.[a-z]{2,}$/i
+     * })
+     * email: string;  // check email with the pattern
+     * ```
      */
     pattern?: RegExp;
     /**
-     * Tell Kite to check input value with this custom filter function
+     * filter input value with given function, return value is used as
+     * new value for this field, example:
+     * ```typescript
+     * @In({
+     *     filter: function(state: string) {
+     *         return state ? state.toUpperCase() : '';
+     *     }
+     * })
+     * state: string;  // conver input state to upper case
+     * ```
      */
     filter?: (input: any) => any;
     /**
-     * Group property check,
-     * at least one of "grouped" properties is required, an error will thrown if none of them is appeared in the inputs.
-     *
-     * @example
-     *
-     * The following example tells Kite to check "phone" or "email"
-     * ```typescript
+     * group property checking, tells Kite this field is connected
+     * with other fields, at least one of grouped fields is required at input.
+     * The following example means: either "phone" or "email" is required,
+     * if both "phone" and "email" are emitted an error will be thrown:
+     *  ```typescript
+     * @Model()
      * class ExampleParam {
-     *      @In({
-     *          group: 'email'  // "phone" will group with "email"
-     *      }) phone: string;
+     *     @In({
+     *         group: 'email'  // "phone" will group with "email"
+     *     })
+     *     phone: string;
      *
-     *      @In() email: string;
+     *     @In()
+     *     email: string;
      * }
      * ```
      */
     group?: string | string[];
     /**
-     * accept empty string, default is `false`, this field is only works when `required` is set to `true`
+     * accept empty string, default is `false`, this field is only works when
+     * `required` is set to `true`
      *
      * `true` - allow empty string as input value
      * `false` - disallow empty string as input value
      *
-     * By default, Kite filters out a string if it's empty; therefore "String" type input fields in
-     * Kite models are always set by a nonempty string.
+     * By default, Kite filters out a string if it's empty; therefore controllers always
+     * receives nonempty strings from "String" typed parameters.
      *
      * In most cases, people do not want "required" fields are set by empty strings, just like
-     * HTML <input> tag, if attribute "required" is set but nothing inputed, browser will warn you.
+     * HTML `<input>` tag, if attribute "required" is set but nothing inputed, browser will warn you.
      *
      * But sometimes people do, for example empty string is frequently used in database design,
      * empty fields do mean something in some cases, so set this field to `true` if you want

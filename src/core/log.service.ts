@@ -49,12 +49,10 @@ export class LogService {
     access: (request: http.IncomingMessage) => void;
 
     constructor(level: number, stdout?: string | NodeJS.WritableStream, stderr?: string | NodeJS.WritableStream) {
-        if (level) {
-            this.info = LogFlags.info ? this._info : this._dummy;
-            this.access = LogFlags.info ? this._access : this._dummy;
-            this.warn = LogFlags.warn ? this._warn : this._dummy;
-            this.error = LogFlags.error ? this._error : this._dummy;
-        }
+        this.info = LogFlags.info & level ? this._info : this._dummy;
+        this.access = LogFlags.info & level ? this._access : this._dummy;
+        this.warn = LogFlags.warn & level ? this._warn : this._dummy;
+        this.error = LogFlags.error & level ? this._error : this._dummy;
 
         let out: NodeJS.WritableStream = process.stdout;
         let err: NodeJS.WritableStream = process.stderr;

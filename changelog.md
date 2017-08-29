@@ -1,3 +1,16 @@
+# 0.3.2 (2017-08-29)
+- Fixed bug on LogService, when log.level is set to `0` it caused crash
+- Did a simple benchmark test to "greeting" API from example on my Macbook Pro, compare against Node.js raw server, still get things to improve: 
+
+framework     | concurrency    | requests     | time taken    | time
+------------- | -------------- | ------------ | ------------- | -----------
+Kite          | 150            | 3000         | 0.987 sec     | 1st
+              |                |              | 0.738 sec     | 2nd
+              |                |              | 0.998 sec     | 3rd
+Raw Node.js   | 150            | 3000         | 0.558 sec     | 1st
+              |                |              | 0.487 sec     | 2nd
+              |                |              | 0.503 sec     | 3rd
+
 # 0.3.1
 - Fix error when controller called `response.write()`
 
