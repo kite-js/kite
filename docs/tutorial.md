@@ -1,4 +1,19 @@
-# Installation
+# Navigation
+
++ [Installation](#Installation)
++ [Writing APIs](#Writing-APIs)
+  + [Typescript environment configuration](#Typescript-environment-configuration)
+  + [Making Kite fly](#Making-Kite-fly)
+  + [Hello world API](#Hello-world-API)
+  + [Accessing client inputs](#Accessing-client-inputs)
+  + [Mapping client inputs to certain types](#Mapping-client-inputs-to-certain-types)
+  + [Mapping client inputs to Kite model](#Mapping-client-inputs-to-Kite-model)
+  + [Mixing inputs mapping](#Mixing-inputs-mapping)
++ [Input filtering](#Input-filtering)
++ [Writing services](#Writing-services)
+
+
+# Installation<a name="Installation"></a>
 Assuming you're working on MacOS or Linux, make a directory from command line 
 for your first Kite project:
 
@@ -17,13 +32,13 @@ Now install Kite framework:
 npm i -s kite-framework
 ```
 
-# Writing APIs
+# Writing APIs<a name="Writing-APIs"></a>
 Before you start writing Kite APIs, you should:
 + Install [NodeJs](https://nodejs.org/), version >= 8.0.0
 + Install [TypeScript](https://www.typescriptlang.org/), verstion >= 2.4
 + Get a TypeScript IDE, [Visual Studio Code](https://code.visualstudio.com/) is recommended here
 
-## Typescript environment configuration
+## Typescript environment configuration<a name="Typescript-environment-configuration"></a>
 Now you need configure Visual Studio Code & TypeScript to enable some features 
 for your project, create a file `tsconfig.json` under project root, 
 and copy this content to it:
@@ -54,7 +69,7 @@ and copy this content to it:
 }
 ```
 
-## Making Kite fly
+## Making Kite fly<a name="Making-Kite-fly"></a>
 A Kite application project structure is generally like:
 ```
 project_home/
@@ -113,7 +128,7 @@ Now open your browser and visit "http://localhost:4000/", you'll get an error me
 }
 ```
 
-## Hello world API
+## Hello world API <a name="Hello-world-API"></a>
 
 APIs is also called controllers in Kite, each controller is placed into a single file, this is quite important:
 + Kite only picks one "controller" from imported modules, if more than one Kite
@@ -156,7 +171,7 @@ Now open your browser and visit "http://localhost:4000/greeting", you'll get thi
 }
 ```
 
-## Accessing client inputs
+## Accessing client inputs <a name="Accessing-client-inputs"></a>
 
 Client inputs data (query string, post data) can be easily accessed in Kite, there are
 many ways to access them, the most simple way is announcing each parameter in argument
@@ -197,7 +212,7 @@ If "name" is omitted from query string you'll get this error response:
 Yes, Kite checks "name" input field for you, a set of parameter checking methods is
 built in to help you to validate client inputs, this will introduce in another section.
 
-### Mapping client inputs to certain types
+## Mapping client inputs to certain types <a name="Mapping-client-inputs-to-certain-types"></a>
 
 TypeScript is a statically typed language, if parameters defined a type (not `any`) Kite will 
 try to map original type - `String` in query string and url-encoded form - to declared types.
@@ -246,7 +261,7 @@ Kite maps original type "String" to declared type automatically. Although javasc
 is untyped but this mapping is still useful for input filter (checking) and object 
 creation, you don't have to check and create objects of certain types in controllers.
 
-### Mapping client inputs to Kite models
+## Mapping client inputs to Kite model <a name="Mapping-client-inputs to-Kite-model"></a>
 
 When APIs are design to process the input data that with lots of fields, 
 writing them in argument list becomes unfriendly, you can do in that way though, 
@@ -338,7 +353,7 @@ Try these request to see response:
 - "http://localhost:4000/user/create?name=Kite&password=APassword&email=x@y.com"
 - "http://localhost:4000/user/create?name=Kite&password=APassword&_id=1231"
 
-### Mixing inputs mapping
+## Mixing inputs mapping <a name="Mixing-inputs-mapping"></a>
 
 Mixing declare basic types and Kite model in controller enty point is allowed.
 
@@ -393,7 +408,7 @@ user =  UserModel { name: 'Kite', password: 'APassword', email: 'x@y.com' }
 From console logs we can see "_id" from query string was mapped to parameter "_id", 
 and other fields were mapped to `UserModel`.
 
-# Filtering input
+# Input filtering <a name="Input-filtering"></a>
 
 Client input filter is a very important feature provided by Kite.
 Unlike other frameworks, Kite provides built-in filters, by writing 
@@ -509,5 +524,103 @@ try these requests to see responses if you're running Kite examples:
 + http://localhost:4000/user/favor?name=Ben&language=C
 
 For more details about filter rules, [please click here](./filter.rules.md)
+
+
+# Writing services <a name="Writing-services"></a>
+
+Kite services are the shared modules that provide common functions - database accessing,
+data sharing etc. - for controllers.
+
+Kite services are annonced with "@Injectable()". Kite creates only single instance for each
+service and share them, therefore different controllers are able to use the same service instance.
+
+Let's create a folder named "services" under "/src", and create our first Kite service 
+"counter.service.ts":
+
+```typescript
+import { Injectable } from 'kite-framework';
+
+@Injectable()
+export class CounterService {
+    private _counter = 0;
+
+    inc() {
+        this._counter++;
+    }
+
+    get counter(): number {
+        return this._counter;
+    }
+}
+```
+
+For using Kite servcies, controllers needs to inject them by annoncing properties with "@Inject()".
+
+For the above "CounterService", we write two controllers to test this service, 
+one is "/counter/inc" for increasing the counter:
+
+```typescript
+/**
+ * /src/counter/inc.ts
+ */
+import { CounterService } from './../../services/counter.services';
+import { Controller, Entry, Inject } from 'kite-framework';
+
+/**
+ * increase counter value
+ */
+@Controller()
+export class CounterIncController {
+    // inject counter service
+    @Inject() counterService: CounterService;
+
+    @Entry()
+    async exec() {
+        this.counterService.inc();
+        return { success: true };
+    }
+}
+```
+
+another is "/counter/show" for showing the counter value:
+
+```typescript
+/**
+ * /src/counter/show.ts
+ */
+import { CounterService } from './../../services/counter.services';
+import { Controller, Entry, Inject } from 'kite-framework';
+
+/**
+ * show counter value
+ */
+@Controller()
+export class CounterShowController {
+    // inject counter service
+    @Inject() counterService: CounterService;
+
+    @Entry()
+    async exec() {
+        return { counter: this.counterService.counter };
+    }
+}
+```
+
+Firstly, we request "http://localhost:4000/counter/inc" to update the counter, you'll get:
+
+```json
+{
+    "success": true
+}
+```
+
+then we request "http://localhost:4000/counter/show" to get the counter value, you'll get 
+response like this:
+
+```json
+{
+    "counter": 1
+}
+```
 
 # TO BE CONTINUED
