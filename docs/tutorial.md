@@ -443,12 +443,70 @@ export class UserModel {
 
 means of each rule:
 
-* __rule for `name`__ - it's a required field; minimal length limited to 3; 
-    maximal length limited to
-* __rule for `password`__ it's a required field; minimal length limited to 6;
-* __rule for `email`__ it's an optional field; if it's set by client, check it by given pattern 
++ __rule for `name`__ - it's a required field; minimal length limited to 3; 
+    maximal length limited to 60;
++ __rule for `password`__ it's a required field; minimal length limited to 6;
++ __rule for `email`__ it's an optional field; if it's set by client, check it by given pattern 
     (a basic email regex)
-* __rule for `dateOfBirth`__ it's an optional field;
++ __rule for `dateOfBirth`__ no rule is applied to this field, treated as an optional field;
+
+controller for API "/user/check_and_create" is like this:
+
+```typescript
+import { UserModel } from './../../models/user.model.rules';
+import { Controller, Entry } from 'kite-framework';
+
+/**
+ * Create a user with model mapping
+ */
+@Controller()
+export class UserGreateController {
+    @Entry()
+    async exec(user: UserModel) {
+        // save user to database
+        return { user };
+    }
+}
+```
+
+try these requests to see responses if you're running Kite examples:
++ http://localhost:4000/user/check_and_create?name=Ben&password=123456
++ http://localhost:4000/user/check_and_create?name=Ben&password=123456&email=abc.com
++ http://localhost:4000/user/check_and_create?name=Ben&password=12
++ http://localhost:4000/user/check_and_create?name=Ben&password=123456&dateOfBirth=1988-01-01
+
+Another way to apply rules to input fields it writing them in controller entry
+point, API "/user/favor":
+
+```typescript
+import { Controller, Entry } from 'kite-framework';
+
+/**
+ * Create a user with model mapping
+ */
+@Controller()
+export class UserFavorController {
+    @Entry({
+        // define rule for "name" parameter
+        name: {
+            min: 3
+        },
+
+        // define name for "language" parameter
+        language: {
+            values: ['Java', 'Javascript', 'PHP', 'GO', 'Python']
+        }
+    })
+    async exec(name: string, language: string) {
+        let msg = `${name}'s favor programming language is ${language}`;
+        return { msg };
+    }
+}
+```
+
+try these requests to see responses if you're running Kite examples:
++ http://localhost:4000/user/favor?name=Ben&language=Javascript
++ http://localhost:4000/user/favor?name=Ben&language=C
 
 For more details about filter rules, [please click here](./filter.rules.md)
 
