@@ -29,7 +29,7 @@ npm init
 
 Now install Kite framework:
 ```sh
-npm i -s kite-framework
+npm install kite-framework --save
 ```
 
 # Writing APIs<a name="Writing-APIs"></a>
