@@ -1,7 +1,15 @@
 # Kite framework
 Next generation, fast, flexible HTTP-JSON-RPC framework
 
-Please visit [Kite Tutorial](https://github.com/kite-js/kite/blob/master/docs/tutorial.md) for more examples
+Please visit [Kite Tutorial](https://github.com/kite-js/kite/blob/master/docs/tutorial.md) for more examples.
+
+For quickly starts a Kite application, please use [Kite tools](https://github.com/kite-js/kite-tools):
+
+```sh
+npm install -g kite-tools
+```
+
+PS: if you're using Linux and MacOS systems, you suppose to run `sudo npm install -g kite-tools`
 
 # Installation
 Assuming you're working on MacOS or Linux, make a directory from command line 
