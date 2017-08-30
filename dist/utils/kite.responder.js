@@ -34,10 +34,10 @@ class KiteResponder {
             content = msg;
             // it it starts with html tag, content type html
             if (this.html.test(msg)) {
-                contentType = 'text/html';
+                contentType = 'text/html; charset=utf-8';
             }
             else {
-                contentType = 'text/plain';
+                contentType = 'text/plain; charset=utf-8';
             }
         }
         else {
@@ -45,7 +45,7 @@ class KiteResponder {
             content = JSON.stringify(msg);
         }
         if (!res.getHeader('content-type')) {
-            res.setHeader('Content-Type', `${contentType};charset=utf-8`);
+            res.setHeader('Content-Type', `${contentType}`);
         }
         res.write(content);
     }
@@ -62,7 +62,7 @@ class KiteResponder {
         }
         res.statusCode = 200;
         let content = JSON.stringify({ error });
-        res.setHeader('Content-Type', 'application/json;charset=utf-8');
+        res.setHeader('Content-Type', 'application/json');
         res.write(content);
     }
 }

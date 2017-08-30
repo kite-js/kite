@@ -208,7 +208,7 @@ class Kite {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 // Log access infomation if loglevel "info" is on
-                this.logService.access(request);
+                // this.logService.access(request);
                 response.on('error', (err) => {
                     this.logService.error(err);
                 });
@@ -226,15 +226,15 @@ class Kite {
                 if (request.method !== 'GET'
                     && request.method !== 'TRACE'
                     && (request.headers['content-length'] || request.headers['transfer-encoding'])) {
-                    let [contentType, encoding] = (request.headers['content-type'] || '').split(';');
+                    let contentType = request.headers['content-type'] || '';
                     let entityBody = yield this.getEntityBody(request);
                     if (!this.parsers[contentType]) {
-                        this.logService.warn(`Unsupported content type "${contentType}"`);
+                        this.logService.warn(`Unsupport content type "${contentType}"`);
                         inputs = entityBody;
                     }
-                    else if (entityBody) {
+                    else {
                         try {
-                            let data = this.parsers[contentType](entityBody, encoding);
+                            let data = this.parsers[contentType](entityBody);
                             inputs = Object.assign({}, url.query, data);
                         }
                         catch (e) {

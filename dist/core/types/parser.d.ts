@@ -12,7 +12,7 @@
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  */
-export declare type Parser = (data: string, encoding?: string) => {
+export declare type Parser = (data: string) => {
     [name: string]: string;
 };
 export declare type ParserEntity = {

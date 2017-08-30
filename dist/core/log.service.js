@@ -25,9 +25,13 @@ exports.LogFlags = {
  * Kite log service
  */
 class LogService {
+    /**
+     * Log access
+     */
+    // access: (request: http.IncomingMessage) => void;
     constructor(level, stdout, stderr) {
         this.info = exports.LogFlags.info & level ? this._info : this._dummy;
-        this.access = exports.LogFlags.info & level ? this._access : this._dummy;
+        // this.access = LogFlags.info & level ? this._access : this._dummy;
         this.warn = exports.LogFlags.warn & level ? this._warn : this._dummy;
         this.error = exports.LogFlags.error & level ? this._error : this._dummy;
         let out = process.stdout;
@@ -69,13 +73,6 @@ class LogService {
         let time = new Date().toLocaleString();
         let tag = '[ ERROR ]';
         this.logger.error.apply(null, [time, tag, output].concat(optionalMsgs));
-    }
-    _access(request) {
-        if (this.info) {
-            let referer = request.headers['referer'] || '-';
-            let ua = request.headers['user-agent'] || '-';
-            this.info(`${request.connection.remoteAddress} - "${request.method} ${request.url}" "${referer}" "${ua}"`);
-        }
     }
 }
 exports.LogService = LogService;

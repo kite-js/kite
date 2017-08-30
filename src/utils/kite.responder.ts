@@ -33,9 +33,9 @@ export class KiteResponder implements Responder {
             content = msg;
             // it it starts with html tag, content type html
             if (this.html.test(msg)) {
-                contentType = 'text/html';
+                contentType = 'text/html; charset=utf-8';
             } else {
-                contentType = 'text/plain';
+                contentType = 'text/plain; charset=utf-8';
             }
         } else {
             contentType = 'text/plain';
@@ -43,7 +43,7 @@ export class KiteResponder implements Responder {
         }
 
         if (!res.getHeader('content-type')) {
-            res.setHeader('Content-Type', `${contentType};charset=utf-8`);
+            res.setHeader('Content-Type', `${contentType}`);
         }
 
         res.write(content);
@@ -62,7 +62,7 @@ export class KiteResponder implements Responder {
         res.statusCode = 200;
         let content = JSON.stringify({ error });
 
-        res.setHeader('Content-Type', 'application/json;charset=utf-8');
+        res.setHeader('Content-Type', 'application/json');
 
         res.write(content);
     }

@@ -23,9 +23,11 @@
             <h1>Next generation framework for building APIs</h1>
             <h3>Kite is designed to write APIs more efficiently with latest Javascript features</h3>
         </div>
-        <h2>Current version <a href="https://github.com/kite-js/kite" title="Kite source">0.3.2</a>:</h2>
+        <h2>Current version <a href="https://github.com/kite-js/kite" title="Kite source">0.3.3</a>:</h2>
         <ul class="change-logs">
-            <li>Fixed bug on LogService, when log.level is set to `0` it caused crash</li>
+            <li>Remove access log from Kite core</li>
+            <li>Remove "charset" split logic from "Content-Type", only accept "UTF-8" encoding</li>
+            <li>Remove "; charset=utf-8" from response header if content type is "application/json"</li>
         </ul>
         <h2>Installation</h2>
         <p>

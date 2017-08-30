@@ -46,11 +46,11 @@ export class LogService {
     /**
      * Log access
      */
-    access: (request: http.IncomingMessage) => void;
+    // access: (request: http.IncomingMessage) => void;
 
     constructor(level: number, stdout?: string | NodeJS.WritableStream, stderr?: string | NodeJS.WritableStream) {
         this.info = LogFlags.info & level ? this._info : this._dummy;
-        this.access = LogFlags.info & level ? this._access : this._dummy;
+        // this.access = LogFlags.info & level ? this._access : this._dummy;
         this.warn = LogFlags.warn & level ? this._warn : this._dummy;
         this.error = LogFlags.error & level ? this._error : this._dummy;
 
@@ -101,11 +101,11 @@ export class LogService {
         this.logger.error.apply(null, [time, tag, output].concat(optionalMsgs));
     }
 
-    _access(request: http.IncomingMessage) {
-        if (this.info) {
-            let referer = request.headers['referer'] || '-';
-            let ua = request.headers['user-agent'] || '-';
-            this.info(`${request.connection.remoteAddress} - "${request.method} ${request.url}" "${referer}" "${ua}"`);
-        }
-    }
+    // _access(request: http.IncomingMessage) {
+    //     if (this.info) {
+    //         let referer = request.headers['referer'] || '-';
+    //         let ua = request.headers['user-agent'] || '-';
+    //         this.info(`${request.connection.remoteAddress} - "${request.method} ${request.url}" "${referer}" "${ua}"`);
+    //     }
+    // }
 }

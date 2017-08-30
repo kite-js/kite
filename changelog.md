@@ -1,3 +1,21 @@
+# 0.3.3 (2017-08-30)
+- Remove access log from Kite core
+- Remove "charset" split logic from "Content-Type", only accept "UTF-8" encoding
+- Remove "; charset=utf-8" from response header if content type is "application/json"
+- Tested benchmark again more fairly - loads a module from other file like Kite does:
+
+framework     | concurrency    | requests     | time taken    | req / sec     | time
+------------- | -------------- | ------------ | ------------- | ------------- | -----------
+Kite          | 150            | 3000         | 0.842 sec     | 3563.14       | 1st
+              |                |              | 1.119 sec     | 2680.48       | 2nd
+              |                |              | 0.950 sec     | 3156.32       | 3rd
+Raw Node.js   | 150            | 3000         | 0.575 sec     | 5215.37       | 1st
+              |                |              | 0.674 sec     | 4449.63       | 2nd
+              |                |              | 0.661 sec     | 4540.19       | 3rd
+Express       | 150            | 3000         | 1.247 sec     | 2405.14       | 1st
+              |                |              | 1.155 sec     | 2596.52       | 2nd
+              |                |              | 1.105 sec     | 2715.58       | 3rd
+
 # 0.3.2 (2017-08-29)
 - Fixed bug on LogService, when log.level is set to `0` it caused crash
 - Did a simple benchmark test to "greeting" API from example on my Macbook Pro, compare against Node.js raw server, still get things to improve: 

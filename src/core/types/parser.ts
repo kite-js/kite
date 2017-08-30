@@ -13,7 +13,7 @@
  * all copies or substantial portions of the Software.
  */
 
-export type Parser = (data: string, encoding?: string) => { [name: string]: string };
+export type Parser = (data: string) => { [name: string]: string };
 
 export type ParserEntity = {
     contentType: string,
