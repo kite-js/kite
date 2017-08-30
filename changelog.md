@@ -7,14 +7,14 @@
 framework     | concurrency    | requests     | time taken    | req / sec     | time
 ------------- | -------------- | ------------ | ------------- | ------------- | -----------
 Kite          | 150            | 3000         | 0.842 sec     | 3563.14       | 1st
-              |                |              | 1.119 sec     | 2680.48       | 2nd
-              |                |              | 0.950 sec     | 3156.32       | 3rd
+_             | _              | _            | 1.119 sec     | 2680.48       | 2nd
+_             | _              | _            | 0.950 sec     | 3156.32       | 3rd
 Raw Node.js   | 150            | 3000         | 0.575 sec     | 5215.37       | 1st
-              |                |              | 0.674 sec     | 4449.63       | 2nd
-              |                |              | 0.661 sec     | 4540.19       | 3rd
+_             | _              | _            | 0.674 sec     | 4449.63       | 2nd
+_             | _              | _            | 0.661 sec     | 4540.19       | 3rd
 Express       | 150            | 3000         | 1.247 sec     | 2405.14       | 1st
-              |                |              | 1.155 sec     | 2596.52       | 2nd
-              |                |              | 1.105 sec     | 2715.58       | 3rd
+_             | _              | _            | 1.155 sec     | 2596.52       | 2nd
+_             | _              | _            | 1.105 sec     | 2715.58       | 3rd
 
 # 0.3.2 (2017-08-29)
 - Fixed bug on LogService, when log.level is set to `0` it caused crash
@@ -23,11 +23,11 @@ Express       | 150            | 3000         | 1.247 sec     | 2405.14       | 
 framework     | concurrency    | requests     | time taken    | time
 ------------- | -------------- | ------------ | ------------- | -----------
 Kite          | 150            | 3000         | 0.987 sec     | 1st
-              |                |              | 0.738 sec     | 2nd
-              |                |              | 0.998 sec     | 3rd
+_             | _              | _            | 0.738 sec     | 2nd
+_             |                | _            | 0.998 sec     | 3rd
 Raw Node.js   | 150            | 3000         | 0.558 sec     | 1st
-              |                |              | 0.487 sec     | 2nd
-              |                |              | 0.503 sec     | 3rd
+_             | _              | _            | 0.487 sec     | 2nd
+_             | _              | _            | 0.503 sec     | 3rd
 
 # 0.3.1
 - Fix error when controller called `response.write()`
