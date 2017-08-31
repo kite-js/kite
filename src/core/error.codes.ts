@@ -14,7 +14,7 @@
  */
 
 export const ERROR_CODES = {
-    1000: 'Error: %s',
+    1000: '%s', // any error msg
     1001: 'Service is not available',
     1002: 'Resource not found',
     1003: 'Script error',
