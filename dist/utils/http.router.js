@@ -15,7 +15,8 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 const error_1 = require("./../core/error");
-const path = require("path");
+const Path = require("path");
+const fs = require("fs");
 /**
  * A router for routing http request to a controller.
  *
@@ -26,25 +27,36 @@ class HttpRouter {
     /**
      * Create a http router
      *
-     * This router maps URL of request to a controller filename, it's called from Kite core when client request comes in.
+     * This router maps a URL to a controller file, it's called from Kite core when client request comes.
      *
-     * The `rootdir` must be a absolute path, in most cases, people use `__dirname` to get the module's directory name,
-     * and set the rootdir to somewhere under module's `__dirname`.
+     * Parameter `rootdir` specifies where Kite controllers are placed, it must be an absolute path.
+     * In most cases you can use `__dirname + path.sep + 'controllers'`, which meas controllers are
+     * placed in directory "controllers" relatived to this caller script.
      *
-     * For security reasons, `extension` is recommended, it's set to '.js' in default to ensure nodejs always load a file
-     * ends with '.js' extension.
+     * Parameter `extension` is set to '.js' defaultly to make Node.js loads modules faster,
+     * you can change it to any other values including empty string, if a non-empty string is given,
+     * it should starts with '.', examples: '.api.js', '.controller.js'
+     *
+     * For uniform-name consideration, if `extension === '.js'` the router will firstly try to locate
+     * a file ends with ".controller.js" - for example "get.controller.js", if it's not exists, router
+     * will return a filename without ".controller" - "get.js".
+     *
+     * "uniform-name consideration" is a filename form that has a surfix to indicate the type of this file:
+     * + controllers - named as "\*\*\*.controller.js"
+     * + services - named as "\*\*\*.service.js"
+     * + models - named as "\*\*\*.model.js"
      *
      * By invoking `route()` method, it:
-     * - map URL to `rootdir` child directories
-     * - locate a file by adding `.${surfix}.${extension}`
+     * - map a URL to `rootdir` or it's sub folder
+     * - locate a file by adding `${extension}`
      *
      * @param rootdir base dir, relative to application root folder
      * @param extension an extension add to controller file name, defaults to `.js`
      */
     constructor(rootdir, extension = '.js') {
-        this.apiNameRegx = /^([\w\d\-_]+\.)*[\w\d\-_]+$/;
+        this.apiNameRegx = /^([a-z\d\-_]+\.)*[a-z\d\-_]+$/i;
         if (!rootdir) {
-            throw new Error(this.constructor.name + ' requires "rootdir" to work');
+            throw new Error(this.constructor.name + ' requires a "rootdir" to work');
         }
         this.rootdir = rootdir;
         this.extension = extension;
@@ -56,20 +68,19 @@ class HttpRouter {
      * @param method http request method
      */
     map(url, method) {
-        let parts = url.pathname.split('/');
-        parts.shift(); // remove the first element: an empty string 
-        // check each part of pathname
-        parts.forEach(part => {
-            if (!part) {
-                throw new error_1.KiteError(1100, url.pathname);
+        let path = Path.join(this.rootdir, Path.normalize(url.pathname));
+        // target path must under rootdir
+        if (!path.startsWith(this.rootdir)) {
+            throw new error_1.KiteError(1100, url.pathname);
+        }
+        let filename = path + this.extension;
+        // if extension is set to ".js", test "***.controller.js" file
+        if (this.extension === '.js') {
+            let uniformName = path + '.controller.js';
+            if (fs.existsSync(uniformName)) {
+                filename = uniformName;
             }
-            // escape "parent directory" symbol
-            if (!this.apiNameRegx.test(part)) {
-                throw new error_1.KiteError(1101);
-            }
-        });
-        parts.unshift(this.rootdir);
-        let filename = path.join(...parts) + this.extension;
+        }
         return { apiname: url.pathname, filename: filename };
     }
 }

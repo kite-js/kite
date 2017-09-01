@@ -55,8 +55,8 @@ and copy this content to it:
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "declaration": false,
-        "rootDir": "./src/",
-        "outDir": "./dist/",
+        "rootDir": "src",
+        "outDir": "dist",
         "types": [
             "node"
         ],

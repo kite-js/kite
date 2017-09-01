@@ -61,7 +61,8 @@ and copy this content to it:
         "typeRoots": ["node_modules/@types"]
     },
     "exclude": [
-        "node_modules"
+        "node_modules",
+        "dist"
     ]
 }
 ```

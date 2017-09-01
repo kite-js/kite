@@ -1,3 +1,9 @@
+# 0.3.5 (2017-09-01)
+- improved "HttpRouter": faster API location if controller source filename ends with '.controller.ts'
+
+# 0.3.4 (2017-08-31)
+- Node republish for renew "readme" document
+
 # 0.3.3 (2017-08-30)
 - Remove access log from Kite core
 - Remove "charset" split logic from "Content-Type", only accept "UTF-8" encoding

@@ -9,8 +9,8 @@
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "declaration": true,
-        "rootDir": "./src/",
-        "outDir": "./dist/",
+        "rootDir": "src",
+        "outDir": "dist",
         "types": [
             "node"
         ],

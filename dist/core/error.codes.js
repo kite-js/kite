@@ -15,7 +15,7 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ERROR_CODES = {
-    1000: 'Error: %s',
+    1000: '%s',
     1001: 'Service is not available',
     1002: 'Resource not found',
     1003: 'Script error',
