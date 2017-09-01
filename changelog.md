@@ -1,3 +1,6 @@
+# 0.3.6 (2017-09-01)
+- export "XformParserProvider" & "JsonParserProvider" from utils
+
 # 0.3.5 (2017-09-01)
 - improved "HttpRouter": faster API location if controller source filename ends with '.controller.ts'
 

@@ -1,6 +1,6 @@
 {
     "name": "kite-framework",
-    "version": "0.3.5",
+    "version": "0.3.6",
     "description": "Next generation, fast, flexible HTTP-JSON-RPC framework",
     "scripts": {
         "build": "tsc && cp ./{package.json,README.md} dist/",

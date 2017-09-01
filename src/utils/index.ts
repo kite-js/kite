@@ -14,3 +14,5 @@
  */
 
 export * from './http.router';
+export * from './xform.parser.provider';
+export * from './json.parser.provider';
