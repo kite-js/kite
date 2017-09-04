@@ -23,9 +23,16 @@
             <h1>Next generation framework for building APIs</h1>
             <h3>Kite is designed to write APIs more efficiently with latest Javascript features</h3>
         </div>
-        <h2>Current version <a href="https://github.com/kite-js/kite" title="Kite source">0.3.6</a>:</h2>
+        <h2>Current version <a href="https://github.com/kite-js/kite" title="Kite source">0.3.7</a>:</h2>
         <ul class="change-logs">
-            <li>export "XformParserProvider" &amp; "JsonParserProvider" from utils</li>
+            <li>Performance improved:
+                <ul>
+                    <li>HttpRouter more simple, no file existing test</li>
+                    <li>post entity body get logic improved</li>
+                    <li>controller privilege check improved, only create new "Holder" class when privilege is given</li>
+                </ul>
+            </li>
+            <li>defaultly support "x-www-form-urlencoded" content type</li>
         </ul>
         <h2>Use <a href="https://github.com/kite-js/kite-tools">Kite cli tools</a> to quickly start your application!</h2>
         <p>
@@ -38,7 +45,8 @@ kite --help
         </p>
         <h2>Installation</h2>
         <p>
-            Kite requires <a href="https://nodejs.org/">Node.js v7.10.0</a> or higher to run. And for development, <a href="https://www.typescriptlang.org/">TypeScript v2.4.0+</a>            or higher is required, <a href="https://code.visualstudio.com/">Visual Studio Code</a> is recommended.
+            Kite requires <a href="https://nodejs.org/">Node.js v7.10.0</a> or higher to run. And for development,
+            <a href="https://www.typescriptlang.org/">TypeScript v2.4.0+</a> or higher is required, <a href="https://code.visualstudio.com/">Visual Studio Code</a>            is recommended.
         </p>
         <p>If every is ready, install Kite from npm:</p>
         <pre><code class="bash">npm i kite-framework</code></pre>
@@ -133,7 +141,8 @@ project_home/
         </code>
     </pre>
         <h2>More examples</h2>
-        <p>Please visit this <a href="https://github.com/kite-js/kite/blob/master/docs/tutorial.md">tutorial</a> for more details.</p>
+        <p>Please visit this <a href="https://github.com/kite-js/kite/blob/master/docs/tutorial.md">tutorial</a> for more details.
+        </p>
     </main>
     <footer>
         <p>Copyright &copy; 2017 Arthur Xie.</p>

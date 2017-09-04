@@ -16,7 +16,6 @@ export declare class HttpRouter implements Router {
      * controller filename extension
      */
     private extension;
-    private apiNameRegx;
     /**
      * Create a http router
      *
@@ -53,9 +52,6 @@ export declare class HttpRouter implements Router {
      * @param url an url.Url object
      * @param method http request method
      */
-    map(url: URL.Url, method: string): {
-        apiname: string;
-        filename: string;
-    };
+    map(url: URL.Url, method: string): string;
 }
 export declare function HttpRouterProvider<RouterProvider>(rootdir: string, extension?: string): HttpRouter;

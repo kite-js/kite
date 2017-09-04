@@ -22,7 +22,7 @@ export interface Router {
      * Route the request url string to a controller
      * @return controller relative path to application entry file
      */
-    map(url: URL.Url, method: string): { apiname: string, filename: string };
+    map(url: URL.Url, method: string): string;
 }
 
 export type RouterProvider = (...args: any[]) => Router;

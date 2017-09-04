@@ -94,6 +94,9 @@ export class Kite {
         this.log('Creating server');
         // Create server
         let server = this.server = createServer((request, response) => {
+            response.on('error', (err) => {
+                this.logService.error(err);
+            });
             this.requestListener(request, response);
         });
 
@@ -262,13 +265,6 @@ export class Kite {
      */
     private async requestListener(request: IncomingMessage, response: ServerResponse) {
         try {
-            // Log access infomation if loglevel "info" is on
-            // this.logService.access(request);
-
-            response.on('error', (err) => {
-                this.logService.error(err);
-            });
-
             // Call middlewares
             for (let middleware of this.middlewares) {
                 if (await middleware.call(null, response, request) === false) {
@@ -277,25 +273,24 @@ export class Kite {
                 }
             }
 
-            let url = URL.parse(request.url, true);
-
-            let inputs = url.query;
+            let url = URL.parse(request.url, true),
+                inputs = url.query;
 
             // if there is any message-body sent from client, try to parse it
             // an entity-body is explicitly forbidden in TRACE, and ingored in GET
-            if (request.method !== 'GET'
-                && request.method !== 'TRACE'
-                && (request.headers['content-length'] || request.headers['transfer-encoding'])) {
+            if ((request.headers['content-length'] || request.headers['transfer-encoding']) &&
+                request.method !== 'GET' &&
+                request.method !== 'TRACE') {
 
-                let contentType = <string>request.headers['content-type'] || '';
-                let entityBody = await this.getEntityBody(request);
+                let contentType = <string>request.headers['content-type'] || '',
+                    entityBody = await this.getEntityBody(request);
 
                 if (!this.parsers[contentType]) {
                     this.logService.warn(`Unsupport content type "${contentType}"`);
                     inputs = entityBody;
-                } else {
+                } else if (entityBody) {
                     try {
-                        let data = this.parsers[contentType](entityBody)
+                        let data = this.parsers[contentType](entityBody);
                         inputs = Object.assign({}, url.query, data);
                     } catch (e) {
                         this.logService.error(e);
@@ -304,26 +299,29 @@ export class Kite {
                 }
             }
 
-            let { apiname, filename } = this.router.map(url, request.method);
+            let filename = this.router.map(url, request.method),
+                // get api from controller factory
+                api = await this.controllerFactory.get(filename),
+                // Get controller metadata, which contains request method / privilege definition etc.
+                metadata: ControllerMetadata = Reflect.getMetadata('kite:controller', api.constructor),
+                // kite holder
+                holder: Holder;
 
-            let api = await this.controllerFactory.get(filename);
-            // Get controller metadata, which contains request method / privilege definition etc.
-            let metadata: ControllerMetadata = Reflect.getMetadata('kite:controller', api.constructor);
-
-            let holder: Holder;
-
-            if (this.config.holder) {
-                // create a holder and call extract data from request
-                holder = new this.config.holder();
-                holder.extract(request);
+            // Check if request method matches the required method
+            if (metadata.method && metadata.method !== request.method) {
+                throw new KiteError(1011, [request.method, metadata.method]);
             }
+
 
             // Needs privilege to access this api ?
             if (metadata.privilege !== undefined) {
-                if (!holder) {
-                    // tslint:disable-next-line:max-line-length
-                    throw new Error(`Controller "${api.constructor.name}" requires privilege to access, but no "Holder" class is configured`)
-                }
+                // if (!this.config.holder) {
+                //     throw new
+                //         Error(`Controller "${api.constructor.name}" requires privilege to access, but no "Holder" class is configured`);
+                // }
+                // create a holder and call extract data from request
+                holder = new this.config.holder();
+                holder.extract(request);
 
                 // Validate this holder, check if it has privilege to access this controller
                 if (!await holder.hasPrivilege(metadata.privilege)) {
@@ -331,17 +329,13 @@ export class Kite {
                 }
             }
 
-            // Check if request method matches the required method
-            if (metadata.method && metadata.method !== request.method) {
-                throw new KiteError(1011, [request.method, metadata.method]);
-            }
-
             // call API with pre-generated $proxy(inputs, holder, context)
-            let context: Context = {
-                request, response
-            }
-
-            let result = await api.$proxy(inputs, holder, context);
+            let result = await api.$proxy(
+                inputs,
+                holder,
+                { request, response }   // context
+            );
+            // if api havn't write response, call responder to output contents
             if (!response.headersSent) {
                 this.config.responder.write(result, response);
             }
@@ -371,7 +365,9 @@ export class Kite {
     private getEntityBody(request: IncomingMessage): Promise<any> {
         let contentLenth = parseInt(<string>request.headers['content-length'], 0);
 
-        if (Number.isInteger(contentLenth) && this.maxContentLength > 0 && contentLenth > this.maxContentLength) {
+        if (Number.isInteger(contentLenth) &&
+            this.maxContentLength > 0 &&
+            contentLenth > this.maxContentLength) {
             return Promise.reject(new KiteError(1009, this.config.maxContentLength));
         }
 
@@ -387,8 +383,7 @@ export class Kite {
             });
 
             request.on('end', () => {
-                let data = Buffer.concat(buffer).toString();
-                resolve(data);
+                resolve(Buffer.concat(buffer).toString());
             });
         });
     }

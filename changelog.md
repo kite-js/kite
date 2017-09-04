@@ -1,3 +1,10 @@
+# 0.3.7 (2017-09-04) 
+- Performance improved:
+ + HttpRouter more simple, no file existing test
+ + post entity body get logic improved
+ + controller privilege check improved, only create new "Holder" class when privilege is given
+- defaultly support "x-www-form-urlencoded" content type
+
 # 0.3.6 (2017-09-01)
 - export "XformParserProvider" & "JsonParserProvider" from utils
 

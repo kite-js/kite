@@ -85,7 +85,6 @@ export class ControllerFactory {
             throw new KiteError(errcode);
         }
 
-
         if (!controller) {
             // tslint:disable-next-line:max-line-length
             throw new Error(`Required module is not a Kite controller, please annotate the controller class with "@Controller": "${ctrlFilename}"`);
@@ -117,7 +116,7 @@ export class ControllerFactory {
             let injectable = Reflect.getMetadata('kite:injectable', type);
             if (!injectable) {
                 // tslint:disable-next-line:max-line-length
-                throw new Error(`${target.constructor.name}.${prop} is decorated as "@Inject()" but injection target "${type.name}" is not injectable`);
+                throw new Error(`${target.constructor.name}.${prop} is annonced with "@Inject()" but injection target "${type.name}" is not injectable`);
             }
 
             // Get injection target from cache, if not, create one

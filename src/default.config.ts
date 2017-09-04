@@ -12,7 +12,7 @@
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  */
-import { Config } from './';
+import { Config, XformParserProvider } from './';
 import { HttpRouter } from './utils/http.router';
 import { JsonParserProvider } from './utils/json.parser.provider';
 import { KiteResponder } from './utils/kite.responder';
@@ -30,6 +30,6 @@ export const DefaultConfig: Config = {
     },
     // router: new HttpRouter(''),  /* Just because can not determin work dir at this file */
     responder: new KiteResponder(),
-    parserProvider: JsonParserProvider
+    parserProvider: [JsonParserProvider, XformParserProvider]
 
 };

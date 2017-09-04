@@ -14,5 +14,5 @@
  * all copies or substantial portions of the Software.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.VERSION = '0.2.7';
+exports.VERSION = '0.3.7';
 //# sourceMappingURL=version.js.map

@@ -36,8 +36,6 @@ export class HttpRouter implements Router {
      */
     private extension: string;
 
-    private apiNameRegx = /^([a-z\d\-_]+\.)*[a-z\d\-_]+$/i;
-
     /**
      * Create a http router
      * 
@@ -82,7 +80,7 @@ export class HttpRouter implements Router {
      * @param url an url.Url object
      * @param method http request method
      */
-    map(url: URL.Url, method: string): { apiname: string, filename: string } {
+    map(url: URL.Url, method: string): string {
         let path = Path.join(this.rootdir, Path.normalize(url.pathname));
 
         // target path must under rootdir
@@ -90,17 +88,16 @@ export class HttpRouter implements Router {
             throw new KiteError(1100, url.pathname);
         }
 
-        let filename = path + this.extension;
-
+        // let filename = path + this.extension;
         // if extension is set to ".js", test "***.controller.js" file
-        if (this.extension === '.js') {
-            let uniformName = path + '.controller.js';
-            if (fs.existsSync(uniformName)) {
-                filename = uniformName;
-            }
-        }
+        // if (this.extension === '.js') {
+        //     let uniformName = path + '.controller.js';
+        //     if (fs.existsSync(uniformName)) {
+        //         filename = uniformName;
+        //     }
+        // }
 
-        return { apiname: url.pathname, filename: filename };
+        return path + this.extension;
     }
 }
 

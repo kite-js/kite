@@ -16,7 +16,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const error_1 = require("./../core/error");
 const Path = require("path");
-const fs = require("fs");
 /**
  * A router for routing http request to a controller.
  *
@@ -54,7 +53,6 @@ class HttpRouter {
      * @param extension an extension add to controller file name, defaults to `.js`
      */
     constructor(rootdir, extension = '.js') {
-        this.apiNameRegx = /^([a-z\d\-_]+\.)*[a-z\d\-_]+$/i;
         if (!rootdir) {
             throw new Error(this.constructor.name + ' requires a "rootdir" to work');
         }
@@ -73,15 +71,15 @@ class HttpRouter {
         if (!path.startsWith(this.rootdir)) {
             throw new error_1.KiteError(1100, url.pathname);
         }
-        let filename = path + this.extension;
+        // let filename = path + this.extension;
         // if extension is set to ".js", test "***.controller.js" file
-        if (this.extension === '.js') {
-            let uniformName = path + '.controller.js';
-            if (fs.existsSync(uniformName)) {
-                filename = uniformName;
-            }
-        }
-        return { apiname: url.pathname, filename: filename };
+        // if (this.extension === '.js') {
+        //     let uniformName = path + '.controller.js';
+        //     if (fs.existsSync(uniformName)) {
+        //         filename = uniformName;
+        //     }
+        // }
+        return path + this.extension;
     }
 }
 exports.HttpRouter = HttpRouter;
