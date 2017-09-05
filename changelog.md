@@ -1,3 +1,6 @@
+# 0.3.8 (2017-09-05)
+- Performance improved in controller factory and watch service
+
 # 0.3.7 (2017-09-04) 
 - Performance improved:
  + HttpRouter more simple, no file existing test
