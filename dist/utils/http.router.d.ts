@@ -52,6 +52,9 @@ export declare class HttpRouter implements Router {
      * @param url an url.Url object
      * @param method http request method
      */
-    map(url: URL.Url, method: string): string;
+    map(url: URL.Url, method: string): {
+        id: string;
+        filename: string;
+    };
 }
 export declare function HttpRouterProvider<RouterProvider>(rootdir: string, extension?: string): HttpRouter;

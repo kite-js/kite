@@ -39,7 +39,6 @@ const os = require("os");
 const default_config_1 = require("./default.config");
 const error_codes_1 = require("./core/error.codes");
 const http_1 = require("http");
-const NUM_CPUS = os.cpus().length;
 /**
  * Kite
  *
@@ -102,8 +101,9 @@ class Kite {
         }
         // Combine default configuration with user configuration
         cfg = Object.assign({}, default_config_1.DefaultConfig, cfg);
-        if (cfg.workers && cfg.workers > NUM_CPUS) {
-            cfg.workers = NUM_CPUS;
+        let numCpus = os.cpus().length;
+        if (cfg.workers && cfg.workers > numCpus) {
+            cfg.workers = numCpus;
         }
         this.maxContentLength = parse_size_1.parseSize(cfg.maxContentLength);
         // concact log filenames with working root directory if they are not a absolute path
@@ -239,9 +239,9 @@ class Kite {
                         }
                     }
                 }
-                let filename = this.router.map(url, request.method), 
+                let { id, filename } = this.router.map(url, request.method), 
                 // get api from controller factory
-                api = yield this.controllerFactory.get(filename), 
+                api = yield this.controllerFactory.get(id, filename), 
                 // Get controller metadata, which contains request method / privilege definition etc.
                 metadata = Reflect.getMetadata('kite:controller', api.constructor), 
                 // kite holder

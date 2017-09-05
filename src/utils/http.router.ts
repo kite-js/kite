@@ -80,11 +80,12 @@ export class HttpRouter implements Router {
      * @param url an url.Url object
      * @param method http request method
      */
-    map(url: URL.Url, method: string): string {
-        let path = Path.join(this.rootdir, Path.normalize(url.pathname));
+    map(url: URL.Url, method: string): { id: string, filename: string } {
+        let id = Path.normalize(url.pathname);
+        let filename = Path.join(this.rootdir, id) + this.extension;
 
         // target path must under rootdir
-        if (!path.startsWith(this.rootdir)) {
+        if (!filename.startsWith(this.rootdir)) {
             throw new KiteError(1100, url.pathname);
         }
 
@@ -97,7 +98,7 @@ export class HttpRouter implements Router {
         //     }
         // }
 
-        return path + this.extension;
+        return { id, filename };
     }
 }
 

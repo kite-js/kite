@@ -43,8 +43,6 @@ import { Middleware } from './core/types/middleware';
 import { Server, createServer, IncomingMessage, ServerResponse } from 'http';
 import { ParserProvider } from './index';
 
-const NUM_CPUS = os.cpus().length;
-
 /**
  * Kite 
  * 
@@ -138,8 +136,9 @@ export class Kite {
         // Combine default configuration with user configuration
         cfg = Object.assign({}, DefaultConfig, cfg);
 
-        if (cfg.workers && cfg.workers > NUM_CPUS) {
-            cfg.workers = NUM_CPUS;
+        let numCpus = os.cpus().length;
+        if (cfg.workers && cfg.workers > numCpus) {
+            cfg.workers = numCpus;
         }
 
         this.maxContentLength = parseSize(cfg.maxContentLength);
@@ -299,9 +298,9 @@ export class Kite {
                 }
             }
 
-            let filename = this.router.map(url, request.method),
+            let {id, filename} = this.router.map(url, request.method),
                 // get api from controller factory
-                api = await this.controllerFactory.get(filename),
+                api = await this.controllerFactory.get(id, filename),
                 // Get controller metadata, which contains request method / privilege definition etc.
                 metadata: ControllerMetadata = Reflect.getMetadata('kite:controller', api.constructor),
                 // kite holder
@@ -311,7 +310,6 @@ export class Kite {
             if (metadata.method && metadata.method !== request.method) {
                 throw new KiteError(1011, [request.method, metadata.method]);
             }
-
 
             // Needs privilege to access this api ?
             if (metadata.privilege !== undefined) {

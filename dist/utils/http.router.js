@@ -66,9 +66,10 @@ class HttpRouter {
      * @param method http request method
      */
     map(url, method) {
-        let path = Path.join(this.rootdir, Path.normalize(url.pathname));
+        let id = Path.normalize(url.pathname);
+        let filename = Path.join(this.rootdir, id) + this.extension;
         // target path must under rootdir
-        if (!path.startsWith(this.rootdir)) {
+        if (!filename.startsWith(this.rootdir)) {
             throw new error_1.KiteError(1100, url.pathname);
         }
         // let filename = path + this.extension;
@@ -79,7 +80,7 @@ class HttpRouter {
         //         filename = uniformName;
         //     }
         // }
-        return path + this.extension;
+        return { id, filename };
     }
 }
 exports.HttpRouter = HttpRouter;

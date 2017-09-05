@@ -42,57 +42,67 @@ export class ControllerFactory {
     /**
      * Get a "controller" instance
      * 
-     * @param ctrlFilename Path of controller, node will require this path for controller module(s)
+     * The first parameter "id" is called "API ID" or "Controller Id", which is provided by router, 
+     * "id" is the identifier of a Kite controller, Kite controller factory use this "id" to locate
+     * controller instance from cache, in "HttpRouter", this parameter is set to the relative path
+     * of a controller, for example `/greeting`, `/user/login`. For performance consideration, this
+     * argument should be as short as possible, because shorter string can reduce the searching time
+     * of javascript Map object.
+     * 
+     * @param id module id
+     * @param filename Path of controller, node will require this path for controller module(s)
      * @return Controller instance, which is ready to be called
      */
-    async get(ctrlFilename: string): Promise<any> {
+    async get(id: string, filename: string): Promise<any> {
         // Try get controller instance from cache
-        if (this.controllers.has(ctrlFilename)) {
-            return this.controllers.get(ctrlFilename);
-        }
-
-        if (!path.isAbsolute(ctrlFilename)) {
-            ctrlFilename = path.join(this.workRoot, ctrlFilename);
-        }
-
-        // no controller instance exists, load the module and create an instance
-        let controller: any;
-        try {
-            // Load the module
-            let mod = require(ctrlFilename);
-
-            // watch for controller & related files changes
-            this.watcherService.watch(ctrlFilename, (filename) => {
-                this.controllers.delete(filename);
-            });
-
-            // find the first "@Controller" decorated module, treat it as a "Controller"
-            Object.keys(mod).every(name => {
-                if (Reflect.hasMetadata('kite:controller', mod[name])) {
-                    controller = mod[name];
-                    return false;
-                }
-                return true;
-            });
-        } catch (e) {
-            this.logService.error(e);
-            let errcode;
-            if (e.code === 'MODULE_NOT_FOUND') {
-                errcode = 1002;
-            } else {
-                errcode = 1003;
+        let instance = this.controllers.get(id);
+        // if instance is not cached, try to create a new one by given filename (module filename)
+        if (!instance) {
+            if (!path.isAbsolute(filename)) {
+                filename = path.join(this.workRoot, filename);
             }
-            throw new KiteError(errcode);
-        }
 
-        if (!controller) {
-            // tslint:disable-next-line:max-line-length
-            throw new Error(`Required module is not a Kite controller, please annotate the controller class with "@Controller": "${ctrlFilename}"`);
-        }
+            // no controller instance exists, load the module and create an instance
+            let controller: any;
+            try {
+                // Load the module
+                let mod = require(filename);
 
-        let instance = new controller();
-        await this.injectDependency(instance);
-        this.controllers.set(ctrlFilename, instance);
+                // watch for controller & related files changes
+                this.watcherService.watch(filename, () => {
+                    this.controllers.delete(id);
+                });
+
+                // find the first "@Controller" decorated module, treat it as a "Controller"
+                Object.keys(mod).every(name => {
+                    if (Reflect.hasMetadata('kite:controller', mod[name])) {
+                        controller = mod[name];
+                        return false;
+                    }
+                    return true;
+                });
+            } catch (e) {
+                this.logService.error(e);
+                let errcode;
+                if (e.code === 'MODULE_NOT_FOUND') {
+                    errcode = 1002;
+                } else {
+                    errcode = 1003;
+                }
+                throw new KiteError(errcode);
+            }
+
+            if (!controller) {
+                // tslint:disable-next-line:max-line-length
+                throw new Error(`Required module is not a Kite controller, please annotate the controller class with "@Controller": "${filename}"`);
+            }
+            // create new controller instance
+            instance = new controller();
+            // wait for dependency injection
+            await this.injectDependency(instance);
+            // cache this instance
+            this.controllers.set(id, instance);
+        }
 
         return instance;
     }
@@ -111,25 +121,26 @@ export class ControllerFactory {
         }
 
         // walk each injection target, create injection instance
-        for (let [prop, type] of injections) {
+        let injectable, injectableObject;
+        for (let [prop, injection] of injections) {
             // Is target type injectable ?
-            let injectable = Reflect.getMetadata('kite:injectable', type);
+            injectable = Reflect.getMetadata('kite:injectable', injection);
             if (!injectable) {
                 // tslint:disable-next-line:max-line-length
-                throw new Error(`${target.constructor.name}.${prop} is annonced with "@Inject()" but injection target "${type.name}" is not injectable`);
+                throw new Error(`${target.constructor.name}.${prop} is annonced with "@Inject()" but injection target "${injection.name}" is not injectable`);
             }
 
             // Get injection target from cache, if not, create one
-            let injectableObject = this.injections.get(type);
+            injectableObject = this.injections.get(injection);
             if (!injectableObject) {
-                injectableObject = new type();
+                injectableObject = new injection();
                 // Cache it, so chained injection could find this instance if there are dependence on each other
-                this.injections.set(type, injectableObject);
+                this.injections.set(injection, injectableObject);
                 // Initialize injection target if contains a "init" method, note: this muse be a "async" function
                 if (injectableObject.onKiteInit) {
                     await injectableObject.onKiteInit();
                 }
-                // try inject something for it self
+                // inject dependency recursively
                 await this.injectDependency(injectableObject);
             }
 

@@ -30,10 +30,18 @@ export declare class ControllerFactory {
     /**
      * Get a "controller" instance
      *
-     * @param ctrlFilename Path of controller, node will require this path for controller module(s)
+     * The first parameter "id" is called "API ID" or "Controller Id", which is provided by router,
+     * "id" is the identifier of a Kite controller, Kite controller factory use this "id" to locate
+     * controller instance from cache, in "HttpRouter", this parameter is set to the relative path
+     * of a controller, for example `/greeting`, `/user/login`. For performance consideration, this
+     * argument should be as short as possible, because shorter string can reduce the searching time
+     * of javascript Map object.
+     *
+     * @param id module id
+     * @param filename Path of controller, node will require this path for controller module(s)
      * @return Controller instance, which is ready to be called
      */
-    get(ctrlFilename: string): Promise<any>;
+    get(id: string, filename: string): Promise<any>;
     /**
      * Dependency injection
      *

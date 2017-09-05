@@ -79,15 +79,15 @@ export class WatcherService {
     watch(filename: string, callback?: (filename: string) => void) {
         // skip if:
         // 1. service not enabled
-        // 2. file is already being watched
-        // 3. file is under "node_modules"
-        // 4. file is a kite module
-        if (!this.enabled
-            || filename.includes(this.node_modules)
-            || !fs.existsSync(filename) || filename.startsWith(this.kiteroot + path.sep)) {
+        // 2. file is under "node_modules"
+        // 3. file is a kite module
+        if (!this.enabled ||
+            filename.includes(this.node_modules) ||
+            filename.startsWith(this.kiteroot + path.sep)) {
             return;
         }
 
+        // if a file is being watched, update callback function
         if (this.watching.has(filename)) {
             // update callback if set
             if (callback) {
