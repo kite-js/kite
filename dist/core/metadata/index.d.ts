@@ -1,5 +1,5 @@
-export * from './controller';
+export { Controller, ControllerMetadata } from './controller';
 export * from './entry';
-export * from './inject';
-export * from './injectable';
+export { Inject } from './inject';
+export { Injectable } from './injectable';
 export { FilterRule, Model, In } from './model';

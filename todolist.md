@@ -1,0 +1,2 @@
+- [ ] model array type conversion ( number array, string array ...)
+- [ ] "min" "max" value check in `Date` type

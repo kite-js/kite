@@ -21,7 +21,7 @@ import { KiteError } from './core/error';
 import { LogService } from './core/log.service';
 import { ErrorService } from './core/error.service';
 import { ControllerFactory } from './core/controller.factory';
-import { ControllerMetadata } from './core/metadata/controller';
+import { ControllerMetadata, getControllerMetadata } from './core/metadata/controller';
 import { getCallerPath } from './core/callsite';
 import { Holder } from './core/types/holder';
 import { parseSize } from './utils/parse.size';
@@ -302,7 +302,7 @@ export class Kite {
                 // get api from controller factory
                 api = await this.controllerFactory.get(id, filename),
                 // Get controller metadata, which contains request method / privilege definition etc.
-                metadata: ControllerMetadata = Reflect.getMetadata('kite:controller', api.constructor),
+                metadata: ControllerMetadata = getControllerMetadata(api.constructor),
                 // kite holder
                 holder: Holder;
 

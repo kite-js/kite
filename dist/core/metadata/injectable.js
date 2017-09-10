@@ -50,4 +50,8 @@ function Injectable() {
     };
 }
 exports.Injectable = Injectable;
+function isInjectable(target) {
+    return Reflect.getMetadata('kite:injectable', target);
+}
+exports.isInjectable = isInjectable;
 //# sourceMappingURL=injectable.js.map

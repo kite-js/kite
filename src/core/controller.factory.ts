@@ -17,6 +17,10 @@ import { LogService } from './log.service';
 import { KiteError } from './error';
 import { WatcherService } from './watcher.service';
 import * as path from 'path';
+import { Init } from './types/init';
+import { getInjections } from './metadata/inject';
+import { isInjectable } from './metadata/injectable';
+import { getControllerMetadata } from './metadata/controller';
 
 /**
  * Controller factory
@@ -75,7 +79,7 @@ export class ControllerFactory {
 
                 // find the first "@Controller" decorated module, treat it as a "Controller"
                 Object.keys(mod).every(name => {
-                    if (Reflect.hasMetadata('kite:controller', mod[name])) {
+                    if (getControllerMetadata(mod[name])) {
                         controller = mod[name];
                         return false;
                     }
@@ -112,36 +116,35 @@ export class ControllerFactory {
      * 
      * @private
      */
-    private async injectDependency(target: Function) {
+    private async injectDependency(target: Object) {
 
         // Get inject types
-        let injections: Map<string, any> = Reflect.getMetadata('kite:injections', target);
+        let injections = getInjections(target);
         if (!injections) {
             return;
         }
 
         // walk each injection target, create injection instance
-        let injectable, injectableObject;
-        for (let [prop, injection] of injections) {
+        let injectableObject: Init;
+        for (let [prop, type] of injections) {
             // Is target type injectable ?
-            injectable = Reflect.getMetadata('kite:injectable', injection);
-            if (!injectable) {
+            if (!isInjectable(type)) {
                 // tslint:disable-next-line:max-line-length
-                throw new Error(`${target.constructor.name}.${prop} is annonced with "@Inject()" but injection target "${injection.name}" is not injectable`);
+                throw new Error(`${target.constructor.name}.${prop} is annonced with "@Inject()" but injection target "${type.name}" is not injectable`);
             }
 
-            // Get injection target from cache, if not, create one
-            injectableObject = this.injections.get(injection);
+            // Get injection target from cache, if not exist, create one
+            injectableObject = this.injections.get(type);
             if (!injectableObject) {
-                injectableObject = new injection();
+                injectableObject = new type();
                 // Cache it, so chained injection could find this instance if there are dependence on each other
-                this.injections.set(injection, injectableObject);
+                this.injections.set(type, injectableObject);
+                // inject dependency recursively
+                await this.injectDependency(injectableObject);
                 // Initialize injection target if contains a "init" method, note: this muse be a "async" function
                 if (injectableObject.onKiteInit) {
                     await injectableObject.onKiteInit();
                 }
-                // inject dependency recursively
-                await this.injectDependency(injectableObject);
             }
 
             // put the injection object to current object

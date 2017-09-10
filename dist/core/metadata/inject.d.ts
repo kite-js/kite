@@ -42,3 +42,4 @@ import 'reflect-metadata';
  * ```
  */
 export declare function Inject(): (target: any, key: string) => void;
+export declare function getInjections(target: Object): Map<string, any>;

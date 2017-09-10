@@ -28,10 +28,13 @@
  */
 export interface Init {
     /**
-     * asynchronous initialization method
+     * asynchronous initialization method,
+     * if a service is implemented this function, it will be invoked after its injections
+     * are successfully injected
+     *
      * @remark
      * Note this method must return a "Promise" object or declare with "async" modifier,
-     * Please handle all exceptions, an exception threw may cause Kite crash
+     * Please handle all exceptions, an exception may cause Kite crash
      */
     onKiteInit(): Promise<any>;
 }

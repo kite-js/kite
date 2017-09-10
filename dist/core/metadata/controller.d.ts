@@ -66,3 +66,4 @@ export interface ControllerMetadata {
  * + any one can invoke, no access check
  */
 export declare function Controller(metadata?: ControllerMetadata): (constructor: Function) => void;
+export declare function getControllerMetadata(target: Object): ControllerMetadata;

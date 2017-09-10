@@ -49,3 +49,8 @@ export function Injectable() {
         Reflect.defineMetadata('kite:injectable', true, constructor);
     }
 }
+
+
+export function isInjectable(target: Object) {
+    return Reflect.getMetadata('kite:injectable', target);
+}

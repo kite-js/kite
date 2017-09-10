@@ -50,3 +50,7 @@ export function Inject() {
         Reflect.defineMetadata('kite:injections', injections, target);
     }
 }
+
+export function getInjections(target: Object): Map<string, any> {
+    return Reflect.getMetadata('kite:injections', target);
+}

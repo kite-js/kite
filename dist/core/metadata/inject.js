@@ -51,4 +51,8 @@ function Inject() {
     };
 }
 exports.Inject = Inject;
+function getInjections(target) {
+    return Reflect.getMetadata('kite:injections', target);
+}
+exports.getInjections = getInjections;
 //# sourceMappingURL=inject.js.map

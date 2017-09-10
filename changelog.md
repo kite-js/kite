@@ -1,3 +1,7 @@
+# 0.3.9 (2017-09-10)
+- changed "onKiteInit" function invoking time, invokes this function after all injections are successfully injected
+- some code optimization
+
 # 0.3.8 (2017-09-05)
 - Performance improved in controller factory and watch service
 

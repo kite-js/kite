@@ -28,6 +28,7 @@ const error_1 = require("./core/error");
 const log_service_1 = require("./core/log.service");
 const error_service_1 = require("./core/error.service");
 const controller_factory_1 = require("./core/controller.factory");
+const controller_1 = require("./core/metadata/controller");
 const callsite_1 = require("./core/callsite");
 const parse_size_1 = require("./utils/parse.size");
 const http_router_1 = require("./utils/http.router");
@@ -243,7 +244,7 @@ class Kite {
                 // get api from controller factory
                 api = yield this.controllerFactory.get(id, filename), 
                 // Get controller metadata, which contains request method / privilege definition etc.
-                metadata = Reflect.getMetadata('kite:controller', api.constructor), 
+                metadata = controller_1.getControllerMetadata(api.constructor), 
                 // kite holder
                 holder;
                 // Check if request method matches the required method

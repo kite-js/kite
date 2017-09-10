@@ -87,3 +87,7 @@ export function Controller(metadata?: ControllerMetadata) {
         Reflect.defineMetadata('kite:controller', metadata, constructor);
     }
 }
+
+export function getControllerMetadata(target: Object): ControllerMetadata {
+    return Reflect.getMetadata('kite:controller', target);
+}

@@ -68,4 +68,8 @@ function Controller(metadata) {
     };
 }
 exports.Controller = Controller;
+function getControllerMetadata(target) {
+    return Reflect.getMetadata('kite:controller', target);
+}
+exports.getControllerMetadata = getControllerMetadata;
 //# sourceMappingURL=controller.js.map
