@@ -13,21 +13,8 @@
  * all copies or substantial portions of the Software.
  */
 import 'reflect-metadata';
-/**
- * Kite controller metadata
- */
 export interface ControllerMetadata {
-    /**
-     * which method to receive data
-     *
-     * @type { string }
-     */
-    method?: string;
-    /**
-     * privilege of accessing this controller
-     * @type { string | number }
-     */
-    privilege?: string | number;
+    [name: string]: any;
 }
 /**
  * Kite controller decorator
@@ -53,17 +40,6 @@ export interface ControllerMetadata {
  *
  * A Kite controller class must have one (only one) entry point, which must be annotated with an
  * `@Entry` decorator, Kite will locate this entry point function and invoke it when request comes.
- *
- * ### Metadata properties
- * + __method__ - which HTTP method ("GET", "POST" ...) to receive client data. If this value is set
- *  client request is restricted to this method, any other methods will cause an error. For example,
- *  `@Controller({method: "GET"})` tells Kite this controller only accepts "GET" method on request,
- *  request with "POST" will get an error.
- * + __privilege__ - access privilege of this controller. #see Kite privilege mechanism#
- *
- * If none of these properties is provided, the controller will:
- * + accept any valid HTTP method from client request
- * + any one can invoke, no access check
  */
-export declare function Controller(metadata?: ControllerMetadata): (constructor: Function) => void;
+export declare function Controller<T extends ControllerMetadata>(metadata?: T): (constructor: Function) => void;
 export declare function getControllerMetadata(target: Object): ControllerMetadata;

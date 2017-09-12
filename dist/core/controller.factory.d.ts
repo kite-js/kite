@@ -26,7 +26,7 @@ export declare class ControllerFactory {
     private injections;
     logService: LogService;
     watcherService: WatcherService;
-    workRoot: string;
+    workdir: string;
     /**
      * Get a "controller" instance
      *

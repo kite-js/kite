@@ -41,7 +41,7 @@ export class ControllerFactory {
 
     watcherService: WatcherService;
 
-    workRoot: string;
+    workdir: string;
 
     /**
      * Get a "controller" instance
@@ -63,7 +63,7 @@ export class ControllerFactory {
         // if instance is not cached, try to create a new one by given filename (module filename)
         if (!instance) {
             if (!path.isAbsolute(filename)) {
-                filename = path.join(this.workRoot, filename);
+                filename = path.join(this.workdir, filename);
             }
 
             // no controller instance exists, load the module and create an instance

@@ -1,3 +1,13 @@
+# 0.4.0 
+- Recompiled for new feature "async/await" with tsc option "--target ESNext"
+- More flexible controller metadata definition, enables middlewares to access these metadata
+- Removed "Context" class, request (IncomingMessage) & response (ServerResponse) now can directly
+  get from entry point function parameter
+- Removed "Holder" & "HolderClass", privilege check is not a built-in function anymore, developer
+  should implement this function in middleware
+- Removed controller metadata "method" check, developer should implement this function in middleware
+- Single Kite instance mode implemented, now can get Kite instance by "Kite.getInstance()" everywhere
+
 # 0.3.9 (2017-09-10)
 - changed "onKiteInit" function invoking time, invokes this function after all injections are successfully injected
 - some code optimization

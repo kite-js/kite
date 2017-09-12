@@ -13,14 +13,6 @@
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 require("reflect-metadata");
 const version_1 = require("./core/version");
@@ -28,7 +20,6 @@ const error_1 = require("./core/error");
 const log_service_1 = require("./core/log.service");
 const error_service_1 = require("./core/error.service");
 const controller_factory_1 = require("./core/controller.factory");
-const controller_1 = require("./core/metadata/controller");
 const callsite_1 = require("./core/callsite");
 const parse_size_1 = require("./utils/parse.size");
 const http_router_1 = require("./utils/http.router");
@@ -46,21 +37,21 @@ const http_1 = require("http");
  * TODO: improve cluster processes
  */
 class Kite {
-    constructor(config = {}) {
+    constructor(workdir, config = {}) {
         this.errorService = new error_service_1.ErrorService();
         this.middlewares = new Set();
-        this.workRoot = callsite_1.getCallerPath();
+        this.workdir = workdir;
         this.log('Kite framework ver ' + version_1.VERSION);
-        this.log(`Working at directory ${this.workRoot}`);
+        this.log(`Working at directory ${this.workdir}`);
         if (typeof config === 'string') {
-            config = path.isAbsolute(config) ? config : path.join(this.workRoot, config);
-            this.configFile = config = require.resolve(config);
+            config = path.isAbsolute(config) ? config : path.join(this.workdir, config);
+            config = require.resolve(config);
             this.log(`Loading configuration from file "${config}"`);
         }
         else {
             this.log('Loading configuration from object');
         }
-        this.init(config);
+        this._init(config);
         this.log('Creating server');
         // Create server
         let server = this.server = http_1.createServer((request, response) => {
@@ -83,6 +74,19 @@ class Kite {
         this.log('Ready to fly');
     }
     /**
+     * Initialize a Kite instance with given configuration
+     * @param config
+     */
+    static init(config = {}) {
+        return this.instance || (this.instance = new Kite(callsite_1.getCallerPath(), config));
+    }
+    /**
+     * Get current running Kite instance
+     */
+    static getInstance() {
+        return this.instance;
+    }
+    /**
      * Load the configuration from file or an KiteConfig object
      *
      * @param { string | Config } config if string is given, it's treated as a filename, configuration will from this file,
@@ -90,7 +94,7 @@ class Kite {
      *
      * @private
      */
-    init(config) {
+    _init(config) {
         let cfg = config;
         if (typeof config === 'string') {
             try {
@@ -109,16 +113,16 @@ class Kite {
         this.maxContentLength = parse_size_1.parseSize(cfg.maxContentLength);
         // concact log filenames with working root directory if they are not a absolute path
         if (typeof cfg.log.out === 'string' && !path.isAbsolute(cfg.log.out)) {
-            cfg.log.out = path.join(this.workRoot, cfg.log.out);
+            cfg.log.out = path.join(this.workdir, cfg.log.out);
         }
         if (typeof cfg.log.err === 'string' && !path.isAbsolute(cfg.log.err)) {
-            cfg.log.err = path.join(this.workRoot, cfg.log.err);
+            cfg.log.err = path.join(this.workdir, cfg.log.err);
         }
         // start log service
         this.logService = new log_service_1.LogService(cfg.log.level, cfg.log.out, cfg.log.err);
         // set default router
         if (!cfg.router) {
-            let rootdir = path.join(this.workRoot, 'controllers');
+            let rootdir = path.join(this.workdir, 'controllers');
             this.router = new http_router_1.HttpRouter(rootdir);
         }
         else if (typeof cfg.router === 'object' && cfg.router.map) {
@@ -150,7 +154,7 @@ class Kite {
         }
         if (!this.controllerFactory) {
             this.controllerFactory = new controller_factory_1.ControllerFactory();
-            this.controllerFactory.workRoot = this.workRoot;
+            this.controllerFactory.workdir = this.workdir;
         }
         this.controllerFactory.logService = this.logService;
         if (!this.watcherService) {
@@ -158,24 +162,30 @@ class Kite {
             this.watcherService.logService = this.logService;
             this.controllerFactory.watcherService = this.watcherService;
         }
+        let oldConfig = this.config;
+        this.config = cfg;
+        Object.seal(this.config);
+        Object.freeze(this.config);
+        // Enable file watch if config.watch is on
+        this.watcherService.setEnabled(Boolean(this.config.watch));
+        if (typeof config === 'string') {
+            this.watchConfigFile(config);
+        }
         // listen again if port / hostname changed
-        if (this.server && this.config && (this.config.port !== cfg.port || this.config.hostname !== cfg.hostname)) {
-            this.config = cfg;
+        if (this.server && (oldConfig.port !== cfg.port || oldConfig.hostname !== cfg.hostname)) {
             this.fly();
         }
-        else {
-            this.config = cfg;
-            this.watchConfigFile();
-        }
     }
-    watchConfigFile() {
+    /**
+     * Watch configuration file
+     * @param filename
+     */
+    watchConfigFile(filename) {
         // watch for config file changing
-        if (this.configFile) {
-            this.watcherService.watch(this.configFile, (configFilename) => {
-                this.log('Reload configuration');
-                this.init(configFilename);
-            });
-        }
+        this.watcherService.watch(filename, (configFilename) => {
+            this.log('Reload configuration');
+            this._init(configFilename);
+        });
     }
     /**
      * Relase your kite, let it fly
@@ -197,9 +207,6 @@ class Kite {
         this.server.listen(this.config.port, this.config.hostname, () => {
             let { address, port } = this.server.address();
             this.log(`Flying! server listening at ${address}:${port}`, '\x1b[33m');
-            // Enable file watch if config.watch is on
-            this.watcherService.setEnabled(Boolean(this.config.watch));
-            this.watchConfigFile();
         });
         return this;
     }
@@ -208,89 +215,71 @@ class Kite {
      * @param { http.IncomingMessage } request
      * @param { http.ServerResponse } response
      */
-    requestListener(request, response) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                // Call middlewares
-                for (let middleware of this.middlewares) {
-                    if ((yield middleware.call(null, response, request)) === false) {
-                        response.end();
-                        return;
-                    }
-                }
-                let url = URL.parse(request.url, true), inputs = url.query;
-                // if there is any message-body sent from client, try to parse it
-                // an entity-body is explicitly forbidden in TRACE, and ingored in GET
-                if ((request.headers['content-length'] || request.headers['transfer-encoding']) &&
-                    request.method !== 'GET' &&
-                    request.method !== 'TRACE') {
-                    let contentType = request.headers['content-type'] || '', entityBody = yield this.getEntityBody(request);
-                    if (!this.parsers[contentType]) {
-                        this.logService.warn(`Unsupport content type "${contentType}"`);
-                        inputs = entityBody;
-                    }
-                    else if (entityBody) {
-                        try {
-                            let data = this.parsers[contentType](entityBody);
-                            inputs = Object.assign({}, url.query, data);
-                        }
-                        catch (e) {
-                            this.logService.error(e);
-                            throw new error_1.KiteError(1010);
-                        }
-                    }
-                }
-                let { id, filename } = this.router.map(url, request.method), 
-                // get api from controller factory
-                api = yield this.controllerFactory.get(id, filename), 
-                // Get controller metadata, which contains request method / privilege definition etc.
-                metadata = controller_1.getControllerMetadata(api.constructor), 
-                // kite holder
-                holder;
-                // Check if request method matches the required method
-                if (metadata.method && metadata.method !== request.method) {
-                    throw new error_1.KiteError(1011, [request.method, metadata.method]);
-                }
-                // Needs privilege to access this api ?
-                if (metadata.privilege !== undefined) {
-                    // if (!this.config.holder) {
-                    //     throw new
-                    //         Error(`Controller "${api.constructor.name}" requires privilege to access, but no "Holder" class is configured`);
-                    // }
-                    // create a holder and call extract data from request
-                    holder = new this.config.holder();
-                    holder.extract(request);
-                    // Validate this holder, check if it has privilege to access this controller
-                    if (!(yield holder.hasPrivilege(metadata.privilege))) {
-                        throw new error_1.KiteError(1006);
-                    }
-                }
-                // call API with pre-generated $proxy(inputs, holder, context)
-                let result = yield api.$proxy(inputs, holder, { request, response } // context
-                );
-                // if api havn't write response, call responder to output contents
-                if (!response.headersSent) {
-                    this.config.responder.write(result, response);
-                }
-            }
-            catch (err) {
-                if (err instanceof Error) {
-                    this.logService.error(err);
-                }
-                if (!response.headersSent) {
-                    // catch error if responder error happens
+    async requestListener(request, response) {
+        try {
+            let url = URL.parse(request.url, true), inputs = url.query, // URL query string
+            { id, filename } = this.router.map(url, request.method), // map to actual filename
+            api = await this.controllerFactory.get(id, filename), // get controller instance
+            // metadata: ControllerMetadata = getControllerMetadata(api.constructor),
+            holder;
+            // if there is any message-body sent from client, try to parse it
+            // an entity-body is explicitly forbidden in TRACE, and ingored in GET
+            if ((request.headers['content-length'] || request.headers['transfer-encoding']) &&
+                request.method !== 'GET' &&
+                request.method !== 'TRACE') {
+                let contentType = request.headers['content-type'] || '', entityBody = await this.getEntityBody(request);
+                if (this.parsers[contentType]) {
                     try {
-                        this.config.responder.writeError(err, response, this.errorService);
+                        let data = this.parsers[contentType](entityBody);
+                        inputs = Object.assign({}, url.query, data);
                     }
-                    catch (err) {
-                        this.logService.error(err);
-                        let error = this.errorService.getError(1001);
-                        response.write(JSON.stringify({ error }));
+                    catch (e) {
+                        this.logService.error(e);
+                        throw new error_1.KiteError(1010);
                     }
                 }
+                else {
+                    this.logService.warn(`Unsupport content type "${contentType}"`);
+                    inputs = entityBody;
+                }
             }
-            response.end();
-        });
+            // Call middlewares
+            let middleResult;
+            for (let middleware of this.middlewares) {
+                middleResult = await middleware.call(null, response, request, api, inputs);
+                // is it a HolderClass ?
+                if (this.config.holderClass && middleResult instanceof this.config.holderClass) {
+                    holder = middleResult;
+                }
+                else if (middleResult === false) {
+                    response.end();
+                    return;
+                }
+            }
+            // call API with pre-generated $proxy(inputs, holder, context)
+            let result = await api.$proxy(inputs, holder, request, response);
+            // if api havn't write response, call responder to output contents
+            if (!response.headersSent) {
+                this.config.responder.write(result, response);
+            }
+        }
+        catch (err) {
+            if (err instanceof Error) {
+                this.logService.error(err);
+            }
+            if (!response.headersSent) {
+                // catch error if responder error happens
+                try {
+                    this.config.responder.writeError(err, response, this.errorService);
+                }
+                catch (err) {
+                    this.logService.error(err);
+                    let error = this.errorService.getError(1001);
+                    response.write(JSON.stringify({ error }));
+                }
+            }
+        }
+        response.end();
     }
     /**
      * get request data
@@ -329,6 +318,12 @@ class Kite {
         this.middlewares.add(middleware);
         // return `this` for chain
         return this;
+    }
+    /**
+     * Get config of current Kite instance
+     */
+    getConfig() {
+        return this.config;
     }
 }
 exports.Kite = Kite;

@@ -14,7 +14,6 @@
  * all copies or substantial portions of the Software.
  */
 import { Router, RouterProvider } from './router';
-import { HolderClass } from './holder';
 import { ParserProvider } from './parser';
 import { Responder } from './responder';
 /**
@@ -107,7 +106,9 @@ export interface Config {
     /**
      * Holder class
      */
-    holder?: HolderClass;
+    holderClass?: {
+        new (...args: any[]): any;
+    };
     /**
      * Router provider
      */

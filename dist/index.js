@@ -18,7 +18,6 @@ function __export(m) {
 }
 Object.defineProperty(exports, "__esModule", { value: true });
 __export(require("./core/metadata/"));
-__export(require("./core/types/"));
 __export(require("./utils/"));
 __export(require("./core/error.service"));
 __export(require("./core/error"));

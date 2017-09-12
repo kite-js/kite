@@ -17,12 +17,8 @@ export declare const ERROR_CODES: {
     1001: string;
     1002: string;
     1003: string;
-    1006: string;
-    1007: string;
-    1008: string;
     1009: string;
     1010: string;
-    1011: string;
     1020: string;
     1021: string;
     1022: string;

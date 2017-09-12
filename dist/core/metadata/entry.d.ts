@@ -75,10 +75,8 @@ export declare type InputRules = {
  * + __Other objects__ - create a parameter object with "new XObject(inputs.paramName)" and set to these parameters,
  *   these objects should support constructor initialization, such as Date `new Date(inputs)` and MongoDB ObjectId `new ObjectId(inputs)`
  * + __Kite model__ - create an model and filter the inputs with declared rules
- * + __Kite context `Context`__ - a object containing
- *   [http.IncomingMessage](https://nodejs.org/api/http.html#http_class_http_incomingmessage) and
- *   [http.ServerResponse](https://nodejs.org/api/http.html#http_class_http_serverresponse) is set to this parameter, you can access
- *   the raw `request` & `resopnse` objects by annotating parameter with `Context`
+ * + __[IncomingMessage](https://nodejs.org/api/http.html#http_class_http_incomingmessage)__ - current IncomingMessage (request) object
+ * + __[ServerResponse](https://nodejs.org/api/http.html#http_class_http_serverresponse)__ - current ServerResponse (response) object
  * + __"Holder" class__ - a decoded holder object is passed in,
  *
  * ### Basic mappings
@@ -241,12 +239,12 @@ export declare type InputRules = {
  * ```
  *
  * ### Access raw `request` and `response` object
- * Kite allows you to access raw `request` and `response` object of current session by annoncing
- * arguments as type of Kite `Context` in entry point:
  * ```typescript
+ * import { IncomingMessage, ServerResponse } from 'http';
+ *
  * export class UserUpdateController {
  *     @Entry()
- *     async exec(ctx: Context) {
+ *     async exec(request: IncomingMessage, response: ServerResponse) {
  *          return {url: ctx.request.url};
  *     }
  * }
@@ -254,3 +252,8 @@ export declare type InputRules = {
  *
  */
 export declare function Entry(rules?: InputRules): (target: any, propertyKey: string, descriptor: PropertyDescriptor) => void;
+/**
+ * Test a class has entry point or not
+ * @param controller any value
+ */
+export declare function hasEntryPoint(controller: any): boolean;

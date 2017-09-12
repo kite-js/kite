@@ -2,8 +2,7 @@
     "compilerOptions": {
         "moduleResolution": "node",
         "noImplicitAny": true,
-        "target": "ES6",
-        "lib": ["es2016"],
+        "target": "ESNext",
         "module": "commonjs",
         "sourceMap": true,
         "experimentalDecorators": true,

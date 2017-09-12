@@ -15,7 +15,7 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 require("reflect-metadata");
-const http = require("http");
+const entry_1 = require("./entry");
 /**
  * Kite controller decorator
  *
@@ -40,31 +40,13 @@ const http = require("http");
  *
  * A Kite controller class must have one (only one) entry point, which must be annotated with an
  * `@Entry` decorator, Kite will locate this entry point function and invoke it when request comes.
- *
- * ### Metadata properties
- * + __method__ - which HTTP method ("GET", "POST" ...) to receive client data. If this value is set
- *  client request is restricted to this method, any other methods will cause an error. For example,
- *  `@Controller({method: "GET"})` tells Kite this controller only accepts "GET" method on request,
- *  request with "POST" will get an error.
- * + __privilege__ - access privilege of this controller. #see Kite privilege mechanism#
- *
- * If none of these properties is provided, the controller will:
- * + accept any valid HTTP method from client request
- * + any one can invoke, no access check
  */
 function Controller(metadata) {
     return function (constructor) {
-        if (!Reflect.hasMetadata('kite:entrypoint', constructor.prototype)) {
+        if (!entry_1.hasEntryPoint(constructor.prototype)) {
             throw new Error(`Missing entry point for controller ${constructor.name}`);
         }
-        metadata = metadata || {};
-        if (metadata.method) {
-            let accept = metadata.method.toUpperCase();
-            if (!http.METHODS.includes(accept)) {
-                throw new Error(`Invalid method "${accept}", support methods: ${http.METHODS.toLocaleString()}`);
-            }
-        }
-        Reflect.defineMetadata('kite:controller', metadata, constructor);
+        Reflect.defineMetadata('kite:controller', metadata || {}, constructor);
     };
 }
 exports.Controller = Controller;

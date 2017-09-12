@@ -23,10 +23,16 @@
             <h1>Next generation framework for building APIs</h1>
             <h3>Kite is designed to write APIs more efficiently with latest Javascript features</h3>
         </div>
-        <h2>Current version <a href="https://github.com/kite-js/kite" title="Kite source">0.3.9</a>:</h2>
+        <h2>Current version <a href="https://github.com/kite-js/kite" title="Kite source">0.4.0</a>:</h2>
         <ul class="change-logs">
-            <li>changed "onKiteInit" function invoking time, invokes this function after all injections are successfully injected</li>
-            <li>some code optimization</li>
+            <li>Recompiled for new feature "async/await" with tsc option "--target ESNext"</li>
+            <li>More flexible controller metadata definition, enables middlewares to access these metadata</li>
+            <li>Removed "Context" class, request (IncomingMessage) &amp; response (ServerResponse) now can directly get from
+                entry point function parameter</li>
+            <li>Removed "Holder" &amp; "HolderClass", privilege check is not a built-in function anymore, developer should implement
+                this function in middleware</li>
+            <li>Removed controller metadata "method" check, developer should implement this function in middleware</li>
+            <li>Single Kite instance mode implemented, now can get Kite instance by "Kite.getInstance()" everywhere</li>
         </ul>
         <h2>Use <a href="https://github.com/kite-js/kite-tools">Kite cli tools</a> to quickly start your application!</h2>
         <p>
@@ -54,8 +60,7 @@ kite --help
     "compilerOptions": {
         "moduleResolution": "node",
         "noImplicitAny": true,
-        "target": "ES6",
-        "lib": ["es2016"],
+        "target": "ESNext",
         "module": "commonjs",
         "sourceMap": true,
         "experimentalDecorators": true,
@@ -82,7 +87,7 @@ kite --help
         <code class="typescript">
 import { Kite } from 'kite-framework';
 
-new Kite().fly();
+Kite.init().fly();
         </code>
     </pre>
         <h2>Hello world</h2>

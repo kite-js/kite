@@ -12,9 +12,10 @@
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  */
-import { Config, XformParserProvider } from './';
+import { Config } from './core/types/config';
 import { HttpRouter } from './utils/http.router';
 import { JsonParserProvider } from './utils/json.parser.provider';
+import { XformParserProvider } from './utils/xform.parser.provider';
 import { KiteResponder } from './utils/kite.responder';
 
 /**

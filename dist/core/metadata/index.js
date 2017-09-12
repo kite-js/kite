@@ -5,6 +5,7 @@ function __export(m) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var controller_1 = require("./controller");
 exports.Controller = controller_1.Controller;
+exports.getControllerMetadata = controller_1.getControllerMetadata;
 __export(require("./entry"));
 var inject_1 = require("./inject");
 exports.Inject = inject_1.Inject;

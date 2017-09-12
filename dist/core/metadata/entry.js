@@ -16,9 +16,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 require("reflect-metadata");
 const model_1 = require("./model");
+const kite_1 = require("./../../kite");
 const vm = require("vm");
-const context_1 = require("../types/context");
-const holder_1 = require("../types/holder");
+const http = require("http");
 const MK_ENTRY_POINT = 'kite:entrypoint';
 /**
  * Kite controller entry point decorator.
@@ -75,10 +75,8 @@ const MK_ENTRY_POINT = 'kite:entrypoint';
  * + __Other objects__ - create a parameter object with "new XObject(inputs.paramName)" and set to these parameters,
  *   these objects should support constructor initialization, such as Date `new Date(inputs)` and MongoDB ObjectId `new ObjectId(inputs)`
  * + __Kite model__ - create an model and filter the inputs with declared rules
- * + __Kite context `Context`__ - a object containing
- *   [http.IncomingMessage](https://nodejs.org/api/http.html#http_class_http_incomingmessage) and
- *   [http.ServerResponse](https://nodejs.org/api/http.html#http_class_http_serverresponse) is set to this parameter, you can access
- *   the raw `request` & `resopnse` objects by annotating parameter with `Context`
+ * + __[IncomingMessage](https://nodejs.org/api/http.html#http_class_http_incomingmessage)__ - current IncomingMessage (request) object
+ * + __[ServerResponse](https://nodejs.org/api/http.html#http_class_http_serverresponse)__ - current ServerResponse (response) object
  * + __"Holder" class__ - a decoded holder object is passed in,
  *
  * ### Basic mappings
@@ -241,12 +239,12 @@ const MK_ENTRY_POINT = 'kite:entrypoint';
  * ```
  *
  * ### Access raw `request` and `response` object
- * Kite allows you to access raw `request` and `response` object of current session by annoncing
- * arguments as type of Kite `Context` in entry point:
  * ```typescript
+ * import { IncomingMessage, ServerResponse } from 'http';
+ *
  * export class UserUpdateController {
  *     @Entry()
- *     async exec(ctx: Context) {
+ *     async exec(request: IncomingMessage, response: ServerResponse) {
  *          return {url: ctx.request.url};
  *     }
  * }
@@ -269,7 +267,7 @@ function Entry(rules) {
         Reflect.defineMetadata(MK_ENTRY_POINT, propertyKey, target);
         // Parameter types
         let paramtypes = Reflect.getMetadata('design:paramtypes', target, propertyKey);
-        // Retrive parameter names from function source
+        // split parameter names from function source
         let fnstr = descriptor.value.toString();
         // Raw parameters with default value
         let rawParams = fnstr.match(/\(.*?\)/)[0].replace(/(\/\/.*$)|(\/\*[\s\S]*?\*\/)|(\s)|\(|\)/g, '');
@@ -299,14 +297,16 @@ function Entry(rules) {
             // tslint:disable-next-line:max-line-length
             throw Error(`Only one Kite model is allowed in parameter list of entry point, please check controller: "${target.constructor.name}"`);
         }
-        let entryParams = [];
-        let numGlobalMapping = 0;
+        let entryParams = [], numGlobalMapping = 0, holderClass = kite_1.Kite.getInstance().getConfig().holderClass;
         paramnames.forEach((name, idx) => {
             let type = paramtypes[idx];
-            if (type === context_1.Context) {
-                entryParams.push('context');
+            if (type === http.IncomingMessage) {
+                entryParams.push('request');
             }
-            else if (type.prototype instanceof holder_1.Holder || type === holder_1.Holder) {
+            else if (type === http.ServerResponse) {
+                entryParams.push('response');
+            }
+            else if (holderClass && (type === holderClass || type.prototype instanceof holderClass)) {
                 entryParams.push('holder');
             }
             else {
@@ -365,7 +365,7 @@ function Entry(rules) {
         let proxyMakerParamNameStr = proxyMakerParamNames.join(', ');
         let callParamsStr = entryParams.join(', ');
         let fnsrc = `(function(${proxyMakerParamNameStr}) {
-                return function(inputs, holder, context) {
+                return function(inputs, holder, request, response) {
                     ${paramExp}
                     return this.${propertyKey}(${callParamsStr});
                 }
@@ -376,4 +376,12 @@ function Entry(rules) {
     };
 }
 exports.Entry = Entry;
+/**
+ * Test a class has entry point or not
+ * @param controller any value
+ */
+function hasEntryPoint(controller) {
+    return Reflect.hasMetadata(MK_ENTRY_POINT, controller);
+}
+exports.hasEntryPoint = hasEntryPoint;
 //# sourceMappingURL=entry.js.map

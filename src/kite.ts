@@ -23,11 +23,9 @@ import { ErrorService } from './core/error.service';
 import { ControllerFactory } from './core/controller.factory';
 import { ControllerMetadata, getControllerMetadata } from './core/metadata/controller';
 import { getCallerPath } from './core/callsite';
-import { Holder } from './core/types/holder';
 import { parseSize } from './utils/parse.size';
 import { HttpRouter } from './utils/http.router';
 import { WatcherService } from './core/watcher.service';
-import { Context } from './core/types/context';
 import { Router } from './core/types/router';
 
 import * as URL from 'url';
@@ -49,11 +47,13 @@ import { ParserProvider } from './index';
  * TODO: improve cluster processes
  */
 export class Kite {
+    private static instance: Kite;
+
     private server: Server;
 
     private config: Config;
 
-    private workRoot: string;
+    private workdir: string;
 
     private controllerFactory: ControllerFactory;
 
@@ -67,27 +67,25 @@ export class Kite {
 
     private parsers: { [name: string]: Parser };
 
-    private configFile: string;
-
     private middlewares: Set<Middleware> = new Set();
 
     private router: Router;
 
-    constructor(config: string | Config = {}) {
-        this.workRoot = getCallerPath();
+    private constructor(workdir: string, config: string | Config = {}) {
+        this.workdir = workdir;
 
         this.log('Kite framework ver ' + VERSION);
-        this.log(`Working at directory ${this.workRoot}`);
+        this.log(`Working at directory ${this.workdir}`);
 
         if (typeof config === 'string') {
-            config = path.isAbsolute(config) ? config : path.join(this.workRoot, config);
-            this.configFile = config = require.resolve(config);
+            config = path.isAbsolute(config) ? config : path.join(this.workdir, config);
+            config = require.resolve(config);
             this.log(`Loading configuration from file "${config}"`);
         } else {
             this.log('Loading configuration from object');
         }
 
-        this.init(config);
+        this._init(config);
 
         this.log('Creating server');
         // Create server
@@ -115,6 +113,21 @@ export class Kite {
     }
 
     /**
+     * Initialize a Kite instance with given configuration
+     * @param config 
+     */
+    public static init(config: string | Config = {}): Kite {
+        return this.instance || (this.instance = new Kite(getCallerPath(), config));
+    }
+
+    /**
+     * Get current running Kite instance
+     */
+    public static getInstance(): Kite {
+        return this.instance;
+    }
+
+    /**
      * Load the configuration from file or an KiteConfig object
      * 
      * @param { string | Config } config if string is given, it's treated as a filename, configuration will from this file,
@@ -122,7 +135,7 @@ export class Kite {
      * 
      * @private
      */
-    private init(config: string | Config) {
+    private _init(config: string | Config) {
         let cfg: Config = config as Config;
 
         if (typeof config === 'string') {
@@ -145,11 +158,11 @@ export class Kite {
 
         // concact log filenames with working root directory if they are not a absolute path
         if (typeof cfg.log.out === 'string' && !path.isAbsolute(cfg.log.out)) {
-            cfg.log.out = path.join(this.workRoot, cfg.log.out);
+            cfg.log.out = path.join(this.workdir, cfg.log.out);
         }
 
         if (typeof cfg.log.err === 'string' && !path.isAbsolute(cfg.log.err)) {
-            cfg.log.err = path.join(this.workRoot, cfg.log.err);
+            cfg.log.err = path.join(this.workdir, cfg.log.err);
         }
 
         // start log service
@@ -157,7 +170,7 @@ export class Kite {
 
         // set default router
         if (!cfg.router) {
-            let rootdir = path.join(this.workRoot, 'controllers');
+            let rootdir = path.join(this.workdir, 'controllers');
             this.router = new HttpRouter(rootdir);
         } else if (typeof cfg.router === 'object' && cfg.router.map) {
             this.router = cfg.router;
@@ -191,7 +204,7 @@ export class Kite {
 
         if (!this.controllerFactory) {
             this.controllerFactory = new ControllerFactory();
-            this.controllerFactory.workRoot = this.workRoot;
+            this.controllerFactory.workdir = this.workdir;
         }
 
         this.controllerFactory.logService = this.logService;
@@ -202,24 +215,33 @@ export class Kite {
             this.controllerFactory.watcherService = this.watcherService;
         }
 
+        let oldConfig = this.config;
+        this.config = cfg;
+        Object.seal(this.config);
+        Object.freeze(this.config);
+
+        // Enable file watch if config.watch is on
+        this.watcherService.setEnabled(Boolean(this.config.watch));
+
+        if (typeof config === 'string') {
+            this.watchConfigFile(config);
+        }
         // listen again if port / hostname changed
-        if (this.server && this.config && (this.config.port !== cfg.port || this.config.hostname !== cfg.hostname)) {
-            this.config = cfg;
+        if (this.server && (oldConfig.port !== cfg.port || oldConfig.hostname !== cfg.hostname)) {
             this.fly();
-        } else {
-            this.config = cfg;
-            this.watchConfigFile();
         }
     }
 
-    private watchConfigFile() {
+    /**
+     * Watch configuration file
+     * @param filename 
+     */
+    private watchConfigFile(filename: string) {
         // watch for config file changing
-        if (this.configFile) {
-            this.watcherService.watch(this.configFile, (configFilename) => {
-                this.log('Reload configuration');
-                this.init(configFilename);
-            });
-        }
+        this.watcherService.watch(filename, (configFilename) => {
+            this.log('Reload configuration');
+            this._init(configFilename);
+        });
     }
 
     /**
@@ -247,11 +269,6 @@ export class Kite {
         this.server.listen(this.config.port, this.config.hostname, () => {
             let { address, port } = this.server.address();
             this.log(`Flying! server listening at ${address}:${port}`, '\x1b[33m');
-
-            // Enable file watch if config.watch is on
-            this.watcherService.setEnabled(Boolean(this.config.watch));
-
-            this.watchConfigFile();
         });
 
         return this;
@@ -264,16 +281,12 @@ export class Kite {
      */
     private async requestListener(request: IncomingMessage, response: ServerResponse) {
         try {
-            // Call middlewares
-            for (let middleware of this.middlewares) {
-                if (await middleware.call(null, response, request) === false) {
-                    response.end();
-                    return;
-                }
-            }
-
             let url = URL.parse(request.url, true),
-                inputs = url.query;
+                inputs = url.query, // URL query string
+                { id, filename } = this.router.map(url, request.method),    // map to actual filename
+                api = await this.controllerFactory.get(id, filename),       // get controller instance
+                // metadata: ControllerMetadata = getControllerMetadata(api.constructor),
+                holder;
 
             // if there is any message-body sent from client, try to parse it
             // an entity-body is explicitly forbidden in TRACE, and ingored in GET
@@ -284,10 +297,7 @@ export class Kite {
                 let contentType = <string>request.headers['content-type'] || '',
                     entityBody = await this.getEntityBody(request);
 
-                if (!this.parsers[contentType]) {
-                    this.logService.warn(`Unsupport content type "${contentType}"`);
-                    inputs = entityBody;
-                } else if (entityBody) {
+                if (this.parsers[contentType]) {
                     try {
                         let data = this.parsers[contentType](entityBody);
                         inputs = Object.assign({}, url.query, data);
@@ -295,35 +305,22 @@ export class Kite {
                         this.logService.error(e);
                         throw new KiteError(1010);
                     }
+                } else {
+                    this.logService.warn(`Unsupport content type "${contentType}"`);
+                    inputs = entityBody;
                 }
             }
 
-            let {id, filename} = this.router.map(url, request.method),
-                // get api from controller factory
-                api = await this.controllerFactory.get(id, filename),
-                // Get controller metadata, which contains request method / privilege definition etc.
-                metadata: ControllerMetadata = getControllerMetadata(api.constructor),
-                // kite holder
-                holder: Holder;
-
-            // Check if request method matches the required method
-            if (metadata.method && metadata.method !== request.method) {
-                throw new KiteError(1011, [request.method, metadata.method]);
-            }
-
-            // Needs privilege to access this api ?
-            if (metadata.privilege !== undefined) {
-                // if (!this.config.holder) {
-                //     throw new
-                //         Error(`Controller "${api.constructor.name}" requires privilege to access, but no "Holder" class is configured`);
-                // }
-                // create a holder and call extract data from request
-                holder = new this.config.holder();
-                holder.extract(request);
-
-                // Validate this holder, check if it has privilege to access this controller
-                if (!await holder.hasPrivilege(metadata.privilege)) {
-                    throw new KiteError(1006);
+            // Call middlewares
+            let middleResult: any;
+            for (let middleware of this.middlewares) {
+                middleResult = await middleware.call(null, response, request, api, inputs);
+                // is it a HolderClass ?
+                if (this.config.holderClass && middleResult instanceof this.config.holderClass) {
+                    holder = middleResult;
+                } else if (middleResult === false) {
+                    response.end();
+                    return;
                 }
             }
 
@@ -331,7 +328,8 @@ export class Kite {
             let result = await api.$proxy(
                 inputs,
                 holder,
-                { request, response }   // context
+                request,
+                response
             );
             // if api havn't write response, call responder to output contents
             if (!response.headersSent) {
@@ -399,5 +397,12 @@ export class Kite {
         this.middlewares.add(middleware);
         // return `this` for chain
         return this;
+    }
+
+    /**
+     * Get config of current Kite instance
+     */
+    getConfig() {
+        return this.config;
     }
 }

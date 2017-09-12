@@ -21,19 +21,28 @@ import { Middleware } from './core/types/middleware';
  * TODO: improve cluster processes
  */
 export declare class Kite {
+    private static instance;
     private server;
     private config;
-    private workRoot;
+    private workdir;
     private controllerFactory;
     private maxContentLength;
     private errorService;
     private logService;
     private watcherService;
     private parsers;
-    private configFile;
     private middlewares;
     private router;
-    constructor(config?: string | Config);
+    private constructor();
+    /**
+     * Initialize a Kite instance with given configuration
+     * @param config
+     */
+    static init(config?: string | Config): Kite;
+    /**
+     * Get current running Kite instance
+     */
+    static getInstance(): Kite;
     /**
      * Load the configuration from file or an KiteConfig object
      *
@@ -42,8 +51,12 @@ export declare class Kite {
      *
      * @private
      */
-    private init(config);
-    private watchConfigFile();
+    private _init(config);
+    /**
+     * Watch configuration file
+     * @param filename
+     */
+    private watchConfigFile(filename);
     /**
      * Relase your kite, let it fly
      */
@@ -64,4 +77,8 @@ export declare class Kite {
      * @param middleware middleware function
      */
     use(middleware: Middleware): this;
+    /**
+     * Get config of current Kite instance
+     */
+    getConfig(): Config;
 }

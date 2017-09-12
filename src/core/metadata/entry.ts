@@ -15,10 +15,9 @@
 
 import 'reflect-metadata';
 import { FilterRule, Model, In, isKiteModel, hasModelInputs } from './model';
+import { Kite } from './../../kite';
 import * as vm from 'vm';
-import { getCallerPath } from '../callsite';
-import { Context } from '../types/context';
-import { Holder } from '../types/holder';
+import * as http from 'http';
 
 const MK_ENTRY_POINT = 'kite:entrypoint';
 
@@ -84,10 +83,8 @@ export type InputRules = {
  * + __Other objects__ - create a parameter object with "new XObject(inputs.paramName)" and set to these parameters, 
  *   these objects should support constructor initialization, such as Date `new Date(inputs)` and MongoDB ObjectId `new ObjectId(inputs)`
  * + __Kite model__ - create an model and filter the inputs with declared rules
- * + __Kite context `Context`__ - a object containing 
- *   [http.IncomingMessage](https://nodejs.org/api/http.html#http_class_http_incomingmessage) and 
- *   [http.ServerResponse](https://nodejs.org/api/http.html#http_class_http_serverresponse) is set to this parameter, you can access 
- *   the raw `request` & `resopnse` objects by annotating parameter with `Context`
+ * + __[IncomingMessage](https://nodejs.org/api/http.html#http_class_http_incomingmessage)__ - current IncomingMessage (request) object
+ * + __[ServerResponse](https://nodejs.org/api/http.html#http_class_http_serverresponse)__ - current ServerResponse (response) object
  * + __"Holder" class__ - a decoded holder object is passed in, 
  * 
  * ### Basic mappings
@@ -250,12 +247,12 @@ export type InputRules = {
  * ```
  * 
  * ### Access raw `request` and `response` object
- * Kite allows you to access raw `request` and `response` object of current session by annoncing 
- * arguments as type of Kite `Context` in entry point:
  * ```typescript
+ * import { IncomingMessage, ServerResponse } from 'http';
+ * 
  * export class UserUpdateController {
  *     @Entry()
- *     async exec(ctx: Context) {
+ *     async exec(request: IncomingMessage, response: ServerResponse) {
  *          return {url: ctx.request.url};
  *     }
  * }
@@ -282,7 +279,7 @@ export function Entry(rules?: InputRules) {
         // Parameter types
         let paramtypes = Reflect.getMetadata('design:paramtypes', target, propertyKey) as any[];
 
-        // Retrive parameter names from function source
+        // split parameter names from function source
         let fnstr = descriptor.value.toString();
 
         // Raw parameters with default value
@@ -321,16 +318,16 @@ export function Entry(rules?: InputRules) {
             throw Error(`Only one Kite model is allowed in parameter list of entry point, please check controller: "${target.constructor.name}"`);
         }
 
-        let entryParams: string[] = [];
-
-        let numGlobalMapping = 0;
+        let entryParams: string[] = [], numGlobalMapping = 0, holderClass = Kite.getInstance().getConfig().holderClass;
 
         paramnames.forEach((name, idx) => {
             let type = paramtypes[idx];
 
-            if (type === Context) {
-                entryParams.push('context');
-            } else if (type.prototype instanceof Holder || type === Holder) {
+            if (type === http.IncomingMessage) {
+                entryParams.push('request');
+            } else if (type === http.ServerResponse) {
+                entryParams.push('response');
+            } else if (holderClass && (type === holderClass || type.prototype instanceof holderClass)) {
                 entryParams.push('holder');
             } else {
                 // Only one Kite model type in parameters, treat it as global mapping type
@@ -396,7 +393,7 @@ export function Entry(rules?: InputRules) {
         let callParamsStr = entryParams.join(', ');
         let fnsrc =
             `(function(${proxyMakerParamNameStr}) {
-                return function(inputs, holder, context) {
+                return function(inputs, holder, request, response) {
                     ${paramExp}
                     return this.${propertyKey}(${callParamsStr});
                 }
@@ -407,4 +404,12 @@ export function Entry(rules?: InputRules) {
 
         target.$proxy = $proxy;
     }
+}
+
+/**
+ * Test a class has entry point or not
+ * @param controller any value
+ */
+export function hasEntryPoint(controller: any) {
+    return Reflect.hasMetadata(MK_ENTRY_POINT, controller);
 }

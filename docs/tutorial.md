@@ -48,8 +48,7 @@ and copy this content to it:
     "compilerOptions": {
         "moduleResolution": "node",
         "noImplicitAny": true,
-        "target": "ES6",
-        "lib": ["es2016"],
+        "target": "ESNext",
         "module": "commonjs",
         "sourceMap": true,
         "experimentalDecorators": true,
@@ -95,7 +94,7 @@ following code to it:
 ```typescript
 import { Kite } from 'kite-framework';
 
-new Kite().fly();
+Kite.init().fly();
 ```
 
 now compile the source and run the application:
@@ -109,7 +108,7 @@ if everthing goes correctly you should get these message:
 
 ```
 2017-8-23 23:26:01 [ KITE  ] Kite framework ver 0.2.4
-2017-8-23 23:26:01 [ KITE  ] Working at directory /Users/***/projects/myapp/dist
+2017-8-23 23:26:01 [ KITE  ] Working at directory /***/projects/myapp/dist
 2017-8-23 23:26:01 [ KITE  ] Loading configuration from object
 2017-8-23 23:26:01 [ KITE  ] Creating server
 2017-8-23 23:26:01 [ KITE  ] Ready to fly
