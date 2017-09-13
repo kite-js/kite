@@ -25,6 +25,7 @@ main {
   max-width: 1000px;
   padding: 1rem;
   margin: 0 auto;
+  box-sizing: border-box;
 }
 main h2 {
   margin-top: 2em;
