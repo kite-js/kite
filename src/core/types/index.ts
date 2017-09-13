@@ -18,3 +18,4 @@ export * from './init';
 export * from './router';
 export * from './parser';
 export * from './responder';
+export * from './middleware';
