@@ -19,11 +19,11 @@ import { WatcherService } from './watcher.service';
  * This controller factory does the following things:
  * - Creates controllers
  * - Builds inputs filters
- * - Creates injections
+ * - Creates dependencies
  */
 export declare class ControllerFactory {
     private controllers;
-    private injections;
+    private dependencies;
     logService: LogService;
     watcherService: WatcherService;
     workdir: string;

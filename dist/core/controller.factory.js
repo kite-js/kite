@@ -24,14 +24,14 @@ const controller_1 = require("./metadata/controller");
  * This controller factory does the following things:
  * - Creates controllers
  * - Builds inputs filters
- * - Creates injections
+ * - Creates dependencies
  */
 class ControllerFactory {
     constructor() {
         // Controller cache
         this.controllers = new Map();
-        // Injections cache
-        this.injections = new WeakMap();
+        // dependencies cache
+        this.dependencies = new WeakMap();
     }
     /**
      * Get a "controller" instance
@@ -104,24 +104,24 @@ class ControllerFactory {
      */
     async injectDependency(target) {
         // Get inject types
-        let injections = inject_1.getInjections(target);
-        if (!injections) {
+        let dependencies = inject_1.getDependencies(target);
+        if (!dependencies) {
             return;
         }
         // walk each injection target, create injection instance
         let injectableObject;
-        for (let [prop, type] of injections) {
+        for (let [prop, type] of dependencies) {
             // Is target type injectable ?
             if (!injectable_1.isInjectable(type)) {
                 // tslint:disable-next-line:max-line-length
                 throw new Error(`${target.constructor.name}.${prop} is annonced with "@Inject()" but injection target "${type.name}" is not injectable`);
             }
             // Get injection target from cache, if not exist, create one
-            injectableObject = this.injections.get(type);
+            injectableObject = this.dependencies.get(type);
             if (!injectableObject) {
                 injectableObject = new type();
                 // Cache it, so chained injection could find this instance if there are dependence on each other
-                this.injections.set(type, injectableObject);
+                this.dependencies.set(type, injectableObject);
                 // inject dependency recursively
                 await this.injectDependency(injectableObject);
                 // Initialize injection target if contains a "init" method, note: this muse be a "async" function

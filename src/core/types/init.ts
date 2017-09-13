@@ -30,7 +30,7 @@
 export interface Init {
     /**
      * asynchronous initialization method,
-     * if a service is implemented this function, it will be invoked after its injections
+     * if a service is implemented this function, it will be invoked after its dependencies
      * are successfully injected
      * 
      * @remark

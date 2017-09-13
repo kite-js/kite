@@ -18,7 +18,7 @@ import { KiteError } from './error';
 import { WatcherService } from './watcher.service';
 import * as path from 'path';
 import { Init } from './types/init';
-import { getInjections } from './metadata/inject';
+import { getDependencies } from './metadata/inject';
 import { isInjectable } from './metadata/injectable';
 import { getControllerMetadata } from './metadata/controller';
 
@@ -27,15 +27,15 @@ import { getControllerMetadata } from './metadata/controller';
  * This controller factory does the following things:
  * - Creates controllers 
  * - Builds inputs filters
- * - Creates injections
+ * - Creates dependencies
  */
 export class ControllerFactory {
 
     // Controller cache
     private controllers = new Map();
 
-    // Injections cache
-    private injections = new WeakMap();
+    // dependencies cache
+    private dependencies = new WeakMap();
 
     logService: LogService;
 
@@ -119,14 +119,14 @@ export class ControllerFactory {
     private async injectDependency(target: Object) {
 
         // Get inject types
-        let injections = getInjections(target);
-        if (!injections) {
+        let dependencies = getDependencies(target);
+        if (!dependencies) {
             return;
         }
 
         // walk each injection target, create injection instance
         let injectableObject: Init;
-        for (let [prop, type] of injections) {
+        for (let [prop, type] of dependencies) {
             // Is target type injectable ?
             if (!isInjectable(type)) {
                 // tslint:disable-next-line:max-line-length
@@ -134,11 +134,11 @@ export class ControllerFactory {
             }
 
             // Get injection target from cache, if not exist, create one
-            injectableObject = this.injections.get(type);
+            injectableObject = this.dependencies.get(type);
             if (!injectableObject) {
                 injectableObject = new type();
                 // Cache it, so chained injection could find this instance if there are dependence on each other
-                this.injections.set(type, injectableObject);
+                this.dependencies.set(type, injectableObject);
                 // inject dependency recursively
                 await this.injectDependency(injectableObject);
                 // Initialize injection target if contains a "init" method, note: this muse be a "async" function

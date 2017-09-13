@@ -45,12 +45,12 @@ import 'reflect-metadata';
  */
 export function Inject() {
     return function (target: any, key: string) {
-        let injections: Map<string, any> = Reflect.getMetadata('kite:injections', target) || new Map<string, any>();
-        injections.set(key, Reflect.getMetadata('design:type', target, key));
-        Reflect.defineMetadata('kite:injections', injections, target);
+        let dependencies: Map<string, any> = Reflect.getMetadata('kite:dependencies', target) || new Map<string, any>();
+        dependencies.set(key, Reflect.getMetadata('design:type', target, key));
+        Reflect.defineMetadata('kite:dependencies', dependencies, target);
     }
 }
 
-export function getInjections(target: Object): Map<string, any> {
-    return Reflect.getMetadata('kite:injections', target);
+export function getDependencies(target: Object): Map<string, any> {
+    return Reflect.getMetadata('kite:dependencies', target);
 }

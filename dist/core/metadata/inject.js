@@ -45,14 +45,14 @@ require("reflect-metadata");
  */
 function Inject() {
     return function (target, key) {
-        let injections = Reflect.getMetadata('kite:injections', target) || new Map();
-        injections.set(key, Reflect.getMetadata('design:type', target, key));
-        Reflect.defineMetadata('kite:injections', injections, target);
+        let dependencies = Reflect.getMetadata('kite:dependencies', target) || new Map();
+        dependencies.set(key, Reflect.getMetadata('design:type', target, key));
+        Reflect.defineMetadata('kite:dependencies', dependencies, target);
     };
 }
 exports.Inject = Inject;
-function getInjections(target) {
-    return Reflect.getMetadata('kite:injections', target);
+function getDependencies(target) {
+    return Reflect.getMetadata('kite:dependencies', target);
 }
-exports.getInjections = getInjections;
+exports.getDependencies = getDependencies;
 //# sourceMappingURL=inject.js.map
