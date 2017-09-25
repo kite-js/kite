@@ -1,3 +1,6 @@
+# 0.4.1
+- Add "trim" option to filter rule, default trim beginning and ending spaces from string
+
 # 0.4.0 
 - Recompiled for new feature "async/await" with tsc option "--target ESNext"
 - More flexible controller metadata definition, enables middlewares to access these metadata

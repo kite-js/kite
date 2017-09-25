@@ -215,6 +215,16 @@ export type FilterRule = {
      * 
      */
     empty?: boolean;
+
+    /**
+     * trim string, default is 'true'.
+     * 
+     * trim benginning & ending spaces from string
+     * 
+     * `true` - do trim, default value
+     * `false` - do not trim
+     */
+    trim?: boolean;
 }
 
 /**
@@ -244,6 +254,10 @@ export type FilterRule = {
 export function In(rules: FilterRule = {}) {
     return function (target: Object, property: string) {
         let filterProperties: Map<string, FilterRule> = Reflect.getMetadata(MK_KITE_INPUTS, target) || new Map<string, FilterRule>();
+
+        // Assign default rules
+        Object.assign(rules, { trim: true });
+
         filterProperties.set(property, rules);
         // Save the rules to class metadata
         Reflect.defineMetadata(MK_KITE_INPUTS, filterProperties, target);
@@ -343,7 +357,8 @@ function createFilterFn(target: KiteModel): void {
         // if defined pattern, check pattern match 
         // if defined min, max, check for length
         if (type.prototype === String.prototype) {   // String
-            fnStack.push(`{ this['${name}'] = String(inputs['${name}']);`);
+            let trim = rule.trim ? '.trim()' : '';
+            fnStack.push(`{ this['${name}'] = String(inputs['${name}'])${trim};`);
             // check allowed values, ignore rule.pattern, rule.min, rule.max
             if (rule.values) {
                 // let src = toSource(rule.values);
