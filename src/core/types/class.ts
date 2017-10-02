@@ -13,4 +13,4 @@
  * all copies or substantial portions of the Software.
  */
 
-export const VERSION = '0.4.2';
+export type Class = { new(...args: any[]): {} };

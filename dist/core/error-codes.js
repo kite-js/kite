@@ -33,15 +33,12 @@ exports.ERROR_CODES = {
     1023: 'Parameter error: "%s" is too short, minimal length is %d',
     1024: 'Parameter error: "%s" is too long, maximal length is %d',
     1025: 'Parameter error: "%s" is not a number',
-    1026: 'Parameter error: "%s" can not less than "%s"',
-    1027: 'Parameter error: "%s" can not greater than "%s"',
+    1026: 'Parameter error: "%s" can not less than %d',
+    1027: 'Parameter error: "%s" can not greater than %d',
     1028: 'Parameter error: at least one of these parameters [%s] is required',
     // 1029: 'Parameter error: property "%s" require an object but %s is found',
     1030: 'Parameter error: length of "%s" is limited to %d',
-    1031: 'Parameter error: invalid date format at "%s"',
-    1032: 'Parameter error: "%s" empty string is not allowed',
-    1033: 'Parameter error: "%s" empty array is not allowed',
     1100: 'Invalid request URL: failed to locate resource "%s"',
     1101: 'Invalid request URL: illegal characters detected',
 };
-//# sourceMappingURL=error.codes.js.map
+//# sourceMappingURL=error-codes.js.map

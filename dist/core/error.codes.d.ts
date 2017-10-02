@@ -29,6 +29,9 @@ export declare const ERROR_CODES: {
     1027: string;
     1028: string;
     1030: string;
+    1031: string;
+    1032: string;
+    1033: string;
     1100: string;
     1101: string;
 };

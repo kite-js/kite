@@ -251,7 +251,7 @@ const MK_ENTRY_POINT = 'kite:entrypoint';
  * ```
  *
  */
-function Entry(rules) {
+function Entry(config) {
     return function (target, propertyKey, descriptor) {
         // If more than one entrypoint be annotated, throw an error
         if (Reflect.hasMetadata(MK_ENTRY_POINT, target)) {
@@ -267,7 +267,7 @@ function Entry(rules) {
         Reflect.defineMetadata(MK_ENTRY_POINT, propertyKey, target);
         // Parameter types
         let paramtypes = Reflect.getMetadata('design:paramtypes', target, propertyKey);
-        // split parameter names from function source
+        // split parameter names from function source, parameter names are used for client input mappings
         let fnstr = descriptor.value.toString();
         // Raw parameters with default value
         let rawParams = fnstr.match(/\(.*?\)/)[0].replace(/(\/\/.*$)|(\/\*[\s\S]*?\*\/)|(\s)|\(|\)/g, '');
@@ -292,7 +292,7 @@ function Entry(rules) {
             }
         });
         // Here, limit only one Kite model in parameter array of entry point
-        // TODO: allow children model mapping in parameter directly ?
+        // TODO: allow child models mapping in parameter directly ?
         if (numModels > 1) {
             // tslint:disable-next-line:max-line-length
             throw Error(`Only one Kite model is allowed in parameter list of entry point, please check controller: "${target.constructor.name}"`);
@@ -328,7 +328,12 @@ function Entry(rules) {
                         typename = proxyMakerParamNames[index];
                     }
                     if (model_1.isKiteModel(type)) {
-                        entryParams.push(`new ${typename}()._$filter(inputs)`);
+                        if (config && config.$cleanModel) {
+                            entryParams.push(`Object.create(${typename}.prototype)._$filter(inputs)`);
+                        }
+                        else {
+                            entryParams.push(`new ${typename}()._$filter(inputs)`);
+                        }
                     }
                     else {
                         entryParams.push(`new ${typename}(inputs)`);
@@ -344,9 +349,17 @@ function Entry(rules) {
                         required
                     };
                     // If filter rule available, use user defined, else create one
-                    if (rules && rules[name]) {
-                        Object.assign(rule, rules[name]);
+                    if (config) {
+                        if (config.$inputRules && config.$inputRules[name]) {
+                            Object.assign(rule, config.$inputRules[name]);
+                        }
+                        else if (config[name]) {
+                            Object.assign(rule, config[name]);
+                        }
                     }
+                    // if (config && config[name]) {
+                    //     Object.assign(rule, config[name]);
+                    // }
                     model_1.In(rule)(_Param.prototype, name);
                     entryParams.push('param.' + name);
                 }
@@ -354,7 +367,7 @@ function Entry(rules) {
         });
         let paramExp = '';
         // if `@In()` is applied to "_Param" class, this Kite model will have MK_KITE_INPUTS metadata, 
-        // else the dynamically created class "_Param" does nothing, therefore this is an useless Kite model
+        // else the dynamically created class "_Param" does nothing, therefore it is an useless Kite model
         if (_Param && model_1.hasModelInputs(_Param.prototype)) {
             // "decoreate" the new created class as KiteModel, force it to create a _$filter() for this class
             model_1.Model()(_Param);

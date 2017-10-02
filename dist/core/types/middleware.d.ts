@@ -56,4 +56,4 @@ import { IncomingMessage, ServerResponse } from 'http';
  * but this is not recommended, it breaks the logic of Kite. If you really want to do in this way,
  * your middleware must handle client request and server response.
  */
-export declare type Middleware = (response: ServerResponse, request: IncomingMessage, api: any, inputs: any) => Promise<any>;
+export declare type Middleware = (response: ServerResponse, request: IncomingMessage, api: Object, inputs: any) => Promise<any>;

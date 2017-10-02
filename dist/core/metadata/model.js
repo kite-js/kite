@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * Copyright (c) 2017 [Arthur Xie]
  * <https://github.com/kite-js/kite>
@@ -13,7 +14,6 @@
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
 const error_1 = require("../error");
 require("reflect-metadata");
 const vm = require("vm");
@@ -55,7 +55,7 @@ const SINGLE_QUOTE = "\\'";
  * `new User()` when client request comes in, without any constructor parameter, so if a Kite mode is
  * coded like following, it'll not work as expected:
  * ```typescript
- * @Model
+ * @Model()
  * class User {
  *      @In() name: string;
  *      @In() password: string;
@@ -77,10 +77,16 @@ const SINGLE_QUOTE = "\\'";
  * NOTE: This expression is invalid in typescript because of type checking,
  * but, it does work in Kite at run time, no parameter is passed to constructor.
  */
-function Model() {
+function Model(globalRule) {
     return function (constructor) {
         Reflect.defineMetadata(MK_KITE_MODEL, true, constructor);
-        createFilterFn(constructor.prototype);
+        createFilterFn(constructor.prototype, globalRule);
+        // return class extends constructor {
+        //     constructor(...args: any[]) {
+        //         super(args);
+        //         (this as any)[Symbol.for('isInitialized')] = true;
+        //     }
+        // };
     };
 }
 exports.Model = Model;
@@ -130,7 +136,7 @@ exports.In = In;
  * ```
  * @param target Target class
  */
-function createFilterFn(target) {
+function createFilterFn(target, globalRule) {
     // Keep the original _$filter function if exists
     if (target._$filter) {
         return;
@@ -146,8 +152,38 @@ function createFilterFn(target) {
     let args = [];
     let quoteRegx = /'/g;
     let groups = [];
+    /**
+     * Get type name for filter function and put it to factory parameter list if type is not exist
+     * @param type
+     */
+    function getTypeName(type) {
+        // property is other type or Kite Module, pass the original type to this filter function
+        // so it can create right objects
+        // if type is already in args, use the existing one, else create a new arg
+        let idx = args.indexOf(type);
+        let typename;
+        if (idx === -1) {
+            typename = '_' + type.name;
+            // if another type has a same name, but prototype is different, give it a new name
+            // this may happen in namespaces, two diferent namespaces both have the same object, 
+            // `type.name` only give the name
+            if (argnames.includes(typename)) {
+                typename += argnames.length;
+            }
+            argnames.push(typename);
+            args.push(type);
+        }
+        else {
+            typename = argnames[idx];
+        }
+        return typename;
+    }
     // Loop every @In decorated properties and create filter code
     for (let [property, rule] of inputs) {
+        // if there is global rule defined, merge rules
+        if (globalRule) {
+            rule = Object.assign(globalRule, rule);
+        }
         // in case of someone named a property with sigle quotation like "it's me" cause runtime errors, following will escape it
         let name = property.replace(quoteRegx, SINGLE_QUOTE);
         // This property is grouped with another property / some other properties
@@ -164,44 +200,41 @@ function createFilterFn(target) {
                 groups.push(rule.group);
             }
         }
-        // is required paramter
+        let type = Reflect.getMetadata('design:type', target, property);
+        // force default type to string
+        if (!type) {
+            type = String;
+        }
+        // field is a required parameter
         if (rule.required) {
-            let condition;
-            if (rule.empty) {
-                condition = `inputs['${name}'] === undefined || inputs['${name}'] === null`;
-            }
-            else {
-                condition = `inputs['${name}'] === undefined || inputs['${name}'] === '' || inputs['${name}'] === null`;
-            }
-            // throws error is input field is not given
-            fnStack.push(`if(${condition}) {
-                throw new KiteError(1020, '${name}');
-            } else `);
+            let condition = rule.allowEmpty ? `inputs['${name}'] === undefined` : `inputs['${name}'] == undefined`;
+            fnStack.push(`if(${condition}) { throw new KiteError(1020, '${name}'); } else `);
         }
         else {
-            fnStack.push(`if(inputs['${name}'] !== undefined)`);
+            let condition = rule.allowEmpty ? `inputs['${name}'] !== undefined` : `inputs['${name}'] != undefined`;
+            fnStack.push(`if(${condition})`);
         }
         // custom filters
         if (rule.filter) {
-            // let n = $customFilters.length;
-            // $customFilters.push(rule.filter);
             let filtername = `_f${argnames.length}`;
             argnames.push(filtername);
             args.push(rule.filter);
             fnStack.push(`{ this['${name}'] = ${filtername}(inputs['${name}']);}`);
             continue;
         }
-        let type = Reflect.getMetadata('design:type', target, property);
-        // force default type to string
-        if (!type) {
-            type = String;
-        }
+        fnStack.push('{');
         // String check points: 
         // if defined values array, input value should in the values list
         // if defined pattern, check pattern match 
-        // if defined min, max, check for length
-        if (type.prototype === String.prototype) {
-            fnStack.push(`{ this['${name}'] = String(inputs['${name}']);`);
+        // if defined min, max, check for minimal & maximal values
+        // if defined minLen, maxLen, check for minimal length & maximal length
+        if (type === String) {
+            let trim = rule.noTrim ? '' : '.trim()';
+            fnStack.push(`this['${name}'] = String(inputs['${name}'])${trim};`);
+            // if "allowEmpty" is undefined or set to false, check original input for empty string '', null 
+            if (rule.required && !rule.allowEmpty) {
+                fnStack.push(`if (this['${name}'] === '' || inputs['${name}'] === null) { throw new KiteError(1032, '${name}'); }`);
+            }
             // check allowed values, ignore rule.pattern, rule.min, rule.max
             if (rule.values) {
                 // let src = toSource(rule.values);
@@ -219,29 +252,35 @@ function createFilterFn(target) {
                 fnStack.push(`if(this['${name}'].length !== ${rule.len}) { throw new KiteError(1030, ['${name}',${rule.len}]); }`);
             }
             else {
-                // check for string length
-                if (rule.min) {
-                    fnStack.push(`if(this['${name}'].length < ${rule.min}) { throw new KiteError(1023, ['${name}',${rule.min}]); }`);
+                if (rule.minLen) {
+                    fnStack.push(`if(this['${name}'].length < ${rule.minLen}) { throw new KiteError(1023, ['${name}',${rule.minLen}]); }`);
                 }
-                if (rule.max) {
-                    fnStack.push(`if(this['${name}'].length > ${rule.max}) { throw new KiteError(1024, ['${name}',${rule.max}]); }`);
+                if (rule.maxLen) {
+                    fnStack.push(`if(this['${name}'].length > ${rule.maxLen}) { throw new KiteError(1024, ['${name}',${rule.maxLen}]); }`);
                 }
             }
-            fnStack.push('}');
+            // check for string minimal & maximal value
+            if (rule.min) {
+                let quotedMin = String(rule.min).replace(quoteRegx, SINGLE_QUOTE);
+                fnStack.push(`if(this['${name}'] < '${quotedMin}') { throw new KiteError(1026, ['${name}', '${quotedMin}']); }`);
+            }
+            if (rule.max) {
+                let quotedMax = String(rule.max).replace(quoteRegx, SINGLE_QUOTE);
+                fnStack.push(`if(this['${name}'] > '${quotedMax}') { throw new KiteError(1027, ['${name}', '${quotedMax}']); }`);
+            }
         }
-        else if (type.prototype === Number.prototype) {
+        else if (type === Number) {
             // Number check points:
             // 1. parse number if input is a string
             // 2. if values is defined, input should be one of these values
             // 3. if min is defined, input should great than or equal to "min"
             // 4. if max is defined, input should less than or equal to "max"
-            fnStack.push(`{
-        let num = Number(inputs['${name}']);
-        if(isNaN(num)) {
-            throw new KiteError(1025, '${name}');
-        }
-        this['${name}'] = num;
-        `);
+            fnStack.push(`let num = Number(inputs['${name}']);
+                        if(isNaN(num)) {
+                            throw new KiteError(1025, '${name}');
+                        }
+                        this['${name}'] = num;
+                        `);
             // check values
             if (rule.values) {
                 let valuesname = `_v${argnames.length}`;
@@ -257,49 +296,115 @@ function createFilterFn(target) {
                     fnStack.push(`if(num > ${rule.max}) { throw new KiteError(1027, ['${name}', ${rule.max}]); } `);
                 }
             }
-            fnStack.push('}');
         }
-        else if (type.prototype === Boolean.prototype) {
+        else if (type === Boolean) {
             // Boolean
             fnStack.push(`this['${name}'] = typeof inputs['${name}'] === 'string' ?
                 ['0', '', 'false'].indexOf(inputs['${name}'].toLowerCase()) === -1 :
                 Boolean(inputs['${name}']); `);
         }
-        else if (type.prototype === Array.prototype) {
+        else if (type === Date) {
+            fnStack.push(`let date = new Date(inputs['${name}']);
+                if (!date.valueOf()) {
+                    throw new KiteError(1031, '${name}');
+                }`);
+            // validate min & max value of date
+            if (rule.min && rule.min instanceof Date) {
+                let min = rule.min.toISOString();
+                fnStack.push(`if(date < new Date('${min}')) { throw new KiteError(1026, ['${name}', '${min}']); }`);
+            }
+            if (rule.max && rule.max instanceof Date) {
+                let max = rule.max.toISOString();
+                fnStack.push(`if(date > new Date('${max}')) { throw new KiteError(1027, ['${name}', '${max}']); } `);
+            }
+            fnStack.push(`this['${name}'] = date;`);
+        }
+        else if (type === Array) {
             // Array
             // [ISSUE] https://github.com/Microsoft/TypeScript/issues/7169
             // Since Typescript does not emmit array types to metadata, we don't know array element types here,
-            // so we can't parse the raw data to it's declared type
-            // TODO: add "type" to rule
-            fnStack.push(`this['${name}'] = inputs['${name}'];`);
+            // so we can't parse the raw data to its declared type
+            fnStack.push(`let input = inputs['${name}'];
+                        if (!Array.isArray(input)) {
+                            input = [input];
+                        }`);
+            // not allow empty array
+            if (!rule.allowEmpty) {
+                fnStack.push(`else if (!input.length) { throw new KiteError(1033, '${name}'); }`);
+            }
+            if (rule.arrayType) {
+                // resolve template 'Array<T>', 'Array<Array<T>>'
+                function parseArray(tpl) {
+                    if (tpl.startsWith('Array<') && tpl.endsWith('>')) {
+                        tpl = tpl.replace(/^Array<(.*)>$/, '$1');
+                        fnStack.push('input.map( input => ');
+                        parseArray(tpl);
+                        fnStack.push(')');
+                    }
+                    else {
+                        // if element type is not specified, determin type by template string
+                        if (!rule.arrayType.elementType) {
+                            switch (tpl.toLocaleLowerCase()) {
+                                case 'number':
+                                    rule.arrayType.elementType = Number;
+                                    break;
+                                case 'boolean':
+                                    rule.arrayType.elementType = Boolean;
+                                    break;
+                                case 'date':
+                                    rule.arrayType.elementType = Date;
+                                    break;
+                                case 'string':
+                                default:
+                                    rule.arrayType.elementType = String;
+                            }
+                        }
+                        let elementTypeStr;
+                        switch (rule.arrayType.elementType) {
+                            case Number:
+                                elementTypeStr = 'Number';
+                                break;
+                            case Boolean:
+                                elementTypeStr = 'Boolean';
+                                break;
+                            case String:
+                                elementTypeStr = 'String';
+                                break;
+                            case Date:
+                                elementTypeStr = 'new Date';
+                                break;
+                            default:
+                                let typename = getTypeName(rule.arrayType.elementType);
+                                if (isKiteModel(rule.arrayType.elementType)) {
+                                    elementTypeStr = `new ${typename}()._$filter`;
+                                }
+                                else {
+                                    elementTypeStr = `new ${typename}`;
+                                }
+                        }
+                        fnStack.push(`${elementTypeStr}(input)`);
+                    }
+                }
+                let template = rule.arrayType.template.replace(/\s/g, '');
+                fnStack.push(`this['${name}'] = `);
+                parseArray(template);
+            }
+            else {
+                fnStack.push(`this['${name}'] = input;`);
+            }
         }
         else {
-            // if type is already in args, use the existing one, else create a new arg
-            let idx = args.indexOf(type);
-            let typename;
-            if (idx === -1) {
-                typename = '_' + type.name;
-                // if another type has the same name, but type prototype is different, give a new name
-                // this may happen in namespaces, two diferent namespaces both have the same object, 
-                // `type.name` only give the name
-                if (argnames.includes(typename)) {
-                    typename += argnames.length;
-                }
-                argnames.push(typename);
-                args.push(type);
+            let typename = getTypeName(type);
+            // If it is a Kite model, create a model object and call _$filter to filter the inputs
+            if (isKiteModel(type)) {
+                fnStack.push(`this['${name}'] = new ${typename}(); this['${name}']._$filter(inputs['${name}']);`);
             }
             else {
-                typename = argnames[idx];
-            }
-            // If it's a Kite model, create a model object and call _$filter to filter the inputs
-            if (Reflect.getMetadata(MK_KITE_MODEL, type)) {
-                fnStack.push(`{this['${name}'] = new ${typename}(); this['${name}']._$filter(inputs['${name}']);}`);
-            }
-            else {
-                // If it's not a Kite model, pass the input value to constructor and create an object
-                fnStack.push(`{ this['${name}'] = new ${typename}(typeof inputs === 'object' ? inputs['${name}'] : inputs); }`);
+                // If it is not a Kite model, pass the input value to constructor and create an object
+                fnStack.push(`this['${name}'] = new ${typename}(typeof inputs === 'object' ? inputs['${name}'] : inputs);`);
             }
         }
+        fnStack.push('}');
     }
     // group the properties
     // [ [A, B], [B, A] ] =(union)=> [ A, B, B, A ] =(unique)=> [ A, B ]
@@ -347,7 +452,6 @@ function createFilterFn(target) {
     fnStack.unshift(`(function(${argnames}) { return function(inputs) {`); // start of function
     fnStack.push('return this;} })'); // end of return function{...}
     let fnBody = fnStack.join('\n');
-    fnStack.length = 0;
     let fn = vm.runInThisContext(fnBody, { filename: `__${target.constructor.name}._$filter.vm` });
     target._$filter = fn(...args);
     // Remove the metadata, won't use it any more ??

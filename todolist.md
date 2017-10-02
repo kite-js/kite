@@ -1,3 +1,3 @@
-- [ ] model array type conversion ( number array, string array ...)
-- [ ] "min" "max" value check in `Date` type
+- [x] model array type conversion ( number array, string array ...)
+- [x] "min" "max" value check in `Date` type
 - [ ] model creation without initialization

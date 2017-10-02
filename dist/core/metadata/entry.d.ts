@@ -21,6 +21,21 @@ export declare type InputRules = {
     [name: string]: FilterRule;
 };
 /**
+ * Entry Point Configuration
+ */
+export interface EntryConfig {
+    /**
+     * initialize Kite model with it's default values
+     *
+     * default is false, create Kite model with `new` operator
+     */
+    $cleanModel?: boolean;
+    /**
+     * Input rules for entry point
+     */
+    $inputRules?: InputRules;
+}
+/**
  * Kite controller entry point decorator.
  *
  * ## Description
@@ -251,7 +266,7 @@ export declare type InputRules = {
  * ```
  *
  */
-export declare function Entry(rules?: InputRules): (target: any, propertyKey: string, descriptor: PropertyDescriptor) => void;
+export declare function Entry(config?: EntryConfig | InputRules): (target: any, propertyKey: string, descriptor: PropertyDescriptor) => void;
 /**
  * Test a class has entry point or not
  * @param controller any value

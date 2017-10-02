@@ -1,4 +1,6 @@
+import { ArrayType } from './model';
 import 'reflect-metadata';
+import { Class } from '../types/class';
 /**
  * Annotate classes as Kite models
  *
@@ -33,7 +35,7 @@ import 'reflect-metadata';
  * `new User()` when client request comes in, without any constructor parameter, so if a Kite mode is
  * coded like following, it'll not work as expected:
  * ```typescript
- * @Model
+ * @Model()
  * class User {
  *      @In() name: string;
  *      @In() password: string;
@@ -55,11 +57,41 @@ import 'reflect-metadata';
  * NOTE: This expression is invalid in typescript because of type checking,
  * but, it does work in Kite at run time, no parameter is passed to constructor.
  */
-export declare function Model(): (constructor: Function) => void;
+export declare function Model(globalRule?: FilterRule): <T extends Class>(constructor: T) => void;
+/**
+ * Array type definition, use only in FilterRule
+ */
+export interface ArrayType {
+    /**
+     * template of input array, etc:
+     * + Simple array: "Array<Number>", this is also the default value
+     * + Two-Dimensional array: "Array<Array<String>>"
+     *
+     * Kite will resolve this template to filter inputs, this field is only used for
+     * describing array dimensional formats
+     */
+    template: string;
+    /**
+     * element type of array template, can be one of:
+     * + Number
+     * + String
+     * + Boolean
+     * + Date
+     * + Kite Model
+     * + Any other types can be set value by `new Type(input)`
+     *
+     * if field `template` is declared clearly with the following types, this field can be omitted:
+     * + Number
+     * + String
+     * + Boolean
+     * + Date
+     */
+    elementType?: Function;
+}
 /**
  * Client inputs parameters filter rules
  */
-export declare type FilterRule = {
+export interface FilterRule {
     /**
      * type: boolean - indicates a input field is required or not, default is "false"
      * + `true` - the field is required, if it's omitted from input, Kite will throw an
@@ -87,18 +119,32 @@ export declare type FilterRule = {
     values?: string[] | number[];
     /**
      * different behavior will be took in filter:
-     * - model property type is "String": define the minimal length of input string
+     * - model property type is "String": define the minimal value of a string,
+     *  strings are compared based on standard lexicographical ordering, using Unicode values. example:
+     *  - 'a' - if input string < 'a' an error will be thrown
+     *  - '2017-09-01' - if input string < '2017-09-01' an error will be thrown
      * - model property type is "Number": define the minimal value of input number
      * - others: ignored
      */
-    min?: number;
+    min?: number | string | Date;
     /**
      * different behavior will be took in filter:
-     * - model property type is "String": define the maximal length of input string
+     * - model property type is "String": define the maximal value of a string
+     * strings are compared based on standard lexicographical ordering, using Unicode values. example:
+     *  - 'z' - if input string > 'z' an error will be thrown
+     *  - '2017-09-30' - if input string > '2017-09-30' an error will be thrown
      * - model property type is "Number": define the maximal value of input number
      * - others: ignored
      */
-    max?: number;
+    max?: number | string | Date;
+    /**
+     * defind the minimal length of a string, affects only on string types
+     */
+    minLen?: number;
+    /**
+     * defind the maximal length of a string, affects only on string types
+     */
+    maxLen?: number;
     /**
      * limit input string with special length, example:
      * ```typescript
@@ -152,16 +198,21 @@ export declare type FilterRule = {
      */
     group?: string | string[];
     /**
-     * accept empty string, default is `false`, this field is only works when
-     * `required` is set to `true`
+     * accept empty values, the following values are considered as empty:
+     * + `""` - an empty string
+     * + `" "` - whitespace string
+     * + `null` - null in JSON object
+     * + `[]` - an empty array
      *
-     * `true` - allow empty string as input value
-     * `false` - disallow empty string as input value
+     * default is `false`, disallow empty values
+     *
+     * `true` - allow empty values as input value
+     * `false` - disallow empty values as input value
      *
      * By default, Kite filters out a string if it's empty; therefore controllers always
      * receives nonempty strings from "String" typed parameters.
      *
-     * In most cases, people do not want "required" fields are set by empty strings, just like
+     * In most cases, people do not want "required" fields are empty strings, just like
      * HTML `<input>` tag, if attribute "required" is set but nothing inputed, browser will warn you.
      *
      * But sometimes people do, for example empty string is frequently used in database design,
@@ -169,8 +220,35 @@ export declare type FilterRule = {
      * Kite accept empty strings.
      *
      */
-    empty?: boolean;
-};
+    allowEmpty?: boolean;
+    /**
+     * disable trim action from strings
+     *
+     * Kite trim benginning & ending spaces from string defaultly:
+     *
+     * `true` - do not trim
+     * `false` - trim
+     */
+    noTrim?: boolean;
+    /**
+     * element type of property, used when source type is Array. if this filter is omitted, Kite will
+     * pass the whole input array to the controller.
+     *
+     * example:
+     * ```typescript
+     * class Foo {
+     *      @In({
+     *          arrayType: {
+     *              template: 'Array<Number>',
+     *              elementType: Number
+     *          }
+     *      })
+     *      arr: Array<Number>;
+     * }
+     * ```
+     */
+    arrayType?: ArrayType;
+}
 /**
  * Decorate a model property as input
  *

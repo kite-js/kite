@@ -23,16 +23,15 @@
             <h1>Next generation framework for building APIs</h1>
             <h3>Kite is designed to write APIs more efficiently with latest Javascript features</h3>
         </div>
-        <h2>Current version <a href="https://github.com/kite-js/kite" title="Kite source">0.4.0</a>:</h2>
+        <h2>Current version <a href="https://github.com/kite-js/kite" title="Kite source">0.4.2</a>:</h2>
         <ul class="change-logs">
-            <li>Recompiled for new feature "async/await" with tsc option "--target ESNext"</li>
-            <li>More flexible controller metadata definition, enables middlewares to access these metadata</li>
-            <li>Removed "Context" class, request (IncomingMessage) &amp; response (ServerResponse) now can directly get from
-                entry point function parameter</li>
-            <li>Removed "Holder" &amp; "HolderClass", privilege check is not a built-in function anymore, developer should implement
-                this function in middleware</li>
-            <li>Removed controller metadata "method" check, developer should implement this function in middleware</li>
-            <li>Single Kite instance mode implemented, now can get Kite instance by "Kite.getInstance()" everywhere</li>
+            <li>rewirte model filter function creation code, fixed several bugs</li>
+            <li>global filter rule is enabled in Kite model</li>
+            <li>change "min" &amp; "max" check behaviour for string type inputs</li>
+            <li>add "minLen" &amp; "maxLen" for string type inputs</li>
+            <li>"min" &amp; "max" rules now can apply to Date type</li>
+            <li>array element type mapping is supported</li>
+            <li>filter rule "trim" option is replaced by "noTrim"</li>
         </ul>
         <h2>Use <a href="https://github.com/kite-js/kite-tools">Kite cli tools</a> to quickly start your application!</h2>
         <p>

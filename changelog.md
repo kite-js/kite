@@ -1,3 +1,12 @@
+# 0.4.2
+- rewirte model filter function creation code, fixed several bugs
+- global filter rule is enabled in Kite model
+- change "min" & "max" check behaviour for string type inputs
+- add "minLen" & "maxLen" for string type inputs
+- "min" & "max" rules now can apply to Date type
+- array element type mapping is supported
+- filter rule "trim" option is replaced by "noTrim"
+
 # 0.4.1
 - Add "trim" option to filter rule, default trim beginning and ending spaces from string
 
@@ -29,7 +38,7 @@
 - export "XformParserProvider" & "JsonParserProvider" from utils
 
 # 0.3.5 (2017-09-01)
-- improved "HttpRouter": faster API location if controller source filename ends with '.controller.ts'
+- improved "HttpRouter": faster API location if controller source filename ends with ".controller.ts"
 
 # 0.3.4 (2017-08-31)
 - Node republish for renew "readme" document
