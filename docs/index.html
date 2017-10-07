@@ -20,10 +20,11 @@
     </header>
     <main class="index">
         <div class="slogan">
-            <h1>Next generation framework for building APIs</h1>
+            <h1>Next generation web framework for building APIs</h1>
             <h3>Kite is designed to write APIs more efficiently with latest Javascript features</h3>
         </div>
-        <h2>Current version <a href="https://github.com/kite-js/kite" title="Kite source">0.4.2</a>:</h2>
+        <h2>Current version
+            <a href="https://github.com/kite-js/kite" title="Kite source">0.4.2</a>:</h2>
         <ul class="change-logs">
             <li>rewirte model filter function creation code, fixed several bugs</li>
             <li>global filter rule is enabled in Kite model</li>
@@ -33,7 +34,48 @@
             <li>array element type mapping is supported</li>
             <li>filter rule "trim" option is replaced by "noTrim"</li>
         </ul>
-        <h2>Use <a href="https://github.com/kite-js/kite-tools">Kite cli tools</a> to quickly start your application!</h2>
+        <h2>Introduction</h2>
+        <p>Kite is a web application framework, it's designed for efficient coding of APIs. Here are differences between other
+            hot frameworks (
+            <a href="https://expressjs.com/">ExpressJS</a>,
+            <a href="http://koajs.com/">KoaJS</a>): </p>
+        <ul class="differences">
+            <li>Kite is written in
+                <a href="https://www.typescriptlang.org/">TypeScript</a> with latest ECMAScript features:
+                <a href="https://tc39.github.io/proposal-decorators/">Decorators</a>,
+                <a href="https://tc39.github.io/ecmascript-asyncawait/">Async function / await</a>
+            </li>
+            <li>Kite applications should be written in TypeScript too (recommended), it makes the source much simple, clear and
+                maintainable
+            </li>
+            <li>
+                <em>NO REST ROUTE in Kite (not yet)</em>, no route definition required in Kite, just place your API in a structured
+                directory, the framework will map to your code,
+                <strong>one api for one source file</strong>
+            </li>
+            <li>
+                <em>Built-in input data filter</em>, filters client inputs with rules like: "required/optional", "min/max value",
+                "min/max length", "empty/nonempty string or array", "pattern" without losing performance (Kite generate filter
+                codes for you)!</li>
+            <li>
+                <em>Built-in data type convertor</em>, Kite converts input data to your declared types, it can convert input
+                strings to JavaScript "Number", "Boolean", "Date", MongoDB "ObjectId" or any other types</li>
+            <li>
+                <em>MongoDB's losing document schema is here!</em> By declaring a model class, Kite filters &amp; converts input
+                data before database operation, post JSON objects with nested objects / complex documents is pretty simple!
+                And this feature is also works for SQL databases</li>
+            <li>
+                <em>Dependance injection supported</em>, Kite manages dependent modules for you, each application service is
+                created &amp; managed in a single instance for reuse and data sharing
+            </li>
+            <li>
+                <em>Enjoy coding</em>, in development mode Kite detects file changes and reload relative modules within 2 seconds,
+                so you don't need to stop &amp; start your application server when source code is changed, this feature makes
+                you focus on coding and testing. Unlike third-party node modules (nodemon / pm2) restart the whole application
+                server, Kite only reloads the changed files and their relative modules.</li>
+        </ul>
+        <h2>Use
+            <a href="https://github.com/kite-js/kite-tools">Kite cli tools</a> to quickly start your application!</h2>
         <p>
             <pre>
                 <code class="bash">
@@ -46,14 +88,17 @@ kite --help
         <video width="100%" controls src="media/kite-start-540.mp4"></video>
         <h2>Installation</h2>
         <p>
-            Kite requires <a href="https://nodejs.org/">Node.js v7.10.0</a> or higher to run. And for development,
-            <a href="https://www.typescriptlang.org/">TypeScript v2.4.0+</a> or higher is required, <a href="https://code.visualstudio.com/">Visual Studio Code</a>            is recommended.
+            If you're going to start a Kite application manually, please make sure you've
+            <a href="https://nodejs.org/">Node.js v7.10.0</a> or higher installed. And for development,
+            <a href="https://www.typescriptlang.org/">TypeScript v2.4.0+</a> or higher is required,
+            <a href="https://code.visualstudio.com/">Visual Studio Code</a>
+            is recommended.
         </p>
-        <p>If every is ready, install Kite from npm:</p>
+        <p>If everything is ready, then install Kite from npm:</p>
         <pre><code class="bash">npm i kite-framework</code></pre>
         <h2>Configuration</h2>
-        <p>Create a file "tsconfig.json" in your project root directory and copy &amp; paste the following content to it, this
-            tells TypeScript compiler how to compile your project:</p>
+        <p>Create a file "tsconfig.json" in your project root directory and copy &amp; paste the following content into it,
+            these configuration is for TypeScript compiler:</p>
         <pre>
         <code class="json">
                 
@@ -131,8 +176,8 @@ project_home/
         <pre>
         <code>node dist/app.server.js</code>
     </pre>
-        <p>Then open your browser and visit <a href="http://localhost:4000/greeting">http://localhost:4000/greeting</a>, you'll
-            get this response:</p>
+        <p>Then open your browser and visit
+            <a href="http://localhost:4000/greeting">http://localhost:4000/greeting</a>, you'll get this response:</p>
         <pre>
         <code class="json">
 {
@@ -141,14 +186,16 @@ project_home/
         </code>
     </pre>
         <h2>More examples</h2>
-        <p>Please visit this <a href="https://github.com/kite-js/kite/blob/master/docs/tutorial.md">tutorial</a> for more details.
+        <p>Please visit this
+            <a href="https://github.com/kite-js/kite/blob/master/docs/tutorial.md">tutorial</a> for more details.
         </p>
     </main>
     <footer>
         <p>Copyright &copy; 2017 Arthur Xie.</p>
         <p>
             <a href="https://js.org" target="_blank" title="JS.ORG | JavaScript Community">
-            <img src="https://logo.js.org/dark_tiny.png" width="102" alt="JS.ORG Logo"/></a>
+                <img src="https://logo.js.org/dark_tiny.png" width="102" alt="JS.ORG Logo" />
+            </a>
         </p>
     </footer>
 </body>
