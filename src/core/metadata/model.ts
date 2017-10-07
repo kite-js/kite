@@ -625,7 +625,13 @@ function createFilterFn(target: KiteModel, globalRule: FilterRule): void {
             let typename = getTypeName(type);
             // If it is a Kite model, create a model object and call _$filter to filter the inputs
             if (isKiteModel(type)) {
-                fnStack.push(`this['${name}'] = new ${typename}(); this['${name}']._$filter(inputs['${name}']);`);
+                fnStack.push(`if (cleanModel) {
+                    this['${name}'] = Object.create(${typename}.prototype);
+                } else {
+                    this['${name}'] = new ${typename}();
+                }
+                this['${name}']._$filter(inputs['${name}']);
+                `);
             } else {
                 // If it is not a Kite model, pass the input value to constructor and create an object
                 fnStack.push(`this['${name}'] = new ${typename}(typeof inputs === 'object' ? inputs['${name}'] : inputs);`);
@@ -682,7 +688,11 @@ function createFilterFn(target: KiteModel, globalRule: FilterRule): void {
     argnames.push('KiteError');
     args.push(KiteError);
 
-    fnStack.unshift(`(function(${argnames}) { return function(inputs) {`);   // start of function
+    // filter function, first parameter 'inputs' type is Object, commonly set to client inputs (filter target)
+    // second parameter 'cleanModel' type is boolean, if it's set to 'true', will create an Kite model (sub-model)
+    // by calling 'Object.create()' instead of 'new' operator, that means creates an object without calling it's
+    // constructor
+    fnStack.unshift(`(function(${argnames}) { return function(inputs, cleanModel) {`);   // start of function
     fnStack.push('return this;} })');  // end of return function{...}
     let fnBody = fnStack.join('\n');
 

@@ -31,12 +31,92 @@ export type InputRules = {
 
 /**
  * Entry Point Configuration
+ * 
+ * useage:
+ * 
+ * ```typescript
+ * @Controller()
+ * export class AssetUpdateController {
+ *      @Entry({
+ *          $cleanModel: true,
+ *          $inputRules: {
+ *              _id: {
+ *                  required: true
+ *              }
+ *          }
+ *      })
+ *      async exec(asset: Asset, _id: ObjectId) {
+ *          delete asset.creationTime;
+ *          // ...
+ *          // database update
+ *      }
+ * }
+ * ```
  */
 export interface EntryConfig {
     /**
-     * initialize Kite model with it's default values
+     * create an Kite model without default value
      * 
-     * default is false, create Kite model with `new` operator
+     * set this value to `true` will cause Kite to create a entry point Kite model by calling
+     * `Object.create(Model.prototype)` instead of `new Model()`, so the constructor of
+     * Kite model will not be called, and all default value settings in constructor will not work.
+     * 
+     * + `true` - create a "clean" model
+     * + `false` - create an ordinary model, default is false
+     * 
+     * Sometimes people declare some properties with default values in a Kite model, 
+     * such as `creationTime: Date = new Date()` - for setting document / table row with current
+     * date time before insert, the default values setting code will be generated in constructor
+     * function by TypeScript compiler, so every time Kite create an model instance by `new Model()`
+     * will create an object with default values, for example:
+     * 
+     * ```typescript
+     * @Model()
+     * export class Asset {
+     *      // asset id
+     *      _id: ObjectId;
+     * 
+     *      // asset creation time, set to current timestamp
+     *      creationTime: Date = new Date();
+     * 
+     *      // asset creator user id
+     *      creatorId: ObjectId;
+     * 
+     *      // asset name
+     *      @In({required: true})
+     *      name: string;
+     * 
+     *      // asset quantity
+     *      @In({required: true})
+     *      quantity: number;
+     * }
+     * ```
+     * 
+     * But default values become useless when coding "update" APIs, assuming update a document with above 
+     * model "Asset", if "creationTime" is set to current date time, this value will be updated to database
+     * if no action is taken, the first solution is remove this property from object:
+     * ```typescript
+     * @Controller()
+     * export class AssetUpdateController {
+     *      @Entry()
+     *      async exec(asset: Asset, _id: ObjectId) {
+     *          delete asset.creationTime;
+     *          // ...
+     *          // database update
+     *      }
+     * }
+     * ```
+     * 
+     * the second solution is setting "$cleanModel" to `true`:
+     * ```typescript
+     * @Controller()
+     * export class AssetUpdateController {
+     *      @Entry({$cleanModel: true})
+     *      async exec(asset: Asset, _id: ObjectId) {
+     *          // database update
+     *      }
+     * }
+     * ```
      */
     $cleanModel?: boolean;
 
@@ -370,7 +450,7 @@ export function Entry(config?: EntryConfig | InputRules) {
 
                     if (isKiteModel(type)) {
                         if (config && (config as EntryConfig).$cleanModel) {
-                            entryParams.push(`Object.create(${typename}.prototype)._$filter(inputs)`);
+                            entryParams.push(`Object.create(${typename}.prototype)._$filter(inputs, true)`);
                         } else {
                             entryParams.push(`new ${typename}()._$filter(inputs)`);
                         }
@@ -396,9 +476,6 @@ export function Entry(config?: EntryConfig | InputRules) {
                             Object.assign(rule, (config as InputRules)[name]);
                         }
                     }
-                    // if (config && config[name]) {
-                    //     Object.assign(rule, config[name]);
-                    // }
 
                     In(rule)(_Param.prototype, name);
 

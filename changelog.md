@@ -1,4 +1,7 @@
-# 0.4.2
+# 0.4.3 (working)
+- "clean model" creates both top level model and its child models without calling their constructors
+
+# 0.4.2 (2017-10-02)
 - rewirte model filter function creation code, fixed several bugs
 - global filter rule is enabled in Kite model
 - change "min" & "max" check behaviour for string type inputs

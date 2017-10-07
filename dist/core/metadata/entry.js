@@ -329,7 +329,7 @@ function Entry(config) {
                     }
                     if (model_1.isKiteModel(type)) {
                         if (config && config.$cleanModel) {
-                            entryParams.push(`Object.create(${typename}.prototype)._$filter(inputs)`);
+                            entryParams.push(`Object.create(${typename}.prototype)._$filter(inputs, true)`);
                         }
                         else {
                             entryParams.push(`new ${typename}()._$filter(inputs)`);
@@ -357,9 +357,6 @@ function Entry(config) {
                             Object.assign(rule, config[name]);
                         }
                     }
-                    // if (config && config[name]) {
-                    //     Object.assign(rule, config[name]);
-                    // }
                     model_1.In(rule)(_Param.prototype, name);
                     entryParams.push('param.' + name);
                 }
