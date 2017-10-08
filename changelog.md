@@ -1,5 +1,7 @@
-# 0.4.3 (working)
-- "clean model" creates both top level model and its child models without calling their constructors
+# 0.4.3 (2017-10-08)
+- new "clean model" creates both top level model and its child models without calling their constructors
+- improved `Date` type min / max value checking
+- fixed error when "min" "max" or property name contains quote mark
 
 # 0.4.2 (2017-10-02)
 - rewirte model filter function creation code, fixed several bugs

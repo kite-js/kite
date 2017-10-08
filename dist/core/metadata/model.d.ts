@@ -1,4 +1,18 @@
 import { ArrayType } from './model';
+/**
+ * Copyright (c) 2017 [Arthur Xie]
+ * <https://github.com/kite-js/kite>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ */
 import 'reflect-metadata';
 import { Class } from '../types/class';
 /**
@@ -31,7 +45,7 @@ import { Class } from '../types/class';
  *
  * __NOTE__
  *
- * When a Kite model is used to map client inputs, Kite will create an object with "new" operator
+ * When a Kite model is used for mapping client inputs, Kite will create an object with "new" operator
  * `new User()` when client request comes in, without any constructor parameter, so if a Kite mode is
  * coded like following, it'll not work as expected:
  * ```typescript
@@ -54,8 +68,9 @@ import { Class } from '../types/class';
  *
  * > let user2 = new User();
  *
- * NOTE: This expression is invalid in typescript because of type checking,
- * but, it does work in Kite at run time, no parameter is passed to constructor.
+ * or ( if $cleanModel is set to `true`)
+ *
+ * > let user2 = Object.create(User.prototype);
  */
 export declare function Model(globalRule?: FilterRule): <T extends Class>(constructor: T) => void;
 /**
@@ -118,31 +133,89 @@ export interface FilterRule {
      */
     values?: string[] | number[];
     /**
-     * different behavior will be took in filter:
-     * - model property type is "String": define the minimal value of a string,
-     *  strings are compared based on standard lexicographical ordering, using Unicode values. example:
-     *  - 'a' - if input string < 'a' an error will be thrown
-     *  - '2017-09-01' - if input string < '2017-09-01' an error will be thrown
-     * - model property type is "Number": define the minimal value of input number
-     * - others: ignored
+     * define the minimal value of input data, this filter supports the following types:
+     * + __`Number`__ - model property type is number, filter value must be a number
+     * + __`String`__ - model property type is string, filter value must be a string
+     * + __`Date`__ - model property type is Date, filter value can be `string` or `number` or `Date`,
+     *   if string or number is given, this value should be possible to convert to a `Date` object:
+     *   - if the value is a number, it must be a integer value representing the number of
+     *     milliseconds since 1 January 1970 00:00:00 UTC
+     *   - if the value is a string, it represents a date which should be recognized by `Date.parse()` method
+     *
+     * min value check for other types is not supported.
+     *
+     * examples:
+     * ```typescript
+     * @Model()
+     * export class Foo {
+     *      @In({
+     *          min: 18
+     *      })
+     *      age: number;
+     *
+     *      @In({
+     *          min: '2017'
+     *      })
+     *      year: string;
+     *
+     *      @In({
+     *          min: '2017-09-01'
+     *      })
+     *      startDate: Date;
+     *
+     *      @In({
+     *          min: new Date('2017-09-01')
+     *      })
+     *      startDate2: Date;
+     * }
+     * ```
      */
     min?: number | string | Date;
     /**
-     * different behavior will be took in filter:
-     * - model property type is "String": define the maximal value of a string
-     * strings are compared based on standard lexicographical ordering, using Unicode values. example:
-     *  - 'z' - if input string > 'z' an error will be thrown
-     *  - '2017-09-30' - if input string > '2017-09-30' an error will be thrown
-     * - model property type is "Number": define the maximal value of input number
-     * - others: ignored
+     * define the maximal value of input data, this filter supports the following types:
+     * + __`Number`__ - model property type is number, filter value must be a number
+     * + __`String`__ - model property type is string, filter value must be a string
+     * + __`Date`__ - model property type is Date, filter value can be `string` or `number` or `Date`,
+     *   if string or number is given, this value should be possible to convert to a `Date` object:
+     *   - if the value is a number, it must be a integer value representing the number of
+     *     milliseconds since 1 January 1970 00:00:00 UTC
+     *   - if the value is a string, it represents a date which should be recognized by `Date.parse()` method
+     *
+     * max value check for other types is not supported.
+     *
+     * examples:
+     * ```typescript
+     * @Model()
+     * export class Foo {
+     *      @In({
+     *          max: 50
+     *      })
+     *      age: number;
+     *
+     *      @In({
+     *          max: '2020'
+     *      })
+     *      year: string;
+     *
+     *      @In({
+     *          max: '2017-09-30'
+     *      })
+     *      endDate: Date;
+     *
+     *      @In({
+     *          max: new Date('2017-09-30')
+     *      })
+     *      endDate2: Date;
+     * }
+     * ```
      */
     max?: number | string | Date;
     /**
-     * defind the minimal length of a string, affects only on string types
+     * define the minimal length of a string, affects only on string types
      */
     minLen?: number;
     /**
-     * defind the maximal length of a string, affects only on string types
+     * define the maximal length of a string, affects only on string types
      */
     maxLen?: number;
     /**
@@ -157,6 +230,7 @@ export interface FilterRule {
     len?: number;
     /**
      * test input string with special pattern, example:
+     *
      * ```typescript
      * @In({
      *     pattern: /^[a-z\d_\.\-]+@[a-z\d_\.\-]+\.[a-z]{2,}$/i
@@ -168,6 +242,7 @@ export interface FilterRule {
     /**
      * filter input value with given function, return value is used as
      * new value for this field, example:
+     *
      * ```typescript
      * @In({
      *     filter: function(state: string) {
@@ -183,6 +258,7 @@ export interface FilterRule {
      * with other fields, at least one of grouped fields is required at input.
      * The following example means: either "phone" or "email" is required,
      * if both "phone" and "email" are emitted an error will be thrown:
+     *
      *  ```typescript
      * @Model()
      * class ExampleParam {
@@ -262,12 +338,12 @@ export interface FilterRule {
  *      // Filter input parameter "name": it's a required value, and min length is 3
  *      @In({
  *          required: true,
- *          min: 3
+ *          minLength: 3
  *      }) name: string;
  *
  *      @In({
  *          required: true,
- *          min: 6
+ *          minLength: 6
  *      }) password: string;
  * }
  *

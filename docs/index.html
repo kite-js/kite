@@ -24,15 +24,11 @@
             <h3>Kite is designed to write APIs more efficiently with latest Javascript features</h3>
         </div>
         <h2>Current version
-            <a href="https://github.com/kite-js/kite" title="Kite source">0.4.2</a>:</h2>
+            <a href="https://github.com/kite-js/kite" title="Kite source">0.4.3</a>:</h2>
         <ul class="change-logs">
-            <li>rewirte model filter function creation code, fixed several bugs</li>
-            <li>global filter rule is enabled in Kite model</li>
-            <li>change "min" &amp; "max" check behaviour for string type inputs</li>
-            <li>add "minLen" &amp; "maxLen" for string type inputs</li>
-            <li>"min" &amp; "max" rules now can apply to Date type</li>
-            <li>array element type mapping is supported</li>
-            <li>filter rule "trim" option is replaced by "noTrim"</li>
+            <li>new "clean model" creates both top level model and its child models without calling their constructors</li>
+            <li>improved <em>Date</em> type min / max value checking</li>
+            <li>fixed error when "min" "max" or property name contains quote mark</li>
         </ul>
         <h2>Introduction</h2>
         <p>Kite is a web application framework, it's designed for efficient coding of APIs. Here are differences between other

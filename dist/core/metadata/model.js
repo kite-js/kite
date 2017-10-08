@@ -14,13 +14,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  */
-const error_1 = require("../error");
 require("reflect-metadata");
 const vm = require("vm");
+const error_1 = require("../error");
 const MK_KITE_MODEL = 'kite:model';
 const MK_KITE_INPUTS = 'kite:inputs';
-// tslint:disable-next-line:quotemark
-const SINGLE_QUOTE = "\\'";
+const ESCAPED_QUOTE = '\\$1';
+const QUOTE_REGEX = /('|"|`)/g;
 /**
  * Annotate classes as Kite models
  *
@@ -51,7 +51,7 @@ const SINGLE_QUOTE = "\\'";
  *
  * __NOTE__
  *
- * When a Kite model is used to map client inputs, Kite will create an object with "new" operator
+ * When a Kite model is used for mapping client inputs, Kite will create an object with "new" operator
  * `new User()` when client request comes in, without any constructor parameter, so if a Kite mode is
  * coded like following, it'll not work as expected:
  * ```typescript
@@ -74,19 +74,14 @@ const SINGLE_QUOTE = "\\'";
  *
  * > let user2 = new User();
  *
- * NOTE: This expression is invalid in typescript because of type checking,
- * but, it does work in Kite at run time, no parameter is passed to constructor.
+ * or ( if $cleanModel is set to `true`)
+ *
+ * > let user2 = Object.create(User.prototype);
  */
 function Model(globalRule) {
     return function (constructor) {
         Reflect.defineMetadata(MK_KITE_MODEL, true, constructor);
         createFilterFn(constructor.prototype, globalRule);
-        // return class extends constructor {
-        //     constructor(...args: any[]) {
-        //         super(args);
-        //         (this as any)[Symbol.for('isInitialized')] = true;
-        //     }
-        // };
     };
 }
 exports.Model = Model;
@@ -103,12 +98,12 @@ exports.Model = Model;
  *      // Filter input parameter "name": it's a required value, and min length is 3
  *      @In({
  *          required: true,
- *          min: 3
+ *          minLength: 3
  *      }) name: string;
  *
  *      @In({
  *          required: true,
- *          min: 6
+ *          minLength: 6
  *      }) password: string;
  * }
  *
@@ -150,7 +145,6 @@ function createFilterFn(target, globalRule) {
     let fnStack = [];
     let argnames = [];
     let args = [];
-    let quoteRegx = /'/g;
     let groups = [];
     /**
      * Get type name for filter function and put it to factory parameter list if type is not exist
@@ -185,7 +179,7 @@ function createFilterFn(target, globalRule) {
             rule = Object.assign(globalRule, rule);
         }
         // in case of someone named a property with sigle quotation like "it's me" cause runtime errors, following will escape it
-        let name = property.replace(quoteRegx, SINGLE_QUOTE);
+        let name = property.replace(QUOTE_REGEX, ESCAPED_QUOTE);
         // This property is grouped with another property / some other properties
         // temporary save the groups 
         if (rule.group) {
@@ -260,12 +254,12 @@ function createFilterFn(target, globalRule) {
                 }
             }
             // check for string minimal & maximal value
-            if (rule.min) {
-                let quotedMin = String(rule.min).replace(quoteRegx, SINGLE_QUOTE);
+            if (rule.min && typeof rule.min === 'string') {
+                let quotedMin = rule.min.replace(QUOTE_REGEX, ESCAPED_QUOTE);
                 fnStack.push(`if(this['${name}'] < '${quotedMin}') { throw new KiteError(1026, ['${name}', '${quotedMin}']); }`);
             }
-            if (rule.max) {
-                let quotedMax = String(rule.max).replace(quoteRegx, SINGLE_QUOTE);
+            if (rule.max && typeof rule.max === 'string') {
+                let quotedMax = rule.max.replace(QUOTE_REGEX, ESCAPED_QUOTE);
                 fnStack.push(`if(this['${name}'] > '${quotedMax}') { throw new KiteError(1027, ['${name}', '${quotedMax}']); }`);
             }
         }
@@ -289,10 +283,10 @@ function createFilterFn(target, globalRule) {
                 fnStack.push(`if(!${valuesname}.includes(num)) { throw new KiteError(1021, ['${name}', '${rule.values}']); } `);
             }
             else {
-                if (rule.min !== undefined) {
+                if (typeof rule.min === 'number') {
                     fnStack.push(`if(num < ${rule.min}) { throw new KiteError(1026, ['${name}', ${rule.min}]); } `);
                 }
-                if (rule.max !== undefined) {
+                if (typeof rule.max === 'number') {
                     fnStack.push(`if(num > ${rule.max}) { throw new KiteError(1027, ['${name}', ${rule.max}]); } `);
                 }
             }
@@ -309,13 +303,23 @@ function createFilterFn(target, globalRule) {
                     throw new KiteError(1031, '${name}');
                 }`);
             // validate min & max value of date
-            if (rule.min && rule.min instanceof Date) {
-                let min = rule.min.toISOString();
-                fnStack.push(`if(date < new Date('${min}')) { throw new KiteError(1026, ['${name}', '${min}']); }`);
+            if (rule.min) {
+                let minDate = rule.min instanceof Date ? rule.min : new Date(rule.min);
+                let argName = '_dateMin' + argnames.length;
+                argnames.push(argName);
+                args.push(minDate);
+                fnStack.push(`if(date < ${argName}) {
+                    throw new KiteError(1026, ['${name}', ${argName}.toISOString()]);
+                }`);
             }
-            if (rule.max && rule.max instanceof Date) {
-                let max = rule.max.toISOString();
-                fnStack.push(`if(date > new Date('${max}')) { throw new KiteError(1027, ['${name}', '${max}']); } `);
+            if (rule.max) {
+                let maxDate = rule.max instanceof Date ? rule.max : new Date(rule.max);
+                let argName = '_dateMax' + argnames.length;
+                argnames.push(argName);
+                args.push(maxDate);
+                fnStack.push(`if(date < ${argName}) {
+                    throw new KiteError(1027, ['${name}', ${argName}.toISOString()]);
+                }`);
             }
             fnStack.push(`this['${name}'] = date;`);
         }
@@ -440,12 +444,12 @@ function createFilterFn(target, globalRule) {
         groups = groups.map(group => {
             let set = new Set(group);
             let unique = [...set];
-            let uniqueProperties = unique.join(', ').replace(quoteRegx, SINGLE_QUOTE);
+            let uniqueProperties = unique.join(', ').replace(QUOTE_REGEX, ESCAPED_QUOTE);
             unique.forEach((prop, idx, arr) => {
                 if (!inputs.has(prop)) {
                     throw new Error(`Group property "${prop}" does not exist in model "${target.constructor.name}"`);
                 }
-                let quoted = prop.replace(quoteRegx, SINGLE_QUOTE);
+                let quoted = prop.replace(QUOTE_REGEX, ESCAPED_QUOTE);
                 arr[idx] = `!inputs['${quoted}']`;
             });
             let condition = unique.join(' && ');

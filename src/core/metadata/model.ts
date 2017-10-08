@@ -14,16 +14,16 @@ import { ArrayType } from './model';
  * all copies or substantial portions of the Software.
  */
 
-import { KiteError } from '../error';
 import 'reflect-metadata';
 import * as vm from 'vm';
+import { KiteError } from '../error';
 import { Class } from '../types/class';
 
 const MK_KITE_MODEL = 'kite:model'
 const MK_KITE_INPUTS = 'kite:inputs';
 
-// tslint:disable-next-line:quotemark
-const SINGLE_QUOTE = "\\'";
+const ESCAPED_QUOTE = '\\$1';
+const QUOTE_REGEX = /('|"|`)/g;
 
 type KiteModel = {
     new(...args: any[]): {}
@@ -60,7 +60,7 @@ type KiteModel = {
  * 
  * __NOTE__
  * 
- * When a Kite model is used to map client inputs, Kite will create an object with "new" operator 
+ * When a Kite model is used for mapping client inputs, Kite will create an object with "new" operator 
  * `new User()` when client request comes in, without any constructor parameter, so if a Kite mode is 
  * coded like following, it'll not work as expected:
  * ```typescript
@@ -83,20 +83,14 @@ type KiteModel = {
  * 
  * > let user2 = new User(); 
  * 
- * NOTE: This expression is invalid in typescript because of type checking,
- * but, it does work in Kite at run time, no parameter is passed to constructor.
+ * or ( if $cleanModel is set to `true`)
+ * 
+ * > let user2 = Object.create(User.prototype);
  */
 export function Model(globalRule?: FilterRule) {
     return function <T extends Class>(constructor: T) {
         Reflect.defineMetadata(MK_KITE_MODEL, true, constructor);
         createFilterFn(constructor.prototype, globalRule);
-
-        // return class extends constructor {
-        //     constructor(...args: any[]) {
-        //         super(args);
-        //         (this as any)[Symbol.for('isInitialized')] = true;
-        //     }
-        // };
     }
 }
 
@@ -165,34 +159,92 @@ export interface FilterRule {
 
 
     /**
-     * different behavior will be took in filter:
-     * - model property type is "String": define the minimal value of a string, 
-     *  strings are compared based on standard lexicographical ordering, using Unicode values. example:
-     *  - 'a' - if input string < 'a' an error will be thrown
-     *  - '2017-09-01' - if input string < '2017-09-01' an error will be thrown
-     * - model property type is "Number": define the minimal value of input number
-     * - others: ignored
+     * define the minimal value of input data, this filter supports the following types:
+     * + __`Number`__ - model property type is number, filter value must be a number
+     * + __`String`__ - model property type is string, filter value must be a string
+     * + __`Date`__ - model property type is Date, filter value can be `string` or `number` or `Date`, 
+     *   if string or number is given, this value should be possible to convert to a `Date` object:
+     *   - if the value is a number, it must be a integer value representing the number of 
+     *     milliseconds since 1 January 1970 00:00:00 UTC
+     *   - if the value is a string, it represents a date which should be recognized by `Date.parse()` method
+     * 
+     * min value check for other types is not supported.
+     * 
+     * examples:
+     * ```typescript
+     * @Model()
+     * export class Foo {
+     *      @In({
+     *          min: 18
+     *      }) 
+     *      age: number;
+     * 
+     *      @In({
+     *          min: '2017'
+     *      }) 
+     *      year: string;
+     * 
+     *      @In({
+     *          min: '2017-09-01'
+     *      }) 
+     *      startDate: Date;
+     *      
+     *      @In({
+     *          min: new Date('2017-09-01')
+     *      }) 
+     *      startDate2: Date;
+     * }
+     * ```
      */
     min?: number | string | Date
 
     /**
-     * different behavior will be took in filter:
-     * - model property type is "String": define the maximal value of a string
-     * strings are compared based on standard lexicographical ordering, using Unicode values. example:
-     *  - 'z' - if input string > 'z' an error will be thrown
-     *  - '2017-09-30' - if input string > '2017-09-30' an error will be thrown
-     * - model property type is "Number": define the maximal value of input number
-     * - others: ignored
+     * define the maximal value of input data, this filter supports the following types:
+     * + __`Number`__ - model property type is number, filter value must be a number
+     * + __`String`__ - model property type is string, filter value must be a string
+     * + __`Date`__ - model property type is Date, filter value can be `string` or `number` or `Date`, 
+     *   if string or number is given, this value should be possible to convert to a `Date` object:
+     *   - if the value is a number, it must be a integer value representing the number of 
+     *     milliseconds since 1 January 1970 00:00:00 UTC
+     *   - if the value is a string, it represents a date which should be recognized by `Date.parse()` method
+     * 
+     * max value check for other types is not supported.
+     * 
+     * examples:
+     * ```typescript
+     * @Model()
+     * export class Foo {
+     *      @In({
+     *          max: 50
+     *      }) 
+     *      age: number;
+     * 
+     *      @In({
+     *          max: '2020'
+     *      }) 
+     *      year: string;
+     * 
+     *      @In({
+     *          max: '2017-09-30'
+     *      }) 
+     *      endDate: Date;
+     *      
+     *      @In({
+     *          max: new Date('2017-09-30')
+     *      }) 
+     *      endDate2: Date;
+     * }
+     * ```
      */
     max?: number | string | Date
 
     /**
-     * defind the minimal length of a string, affects only on string types
+     * define the minimal length of a string, affects only on string types
      */
     minLen?: number
 
     /**
-     * defind the maximal length of a string, affects only on string types
+     * define the maximal length of a string, affects only on string types
      */
     maxLen?: number
 
@@ -209,6 +261,7 @@ export interface FilterRule {
 
     /**
      * test input string with special pattern, example:
+     * 
      * ```typescript
      * @In({
      *     pattern: /^[a-z\d_\.\-]+@[a-z\d_\.\-]+\.[a-z]{2,}$/i
@@ -221,6 +274,7 @@ export interface FilterRule {
     /**
      * filter input value with given function, return value is used as
      * new value for this field, example: 
+     * 
      * ```typescript
      * @In({
      *     filter: function(state: string) {
@@ -237,6 +291,7 @@ export interface FilterRule {
      * with other fields, at least one of grouped fields is required at input.
      * The following example means: either "phone" or "email" is required, 
      * if both "phone" and "email" are emitted an error will be thrown:
+     * 
      *  ```typescript
      * @Model()
      * class ExampleParam {
@@ -320,12 +375,12 @@ export interface FilterRule {
  *      // Filter input parameter "name": it's a required value, and min length is 3
  *      @In({
  *          required: true,
- *          min: 3
+ *          minLength: 3
  *      }) name: string;
  *
  *      @In({
  *          required: true,
- *          min: 6
+ *          minLength: 6
  *      }) password: string;
  * }
  * 
@@ -371,8 +426,6 @@ function createFilterFn(target: KiteModel, globalRule: FilterRule): void {
     let fnStack: string[] = [];
     let argnames: string[] = [];
     let args: any[] = [];
-
-    let quoteRegx = /'/g;
     let groups: string[][] = [];
 
     /**
@@ -409,7 +462,7 @@ function createFilterFn(target: KiteModel, globalRule: FilterRule): void {
             rule = Object.assign(globalRule, rule);
         }
         // in case of someone named a property with sigle quotation like "it's me" cause runtime errors, following will escape it
-        let name = property.replace(quoteRegx, SINGLE_QUOTE);
+        let name = property.replace(QUOTE_REGEX, ESCAPED_QUOTE);
 
         // This property is grouped with another property / some other properties
         // temporary save the groups 
@@ -489,12 +542,12 @@ function createFilterFn(target: KiteModel, globalRule: FilterRule): void {
             }
 
             // check for string minimal & maximal value
-            if (rule.min) {
-                let quotedMin = String(rule.min).replace(quoteRegx, SINGLE_QUOTE);
+            if (rule.min && typeof rule.min === 'string') {
+                let quotedMin = rule.min.replace(QUOTE_REGEX, ESCAPED_QUOTE);
                 fnStack.push(`if(this['${name}'] < '${quotedMin}') { throw new KiteError(1026, ['${name}', '${quotedMin}']); }`);
             }
-            if (rule.max) {
-                let quotedMax = String(rule.max).replace(quoteRegx, SINGLE_QUOTE);
+            if (rule.max && typeof rule.max === 'string') {
+                let quotedMax = rule.max.replace(QUOTE_REGEX, ESCAPED_QUOTE);
                 fnStack.push(`if(this['${name}'] > '${quotedMax}') { throw new KiteError(1027, ['${name}', '${quotedMax}']); }`);
             }
 
@@ -517,10 +570,10 @@ function createFilterFn(target: KiteModel, globalRule: FilterRule): void {
                 args.push(rule.values);
                 fnStack.push(`if(!${valuesname}.includes(num)) { throw new KiteError(1021, ['${name}', '${rule.values}']); } `);
             } else {
-                if (rule.min !== undefined) {
+                if (typeof rule.min === 'number') {
                     fnStack.push(`if(num < ${rule.min}) { throw new KiteError(1026, ['${name}', ${rule.min}]); } `);
                 }
-                if (rule.max !== undefined) {
+                if (typeof rule.max === 'number') {
                     fnStack.push(`if(num > ${rule.max}) { throw new KiteError(1027, ['${name}', ${rule.max}]); } `);
                 }
             }
@@ -536,13 +589,24 @@ function createFilterFn(target: KiteModel, globalRule: FilterRule): void {
                 }`);
 
             // validate min & max value of date
-            if (rule.min && rule.min instanceof Date) {
-                let min = rule.min.toISOString();
-                fnStack.push(`if(date < new Date('${min}')) { throw new KiteError(1026, ['${name}', '${min}']); }`);
+            if (rule.min) {
+                let minDate = rule.min instanceof Date ? rule.min : new Date(rule.min);
+                let argName = '_dateMin' + argnames.length;
+                argnames.push(argName);
+                args.push(minDate);
+                fnStack.push(`if(date < ${argName}) {
+                    throw new KiteError(1026, ['${name}', ${argName}.toISOString()]);
+                }`);
             }
-            if (rule.max && rule.max instanceof Date) {
-                let max = rule.max.toISOString();
-                fnStack.push(`if(date > new Date('${max}')) { throw new KiteError(1027, ['${name}', '${max}']); } `);
+
+            if (rule.max) {
+                let maxDate = rule.max instanceof Date ? rule.max : new Date(rule.max);
+                let argName = '_dateMax' + argnames.length;
+                argnames.push(argName);
+                args.push(maxDate);
+                fnStack.push(`if(date < ${argName}) {
+                    throw new KiteError(1027, ['${name}', ${argName}.toISOString()]);
+                }`);
             }
 
             fnStack.push(`this['${name}'] = date;`);
@@ -667,13 +731,13 @@ function createFilterFn(target: KiteModel, globalRule: FilterRule): void {
         groups = groups.map(group => {
             let set = new Set(group);
             let unique = [...set];
-            let uniqueProperties = unique.join(', ').replace(quoteRegx, SINGLE_QUOTE);
+            let uniqueProperties = unique.join(', ').replace(QUOTE_REGEX, ESCAPED_QUOTE);
             unique.forEach((prop, idx, arr) => {
                 if (!inputs.has(prop)) {
                     throw new Error(`Group property "${prop}" does not exist in model "${target.constructor.name}"`);
                 }
 
-                let quoted = prop.replace(quoteRegx, SINGLE_QUOTE);
+                let quoted = prop.replace(QUOTE_REGEX, ESCAPED_QUOTE);
                 arr[idx] = `!inputs['${quoted}']`;
             });
 

@@ -3,10 +3,10 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 Object.defineProperty(exports, "__esModule", { value: true });
+__export(require("./entry"));
 var controller_1 = require("./controller");
 exports.Controller = controller_1.Controller;
 exports.getControllerMetadata = controller_1.getControllerMetadata;
-__export(require("./entry"));
 var inject_1 = require("./inject");
 exports.Inject = inject_1.Inject;
 var injectable_1 = require("./injectable");
