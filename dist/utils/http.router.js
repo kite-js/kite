@@ -72,15 +72,7 @@ class HttpRouter {
         if (!filename.startsWith(this.rootdir)) {
             throw new error_1.KiteError(1100, url.pathname);
         }
-        // let filename = path + this.extension;
-        // if extension is set to ".js", test "***.controller.js" file
-        // if (this.extension === '.js') {
-        //     let uniformName = path + '.controller.js';
-        //     if (fs.existsSync(uniformName)) {
-        //         filename = uniformName;
-        //     }
-        // }
-        return { id, filename };
+        return filename;
     }
 }
 exports.HttpRouter = HttpRouter;

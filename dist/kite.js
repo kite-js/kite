@@ -21,9 +21,9 @@ const log_service_1 = require("./core/log.service");
 const error_service_1 = require("./core/error.service");
 const controller_factory_1 = require("./core/controller.factory");
 const callsite_1 = require("./core/callsite");
-const parse_size_1 = require("./utils/parse.size");
+const parsesize_1 = require("./utils/parsesize");
 const http_router_1 = require("./utils/http.router");
-const watcher_service_1 = require("./core/watcher.service");
+const watch_service_1 = require("./core/watch.service");
 const URL = require("url");
 const path = require("path");
 const cluster = require("cluster");
@@ -37,10 +37,10 @@ const http_1 = require("http");
  * TODO: improve cluster processes
  */
 class Kite {
-    constructor(workdir, config = {}) {
+    constructor(config = {}) {
         this.errorService = new error_service_1.ErrorService();
         this.middlewares = new Set();
-        this.workdir = workdir;
+        this.workdir = callsite_1.getCallerPath();
         this.log('Kite framework ver ' + version_1.VERSION);
         this.log(`Working at directory ${this.workdir}`);
         if (typeof config === 'string') {
@@ -58,9 +58,10 @@ class Kite {
             response.on('error', (err) => {
                 this.logService.error(err);
             });
-            this.requestListener(request, response);
+            this.onRequest(request, response);
         });
         server.on('clientError', (err, socket) => {
+            console.error(err);
             socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
         });
         server.on('error', (err) => {
@@ -72,19 +73,6 @@ class Kite {
             process.exit();
         });
         this.log('Ready to fly');
-    }
-    /**
-     * Initialize a Kite instance with given configuration
-     * @param config
-     */
-    static init(config = {}) {
-        return this.instance || (this.instance = new Kite(callsite_1.getCallerPath(), config));
-    }
-    /**
-     * Get current running Kite instance
-     */
-    static getInstance() {
-        return this.instance;
     }
     /**
      * Load the configuration from file or an KiteConfig object
@@ -110,7 +98,7 @@ class Kite {
         if (cfg.workers && cfg.workers > numCpus) {
             cfg.workers = numCpus;
         }
-        this.maxContentLength = parse_size_1.parseSize(cfg.maxContentLength);
+        this.maxContentLength = parsesize_1.parseSize(cfg.maxContentLength);
         // concact log filenames with working root directory if they are not a absolute path
         if (typeof cfg.log.out === 'string' && !path.isAbsolute(cfg.log.out)) {
             cfg.log.out = path.join(this.workdir, cfg.log.out);
@@ -121,15 +109,15 @@ class Kite {
         // start log service
         this.logService = new log_service_1.LogService(cfg.log.level, cfg.log.out, cfg.log.err);
         // set default router
-        if (!cfg.router) {
-            let rootdir = path.join(this.workdir, 'controllers');
-            this.router = new http_router_1.HttpRouter(rootdir);
-        }
-        else if (typeof cfg.router === 'object' && cfg.router.map) {
+        if (typeof cfg.router === 'object' && cfg.router.map) {
             this.router = cfg.router;
         }
         else if (typeof cfg.router === 'function') {
             this.router = cfg.router.call(null);
+        }
+        else {
+            let rootdir = path.join(this.workdir, 'controllers');
+            this.router = new http_router_1.HttpRouter(rootdir);
         }
         // built-in errors
         this.errorService.errors = Object.assign({}, error_codes_1.ERROR_CODES);
@@ -138,18 +126,18 @@ class Kite {
             Object.assign(this.errorService.errors, cfg.errors);
         }
         // build data hub from factory
-        this.parsers = {};
-        if (cfg.parserProvider) {
+        this.receivers = {};
+        if (cfg.receiverProvider) {
             let parsers = [];
-            if (typeof cfg.parserProvider === 'function') {
-                parsers.push(cfg.parserProvider);
+            if (typeof cfg.receiverProvider === 'function') {
+                parsers.push(cfg.receiverProvider);
             }
-            else if (Array.isArray(cfg.parserProvider)) {
-                parsers = cfg.parserProvider;
+            else if (Array.isArray(cfg.receiverProvider)) {
+                parsers = cfg.receiverProvider;
             }
             parsers.forEach(provider => {
                 let { contentType, parser } = provider.call(null);
-                this.parsers[contentType] = parser;
+                this.receivers[contentType] = parser;
             });
         }
         if (!this.controllerFactory) {
@@ -157,24 +145,29 @@ class Kite {
             this.controllerFactory.workdir = this.workdir;
         }
         this.controllerFactory.logService = this.logService;
-        if (!this.watcherService) {
-            this.watcherService = new watcher_service_1.WatcherService(__dirname);
-            this.watcherService.logService = this.logService;
-            this.controllerFactory.watcherService = this.watcherService;
+        if (!this.watchService) {
+            this.watchService = new watch_service_1.WatchService(__dirname);
+            this.watchService.logService = this.logService;
+            this.controllerFactory.watchService = this.watchService;
         }
         let oldConfig = this.config;
         this.config = cfg;
         Object.seal(this.config);
         Object.freeze(this.config);
-        // Enable file watch if config.watch is on
-        this.watcherService.setEnabled(Boolean(this.config.watch));
         if (typeof config === 'string') {
             this.watchConfigFile(config);
         }
-        // listen again if port / hostname changed
-        if (this.server && (oldConfig.port !== cfg.port || oldConfig.hostname !== cfg.hostname)) {
-            this.fly();
-        }
+    }
+    /**
+     * Set watch mode
+     * Watch mode allows you code & test APIs smoothly without restarting Kite server.
+     *
+     * @param flag - true (default), Kite work in watch mode, suggested in dev mode
+     *             - false, turn off watch suggested set to `false` in production
+     */
+    watch(flag = true) {
+        this.watchService.setEnabled(flag);
+        return this;
     }
     /**
      * Watch configuration file
@@ -182,7 +175,7 @@ class Kite {
      */
     watchConfigFile(filename) {
         // watch for config file changing
-        this.watcherService.watch(filename, (configFilename) => {
+        this.watchService.watch(filename, (configFilename) => {
             this.log('Reload configuration');
             this._init(configFilename);
         });
@@ -190,7 +183,7 @@ class Kite {
     /**
      * Relase your kite, let it fly
      */
-    fly() {
+    fly(port = 4000, hostname = 'localhost') {
         if (this.config.workers && cluster.isMaster) {
             this.log(`Master process is running #${process.pid}`);
             for (let i = 0; i < this.config.workers; i++) {
@@ -204,7 +197,7 @@ class Kite {
         if (this.server && this.server.listening) {
             this.server.close();
         }
-        this.server.listen(this.config.port, this.config.hostname, () => {
+        this.server.listen(port, hostname, () => {
             let { address, port } = this.server.address();
             this.log(`Flying! server listening at ${address}:${port}`, '\x1b[33m');
         });
@@ -212,25 +205,34 @@ class Kite {
     }
     /**
      * Request listener, process all requests here
-     * @param { http.IncomingMessage } request
-     * @param { http.ServerResponse } response
+     * @param { IncomingMessage } request
+     * @param { ServerResponse } response
      */
-    async requestListener(request, response) {
+    async onRequest(request, response) {
         try {
             let url = URL.parse(request.url, true), inputs = url.query, // URL query string
-            { id, filename } = this.router.map(url, request.method), // map to actual filename
-            api = await this.controllerFactory.get(id, filename), // get controller instance
+            filename = this.router.map(url, request.method), // map to actual filename
+            trainData;
+            // api = await this.controllerFactory.get(filename);       // get controller instance
             // metadata: ControllerMetadata = getControllerMetadata(api.constructor),
-            holder;
-            // if there is any message-body sent from client, try to parse it
-            // an entity-body is explicitly forbidden in TRACE, and ingored in GET
-            if ((request.headers['content-length'] || request.headers['transfer-encoding']) &&
+            let controller = this.controllerFactory.getController(filename);
+            if (this._provider) {
+                trainData = this._provider.exec(request, controller, inputs);
+            }
+            let api = await this.controllerFactory.getInstance(controller, trainData);
+            // if api handle http request it self, skip "input" parsing
+            if (api.onRequest) {
+                inputs = await api.onRequest(request, url.query);
+            }
+            else if ((request.headers['content-length'] || request.headers['transfer-encoding']) &&
                 request.method !== 'GET' &&
                 request.method !== 'TRACE') {
-                let contentType = request.headers['content-type'] || '', entityBody = await this.getEntityBody(request);
-                if (this.parsers[contentType]) {
+                // if there is any message-body sent from client, try to parse it
+                // an entity-body is explicitly forbidden in TRACE, and ingored in GET
+                let contentType = request.headers['content-type'] || 'text/plain', entityBody = await this.getEntityBody(request);
+                if (this.receivers[contentType]) {
                     try {
-                        let data = this.parsers[contentType](entityBody);
+                        let data = this.receivers[contentType](entityBody);
                         inputs = Object.assign({}, url.query, data);
                     }
                     catch (e) {
@@ -239,27 +241,32 @@ class Kite {
                     }
                 }
                 else {
-                    this.logService.warn(`Unsupport content type "${contentType}"`);
-                    inputs = entityBody;
+                    this.logService.warn(`Unsupported content type "${contentType}"`);
+                    // inputs = entityBody;
+                    inputs.$data = entityBody;
                 }
             }
             // Call middlewares
             let middleResult;
             for (let middleware of this.middlewares) {
-                middleResult = await middleware.call(null, response, request, api, inputs);
-                // is it a HolderClass ?
-                if (this.config.holderClass && middleResult instanceof this.config.holderClass) {
-                    holder = middleResult;
+                middleResult = middleware.exec(request, response, api, inputs);
+                // if return type is promise then wait promise return
+                if (middleResult instanceof Promise) {
+                    middleResult = await middleResult;
                 }
-                else if (middleResult === false) {
+                // ends the response if middleware explicitly returns false, else continue
+                if (middleResult === false) {
                     response.end();
                     return;
                 }
             }
-            // call API with pre-generated $proxy(inputs, holder, context)
-            let result = await api.$proxy(inputs, holder, request, response);
-            // if api havn't write response, call responder to output contents
-            if (!response.headersSent) {
+            // call API with pre-generated $proxy(inputs)
+            let result = await api.$proxy(inputs, request);
+            // let this controller handle all response if "handleResponse" function is available
+            if (api.onResponse) {
+                api.onResponse(response, result);
+            }
+            else {
                 this.config.responder.write(result, response);
             }
         }
@@ -275,11 +282,10 @@ class Kite {
                 catch (err) {
                     this.logService.error(err);
                     let error = this.errorService.getError(1001);
-                    response.write(JSON.stringify({ error }));
+                    response.end(JSON.stringify({ error }));
                 }
             }
         }
-        response.end();
     }
     /**
      * get request data
@@ -320,10 +326,15 @@ class Kite {
         return this;
     }
     /**
-     * Get config of current Kite instance
+     * Set train kite data provider.
+     *
+     * If a provider is given, Kite will invoke the `exec()` method when request comes,
+     * the return value must be a "injectable" object
+     * @param provider Provider instance
      */
-    getConfig() {
-        return this.config;
+    provider(provider) {
+        this._provider = provider;
+        return this;
     }
 }
 exports.Kite = Kite;

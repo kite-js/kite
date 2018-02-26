@@ -15,6 +15,7 @@
  **/
 Object.defineProperty(exports, "__esModule", { value: true });
 require("reflect-metadata");
+const MK_DEPENDENCIES = 'kite:dependencies';
 /**
  * Tell Kite to inject an "injectable" #Injectable# instance for a controller.
  *
@@ -45,14 +46,14 @@ require("reflect-metadata");
  */
 function Inject() {
     return function (target, key) {
-        let dependencies = Reflect.getMetadata('kite:dependencies', target) || new Map();
+        let dependencies = Reflect.getMetadata(MK_DEPENDENCIES, target) || new Map();
         dependencies.set(key, Reflect.getMetadata('design:type', target, key));
-        Reflect.defineMetadata('kite:dependencies', dependencies, target);
+        Reflect.defineMetadata(MK_DEPENDENCIES, dependencies, target);
     };
 }
 exports.Inject = Inject;
 function getDependencies(target) {
-    return Reflect.getMetadata('kite:dependencies', target);
+    return Reflect.getMetadata(MK_DEPENDENCIES, target);
 }
 exports.getDependencies = getDependencies;
 //# sourceMappingURL=inject.js.map

@@ -14,4 +14,15 @@
  * all copies or substantial portions of the Software.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-//# sourceMappingURL=parser.js.map
+const querystring = require("querystring");
+// tslint:disable-next-line:no-shadowed-variable
+function XformReceiverProvider() {
+    return {
+        contentType: 'application/x-www-form-urlencoded',
+        receiver: function (data) {
+            return querystring.parse(data);
+        }
+    };
+}
+exports.XformReceiverProvider = XformReceiverProvider;
+//# sourceMappingURL=xform-receiver.provider.js.map

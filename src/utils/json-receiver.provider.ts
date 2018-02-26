@@ -1,4 +1,4 @@
-/***
+/*
  * Copyright (c) 2017 [Arthur Xie]
  * <https://github.com/kite-js/kite>
  * 
@@ -13,17 +13,16 @@
  * all copies or substantial portions of the Software.
  */
 
-import { ParserProvider } from '../core/types/parser';
+import { ReceiverProvider } from '../core/types/receiver';
 
-// tslint:disable-next-line:no-shadowed-variable
-export function JsonParserProvider<ParserProvider>() {
+export function JsonReceiverProvider<ParserProvider>() {
     const contentType = 'application/json';
-    const parser = function (data: string) {
+    const receiver = function (data: string) {
         return JSON.parse(data);
     };
 
     return {
         contentType,
-        parser
+        receiver
     }
 }

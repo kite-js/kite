@@ -15,6 +15,7 @@
  **/
 Object.defineProperty(exports, "__esModule", { value: true });
 require("reflect-metadata");
+const MK_INJECTABLE = 'kite:injectable';
 /**
  * Injectable services decorator, represents a service can be inject to controllers.
  *
@@ -46,12 +47,12 @@ require("reflect-metadata");
  */
 function Injectable() {
     return function (constructor) {
-        Reflect.defineMetadata('kite:injectable', true, constructor);
+        Reflect.defineMetadata(MK_INJECTABLE, true, constructor);
     };
 }
 exports.Injectable = Injectable;
 function isInjectable(target) {
-    return Reflect.getMetadata('kite:injectable', target);
+    return Reflect.getMetadata(MK_INJECTABLE, target);
 }
 exports.isInjectable = isInjectable;
 //# sourceMappingURL=injectable.js.map

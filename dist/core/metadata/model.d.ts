@@ -1,5 +1,4 @@
-import { ArrayType } from './model';
-/**
+/***
  * Copyright (c) 2017 [Arthur Xie]
  * <https://github.com/kite-js/kite>
  *
@@ -15,6 +14,7 @@ import { ArrayType } from './model';
  */
 import 'reflect-metadata';
 import { Class } from '../types/class';
+import { ArrayType } from './model';
 /**
  * Annotate classes as Kite models
  *

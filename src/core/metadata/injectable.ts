@@ -15,6 +15,8 @@
 
 import 'reflect-metadata';
 
+const MK_INJECTABLE = 'kite:injectable';
+
 /**
  * Injectable services decorator, represents a service can be inject to controllers.
  * 
@@ -45,12 +47,12 @@ import 'reflect-metadata';
  * 
  */
 export function Injectable() {
-    return function (constructor: Function) {
-        Reflect.defineMetadata('kite:injectable', true, constructor);
+    return function (constructor: Object) {
+        Reflect.defineMetadata(MK_INJECTABLE, true, constructor);
     }
 }
 
 
 export function isInjectable(target: Object) {
-    return Reflect.getMetadata('kite:injectable', target);
+    return Reflect.getMetadata(MK_INJECTABLE, target);
 }

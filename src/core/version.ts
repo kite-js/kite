@@ -1,4 +1,4 @@
-/**
+/***
  * Copyright (c) 2017 [Arthur Xie]
  * <https://github.com/kite-js/kite>
  * 
@@ -13,4 +13,4 @@
  * all copies or substantial portions of the Software.
  */
 
-export const VERSION = '0.4.3';
+export const VERSION = '0.5.0';

@@ -1,4 +1,4 @@
-/**
+/***
  * Copyright (c) 2017 [Arthur Xie]
  * <https://github.com/kite-js/kite>
  * 
@@ -20,110 +20,15 @@ import * as vm from 'vm';
 import * as http from 'http';
 import { Class } from '../types/class';
 
-const MK_ENTRY_POINT = 'kite:entrypoint';
+const MK_ENTRY_POINT = 'kite:entry-point';
+const MK_ENTRY_PARAMS = 'kite:entry-params';
+const MK_MAP_INPUT_ONLY = 'kite:map-input-only';
 
 /**
  * Controller entry point definition structure
  */
 export type InputRules = {
     [name: string]: FilterRule
-}
-
-/**
- * Entry Point Configuration
- * 
- * useage:
- * 
- * ```typescript
- * @Controller()
- * export class AssetUpdateController {
- *      @Entry({
- *          $cleanModel: true,
- *          $inputRules: {
- *              _id: {
- *                  required: true
- *              }
- *          }
- *      })
- *      async exec(asset: Asset, _id: ObjectId) {
- *          delete asset.creationTime;
- *          // ...
- *          // database update
- *      }
- * }
- * ```
- */
-export interface EntryConfig {
-    /**
-     * create an Kite model without default value
-     * 
-     * set this value to `true` will cause Kite to create a entry point Kite model by calling
-     * `Object.create(Model.prototype)` instead of `new Model()`, so the constructor of
-     * Kite model will not be called, and all default value settings in constructor will not work.
-     * 
-     * + `true` - create a "clean" model
-     * + `false` - create an ordinary model, default is false
-     * 
-     * Sometimes people declare some properties with default values in a Kite model, 
-     * such as `creationTime: Date = new Date()` - for setting document / table row with current
-     * date time before insert, the default values setting code will be generated in constructor
-     * function by TypeScript compiler, so every time Kite create an model instance by `new Model()`
-     * will create an object with default values, for example:
-     * 
-     * ```typescript
-     * @Model()
-     * export class Asset {
-     *      // asset id
-     *      _id: ObjectId;
-     * 
-     *      // asset creation time, set to current timestamp
-     *      creationTime: Date = new Date();
-     * 
-     *      // asset creator user id
-     *      creatorId: ObjectId;
-     * 
-     *      // asset name
-     *      @In({required: true})
-     *      name: string;
-     * 
-     *      // asset quantity
-     *      @In({required: true})
-     *      quantity: number;
-     * }
-     * ```
-     * 
-     * But default values become useless when coding "update" APIs, assuming update a document with above 
-     * model "Asset", if "creationTime" is set to current date time, this value will be updated to database
-     * if no action is taken, the first solution is remove this property from object:
-     * ```typescript
-     * @Controller()
-     * export class AssetUpdateController {
-     *      @Entry()
-     *      async exec(asset: Asset, _id: ObjectId) {
-     *          delete asset.creationTime;
-     *          // ...
-     *          // database update
-     *      }
-     * }
-     * ```
-     * 
-     * the second solution is setting "$cleanModel" to `true`:
-     * ```typescript
-     * @Controller()
-     * export class AssetUpdateController {
-     *      @Entry({$cleanModel: true})
-     *      async exec(asset: Asset, _id: ObjectId) {
-     *          // database update
-     *      }
-     * }
-     * ```
-     */
-    $cleanModel?: boolean;
-
-    /**
-     * Input rules for entry point
-     */
-    $inputRules?: InputRules;
 }
 
 /**
@@ -182,8 +87,6 @@ export interface EntryConfig {
  *   these objects should support constructor initialization, such as Date `new Date(inputs)` and MongoDB ObjectId `new ObjectId(inputs)`
  * + __Kite model__ - create an model and filter the inputs with declared rules
  * + __[IncomingMessage](https://nodejs.org/api/http.html#http_class_http_incomingmessage)__ - current IncomingMessage (request) object
- * + __[ServerResponse](https://nodejs.org/api/http.html#http_class_http_serverresponse)__ - current ServerResponse (response) object
- * + __"Holder" class__ - a decoded holder object is passed in, 
  * 
  * ### Basic mappings
  * A shortcut to map client inputs to controllers is define map rules for parameters of entry points.
@@ -201,7 +104,7 @@ export interface EntryConfig {
  * ```
  * the server console will output "
  * 
- * > 1000 Tom unknow
+ * `> 1000 Tom unknow`
  * 
  * Kite maps "_id" and "name" from URL to parameters of controller entry point,
  * both "_id" and "name" are required fields, if any of them is omitted, Kite will give an error to clients;
@@ -210,7 +113,7 @@ export interface EntryConfig {
  * And, if "country" is given in request, parameter "country" of "UserUpdateController.exec()" is set to a given value,
  * for example http://localhost:4000/UserUpdate?_id=1000&name=Tom&country=US" outputs:
  * 
- * > 1000 Tom US
+ * `> 1000 Tom US`
  * 
  * Kite treats non-default arguments as "required" fields for entry points, and arguments with default values are treated 
  * as optional fields, so you can place the optional arguments any where:
@@ -344,20 +247,8 @@ export interface EntryConfig {
  * }
  * ```
  * 
- * ### Access raw `request` and `response` object
- * ```typescript
- * import { IncomingMessage, ServerResponse } from 'http';
- * 
- * export class UserUpdateController {
- *     @Entry()
- *     async exec(request: IncomingMessage, response: ServerResponse) {
- *          return {url: ctx.request.url};
- *     }
- * }
- * ```
- * 
  */
-export function Entry(config?: EntryConfig | InputRules) {
+export function Entry(config?: InputRules) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         // If more than one entrypoint be annotated, throw an error
         if (Reflect.hasMetadata(MK_ENTRY_POINT, target)) {
@@ -389,6 +280,14 @@ export function Entry(config?: EntryConfig | InputRules) {
         // make the parameters to independent
         let paramnames = params ? params.split(',') : [];
 
+        // save parameter name and relative type to object
+        let paramReflection = {} as any;
+        paramnames.forEach((name, index) => {
+            paramReflection[name] = paramtypes[index];
+        });
+        // save parameter names and tyes for reflection (for middleware)
+        Reflect.defineMetadata(MK_ENTRY_PARAMS, paramReflection, target);
+
         let proxyMakerParamNames: string[] = [];
         let proxyMakerParams: any[] = [];
 
@@ -412,75 +311,62 @@ export function Entry(config?: EntryConfig | InputRules) {
         // Here, limit only one Kite model in parameter array of entry point
         // TODO: allow child models mapping in parameter directly ?
         if (numModels > 1) {
-            // tslint:disable-next-line:max-line-length
             throw Error(`Only one Kite model is allowed in parameter list of entry point, please check controller: "${target.constructor.name}"`);
         }
 
-        let entryParams: string[] = [], numGlobalMapping = 0, holderClass = Kite.getInstance().getConfig().holderClass;
+        let entryParams: string[] = [], numGlobalMapping = 0;
 
         paramnames.forEach((name, idx) => {
             let type = paramtypes[idx];
 
             if (type === http.IncomingMessage) {
                 entryParams.push('request');
-            } else if (type === http.ServerResponse) {
-                entryParams.push('response');
-            } else if (holderClass && (type === holderClass || type.prototype instanceof holderClass)) {
-                entryParams.push('holder');
-            } else {
-                // Only one Kite model type in parameters, treat it as global mapping type
-                if ((isKiteModel(type) && numModels === 1) || name.startsWith('$')) {
-                    numGlobalMapping++;
+            } else if (isKiteModel(type) && numModels === 1) { // Only one Kite model type in parameters, treat it as global mapping type
+                numGlobalMapping++;
 
-                    let typename, index;
-                    // type is already cached?
-                    index = proxyMakerParams.indexOf(type);
-                    if (index === -1) {
-                        typename = `_${type.name}`;
+                let typename, index;
+                // type is already cached?
+                index = proxyMakerParams.indexOf(type);
+                if (index === -1) {
+                    typename = `_${type.name}`;
 
-                        if (proxyMakerParamNames.includes(typename)) {
-                            typename += proxyMakerParamNames.length;
-                        }
-
-                        proxyMakerParamNames.push(typename);
-                        proxyMakerParams.push(type);
-                    } else {
-                        typename = proxyMakerParamNames[index];
+                    if (proxyMakerParamNames.includes(typename)) {
+                        typename += proxyMakerParamNames.length;
                     }
 
-                    if (isKiteModel(type)) {
-                        if (config && (config as EntryConfig).$cleanModel) {
-                            entryParams.push(`Object.create(${typename}.prototype)._$filter(inputs, true)`);
-                        } else {
-                            entryParams.push(`new ${typename}()._$filter(inputs)`);
-                        }
+                    proxyMakerParamNames.push(typename);
+                    proxyMakerParams.push(type);
+                } else {
+                    typename = proxyMakerParamNames[index];
+                }
+
+                if (isKiteModel(type)) {
+                    if (isMapInputOnly(target)) {
+                        entryParams.push(`Object.create(${typename}.prototype)._$filter(inputs, true)`);
                     } else {
-                        entryParams.push(`new ${typename}(inputs)`);
+                        entryParams.push(`new ${typename}()._$filter(inputs)`);
                     }
                 } else {
-                    Reflect.defineMetadata('design:type', type, _Param.prototype, name);
-
-                    // by default, all parameters are required fields if no rule be defined, 
-                    // if any parameter has a default value "undefined", treat it as a optional input
-                    let undefRegx = new RegExp(`(^|,)${name}=`);
-                    let required = !undefRegx.test(rawParams);
-                    let rule: FilterRule = {
-                        required
-                    };
-
-                    // If filter rule available, use user defined, else create one
-                    if (config) {
-                        if ((config as EntryConfig).$inputRules && (config as EntryConfig).$inputRules[name]) {
-                            Object.assign(rule, (config as EntryConfig).$inputRules[name]);
-                        } else if ((config as InputRules)[name]) {
-                            Object.assign(rule, (config as InputRules)[name]);
-                        }
-                    }
-
-                    In(rule)(_Param.prototype, name);
-
-                    entryParams.push('param.' + name);
+                    entryParams.push(`new ${typename}(inputs)`);
                 }
+            } else {
+                Reflect.defineMetadata('design:type', type, _Param.prototype, name);
+
+                // by default, all parameters are required fields if no rule be defined, 
+                // if any argument has a default value, let's treat it as an optional input
+                let defaultValueArg = new RegExp(`(^|,)${name}=`);
+                let rule: FilterRule = {
+                    required: !defaultValueArg.test(rawParams)
+                };
+
+                // If filter rule available, use user defined, else create one
+                if (config) {
+                    Object.assign(rule, config[name]);
+                }
+
+                In(rule)(_Param.prototype, name);
+
+                entryParams.push('param.' + name);
             }
         });
 
@@ -499,7 +385,7 @@ export function Entry(config?: EntryConfig | InputRules) {
         let callParamsStr = entryParams.join(', ');
         let fnsrc =
             `(function(${proxyMakerParamNameStr}) {
-                return function(inputs, holder, request, response) {
+                return function(inputs, request) {
                     ${paramExp}
                     return this.${propertyKey}(${callParamsStr});
                 }
@@ -516,6 +402,45 @@ export function Entry(config?: EntryConfig | InputRules) {
  * Test a class has entry point or not
  * @param controller any value
  */
-export function hasEntryPoint(controller: any) {
+export function hasEntryPoint(controller: object) {
     return Reflect.hasMetadata(MK_ENTRY_POINT, controller);
+}
+
+/**
+ * Get parameter reflection object from a controller
+ * @param controller constroller instance
+ */
+export function getEntryParams(controller: object) {
+    return Reflect.getMetadata(MK_ENTRY_PARAMS, controller);
+}
+
+/**
+ * Tell Kite only map client input to a Kite model and its children,
+ * without calling the constructor.
+ * 
+ * This decorator can be only applied to Kite controller entry point function,
+ * and must be placed after `@Entry()` decorator, for example:
+ * ```typescript
+ * import { Controller, Entry } from 'kite-framework';
+ * 
+ * @Controller()
+ * export class TypesController {
+ *     @Entry()
+ *     @MapInputOnly
+ *     async exec(str: string, num: number, bool: boolean, date: Date = undefined) {
+ *         return { values: { str, num, bool, date } };
+ *     }
+ * }
+ * ```
+ */
+export function MapInputOnly(target: Object, propertyKey: string, descriptor: PropertyDescriptor) {
+    Reflect.defineMetadata(MK_MAP_INPUT_ONLY, true, target);
+}
+
+/**
+ * Test a Kite model is only map client inputs or not
+ * @param target 
+ */
+export function isMapInputOnly(target: Object): boolean {
+    return Reflect.hasMetadata(MK_MAP_INPUT_ONLY, target);
 }

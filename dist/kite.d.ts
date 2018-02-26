@@ -15,13 +15,13 @@
 import 'reflect-metadata';
 import { Config } from './core/types/config';
 import { Middleware } from './core/types/middleware';
+import { Provider } from './core/types/provider';
 /**
  * Kite
  *
  * TODO: improve cluster processes
  */
 export declare class Kite {
-    private static instance;
     private server;
     private config;
     private workdir;
@@ -29,20 +29,12 @@ export declare class Kite {
     private maxContentLength;
     private errorService;
     private logService;
-    private watcherService;
-    private parsers;
+    private watchService;
+    private receivers;
     private middlewares;
     private router;
-    private constructor();
-    /**
-     * Initialize a Kite instance with given configuration
-     * @param config
-     */
-    static init(config?: string | Config): Kite;
-    /**
-     * Get current running Kite instance
-     */
-    static getInstance(): Kite;
+    private _provider;
+    constructor(config?: string | Config);
     /**
      * Load the configuration from file or an KiteConfig object
      *
@@ -53,6 +45,14 @@ export declare class Kite {
      */
     private _init(config);
     /**
+     * Set watch mode
+     * Watch mode allows you code & test APIs smoothly without restarting Kite server.
+     *
+     * @param flag - true (default), Kite work in watch mode, suggested in dev mode
+     *             - false, turn off watch suggested set to `false` in production
+     */
+    watch(flag?: boolean): this;
+    /**
      * Watch configuration file
      * @param filename
      */
@@ -60,13 +60,13 @@ export declare class Kite {
     /**
      * Relase your kite, let it fly
      */
-    fly(): this;
+    fly(port?: number, hostname?: string): this;
     /**
      * Request listener, process all requests here
-     * @param { http.IncomingMessage } request
-     * @param { http.ServerResponse } response
+     * @param { IncomingMessage } request
+     * @param { ServerResponse } response
      */
-    private requestListener(request, response);
+    private onRequest(request, response);
     /**
      * get request data
      */
@@ -78,7 +78,11 @@ export declare class Kite {
      */
     use(middleware: Middleware): this;
     /**
-     * Get config of current Kite instance
+     * Set train kite data provider.
+     *
+     * If a provider is given, Kite will invoke the `exec()` method when request comes,
+     * the return value must be a "injectable" object
+     * @param provider Provider instance
      */
-    getConfig(): Config;
+    provider(provider: Provider): this;
 }

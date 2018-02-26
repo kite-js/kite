@@ -18,6 +18,6 @@ function __export(m) {
 }
 Object.defineProperty(exports, "__esModule", { value: true });
 __export(require("./http.router"));
-__export(require("./xform.parser.provider"));
-__export(require("./json.parser.provider"));
+__export(require("./xform-receiver.provider"));
+__export(require("./json-receiver.provider"));
 //# sourceMappingURL=index.js.map

@@ -42,5 +42,5 @@ import 'reflect-metadata';
  * ```
  *
  */
-export declare function Injectable(): (constructor: Function) => void;
+export declare function Injectable(): (constructor: Object) => void;
 export declare function isInjectable(target: Object): any;

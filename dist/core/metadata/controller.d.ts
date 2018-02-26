@@ -1,4 +1,4 @@
-/**
+/***
  * Copyright (c) 2017 [Arthur Xie]
  * <https://github.com/kite-js/kite>
  *
@@ -43,3 +43,4 @@ export interface ControllerMetadata {
  */
 export declare function Controller<T extends ControllerMetadata>(metadata?: T): (constructor: Function) => void;
 export declare function getControllerMetadata(target: Object): ControllerMetadata;
+export declare function isKiteController(target: object): boolean;

@@ -1,4 +1,5 @@
-/**
+"use strict";
+/*
  * Copyright (c) 2017 [Arthur Xie]
  * <https://github.com/kite-js/kite>
  *
@@ -12,6 +13,16 @@
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  */
-export declare type Class = {
-    new (...args: any[]): any;
-};
+Object.defineProperty(exports, "__esModule", { value: true });
+function JsonReceiverProvider() {
+    const contentType = 'application/json';
+    const receiver = function (data) {
+        return JSON.parse(data);
+    };
+    return {
+        contentType,
+        receiver
+    };
+}
+exports.JsonReceiverProvider = JsonReceiverProvider;
+//# sourceMappingURL=json-receiver.provider.js.map

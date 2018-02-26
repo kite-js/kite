@@ -32,23 +32,27 @@ import { IncomingMessage, ServerResponse } from 'http';
  * + __`true` or nothing__ - Kite will continue call next middleware if exsits, then continue to process the request
  * + __false__ - explicitly returns false will force Kite stop calling other middlewares and ends the session
  *
- * A Kite module generally returns nothing (does not need a return statment) or `Promise.resolve(true)`
+ * A Kite middleware generally returns "void" or `Promise.resolve(true)`
  * to tell Kite to continue, for example, a middleware for setting response headers like:
  * ```typescript
- * function setHeaderMiddleware(res: ServerResponse, req: IncomingMessage): Promise<boolean> {
- *     res.setHeader('Access-Control-Allow-Origin', '*');
- *     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
- *     res.setHeader('Access-Control-Allow-Headers', 'Origin,X-Requested-With,Content-Type,Accept,Access-Token');
+ * class SetHeaderMiddleware implememts Middleware {
+ *      exec(res: ServerResponse, req: IncomingMessage): Promise<boolean> {
+ *          res.setHeader('Access-Control-Allow-Origin', '*');
+ *          res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+ *          res.setHeader('Access-Control-Allow-Headers', 'Origin,X-Requested-With,Content-Type,Accept,Access-Token');
+ *      }
  * }
  * ```
  *
- * If you want to end a session before Kite invokes a controller, you should throw an error, then Kite will ends
+ * If you want to end a session before Kite invokes a controller, you can throw an error, then Kite will ends
  * the respond an error message to client:
  * ```typescript
- * function someCheckingMiddleware(res: ServerResponse, req: IncomingMessage): Promise<boolean> {
- *     if(!req.headers['access-token']) {   // if there is not an 'access-token' in request header
- *          throw new KiteError(1000);  // throw a Kite error
- *     }
+ * class SomeCheckingMiddleware implememts Middleware {
+ *      exec(res: ServerResponse, req: IncomingMessage): Promise<boolean> {
+ *          if(!req.headers['access-token']) {   // if there is not an 'access-token' in request header
+ *               throw new KiteError(1000);  // throw a Kite error
+ *          }
+ *      }
  * }
  * ```
  *
@@ -56,4 +60,6 @@ import { IncomingMessage, ServerResponse } from 'http';
  * but this is not recommended, it breaks the logic of Kite. If you really want to do in this way,
  * your middleware must handle client request and server response.
  */
-export declare type Middleware = (response: ServerResponse, request: IncomingMessage, api: Object, inputs: any) => Promise<any>;
+export interface Middleware {
+    exec(request?: IncomingMessage, response?: ServerResponse, controller?: Function, inputs?: any): Promise<any> | any;
+}

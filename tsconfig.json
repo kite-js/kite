@@ -10,6 +10,9 @@
         "declaration": true,
         "rootDir": "src",
         "outDir": "dist",
+        "lib": [
+            "es7"
+        ],
         "types": [
             "node"
         ],

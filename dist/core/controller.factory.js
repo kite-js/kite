@@ -15,123 +15,116 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 const error_1 = require("./error");
-const path = require("path");
 const inject_1 = require("./metadata/inject");
 const injectable_1 = require("./metadata/injectable");
 const controller_1 = require("./metadata/controller");
+const path = require("path");
+const fs = require("fs");
 /**
  * Controller factory
  * This controller factory does the following things:
  * - Creates controllers
- * - Builds inputs filters
  * - Creates dependencies
  */
 class ControllerFactory {
     constructor() {
         // Controller cache
-        this.controllers = new Map();
-        // dependencies cache
-        this.dependencies = new WeakMap();
+        // private controllers = new Map();
+        this._images = new Map();
+        this._controllers = new Map();
     }
     /**
-     * Get a "controller" instance
-     *
-     * The first parameter "id" is called "API ID" or "Controller Id", which is provided by router,
-     * "id" is the identifier of a Kite controller, Kite controller factory use this "id" to locate
-     * controller instance from cache, in "HttpRouter", this parameter is set to the relative path
-     * of a controller, for example `/greeting`, `/user/login`. For performance consideration, this
-     * argument should be as short as possible, because shorter string can reduce the searching time
-     * of javascript Map object.
-     *
-     * @param id module id
-     * @param filename Path of controller, node will require this path for controller module(s)
-     * @return Controller instance, which is ready to be called
+     * Get a controller class by given filename,
+     * the filename can be an absolute path or a relative path,
+     * if a relative path is given, Kite will search the working
+     * directory for modules
+     * @param filename controller filename
      */
-    async get(id, filename) {
-        // Try get controller instance from cache
-        let instance = this.controllers.get(id);
-        // if instance is not cached, try to create a new one by given filename (module filename)
-        if (!instance) {
-            if (!path.isAbsolute(filename)) {
-                filename = path.join(this.workdir, filename);
+    getController(filename) {
+        let controller = this._controllers.get(filename);
+        if (!controller) {
+            const fullname = path.isAbsolute(filename) ? filename : path.join(this.workdir, filename);
+            if (!fs.existsSync(fullname)) {
+                throw new error_1.KiteError(1002);
             }
-            // no controller instance exists, load the module and create an instance
-            let controller;
-            try {
-                // Load the module
-                let mod = require(filename);
-                // watch for controller & related files changes
-                this.watcherService.watch(filename, () => {
-                    this.controllers.delete(id);
-                });
-                // find the first "@Controller" decorated module, treat it as a "Controller"
-                Object.keys(mod).every(name => {
-                    if (controller_1.getControllerMetadata(mod[name])) {
-                        controller = mod[name];
-                        return false;
-                    }
-                    return true;
-                });
-            }
-            catch (e) {
-                this.logService.error(e);
-                let errcode;
-                if (e.code === 'MODULE_NOT_FOUND') {
-                    errcode = 1002;
+            const mod = require(fullname);
+            // find the first "@Controller" decorated module, treat it as a "Controller"
+            const keys = Object.keys(mod);
+            for (let i = 0; i < keys.length; i++) {
+                if (controller_1.isKiteController(mod[keys[i]])) {
+                    controller = mod[keys[i]];
+                    break;
                 }
-                else {
-                    errcode = 1003;
-                }
-                throw new error_1.KiteError(errcode);
             }
             if (!controller) {
-                // tslint:disable-next-line:max-line-length
-                throw new Error(`Required module is not a Kite controller, please annotate the controller class with "@Controller": "${filename}"`);
+                throw new Error(`No @Controller annotation was found at "${fullname}"`);
             }
-            // create new controller instance
+            this._controllers.set(filename, controller);
+            // watch this file
+            this.watchService.watch(fullname, () => {
+                this._controllers.delete(filename);
+            });
+        }
+        return controller;
+    }
+    /**
+     * Get controller instance by given controller class and data
+     * @param controller
+     * @param data
+     */
+    async getInstance(controller, data = undefined) {
+        // get image by data
+        let image = this._images.get(data);
+        if (!image) {
+            image = {
+                controllers: new WeakMap(),
+                dependencies: new WeakMap()
+            };
+            this._images.set(data, image);
+        }
+        let instance = image.controllers.get(controller);
+        if (!instance) {
             instance = new controller();
-            // wait for dependency injection
-            await this.injectDependency(instance);
-            // cache this instance
-            this.controllers.set(id, instance);
+            await this._injectDependency(instance, image.dependencies, data);
+            image.controllers.set(controller, instance);
         }
         return instance;
     }
     /**
-     * Dependency injection
-     *
-     * @private
+     * Inject dependencies for an object
+     * @param target
+     * @param pool
      */
-    async injectDependency(target) {
+    async _injectDependency(target, pool, data) {
         // Get inject types
         let dependencies = inject_1.getDependencies(target);
         if (!dependencies) {
             return;
         }
         // walk each injection target, create injection instance
-        let injectableObject;
+        let dependency;
         for (let [prop, type] of dependencies) {
-            // Is target type injectable ?
-            if (!injectable_1.isInjectable(type)) {
-                // tslint:disable-next-line:max-line-length
-                throw new Error(`${target.constructor.name}.${prop} is annonced with "@Inject()" but injection target "${type.name}" is not injectable`);
-            }
             // Get injection target from cache, if not exist, create one
-            injectableObject = this.dependencies.get(type);
-            if (!injectableObject) {
-                injectableObject = new type();
+            dependency = pool.get(type);
+            if (!dependency) {
+                // Is target type injectable ?
+                if (!injectable_1.isInjectable(type)) {
+                    // tslint:disable-next-line:max-line-length
+                    throw new Error(`${target.constructor.name}.${prop} is annonced with "@Inject()" but target "${type.name}" is not injectable`);
+                }
+                dependency = data && data instanceof type ? data : new type();
                 // Cache it, so chained injection could find this instance if there are dependence on each other
-                this.dependencies.set(type, injectableObject);
+                pool.set(type, dependency);
                 // inject dependency recursively
-                await this.injectDependency(injectableObject);
+                await this._injectDependency(dependency, pool, data);
                 // Initialize injection target if contains a "init" method, note: this muse be a "async" function
-                if (injectableObject.onKiteInit) {
-                    await injectableObject.onKiteInit();
+                if (dependency.onInit) {
+                    await dependency.onInit();
                 }
             }
-            // put the injection object to current object
+            // pass the depedency to current object
             Object.defineProperty(target, prop, {
-                value: injectableObject
+                value: dependency
             });
         }
     }

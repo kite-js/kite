@@ -37,5 +37,5 @@ export interface Init {
      * Note this method must return a "Promise" object or declare with "async" modifier,
      * Please handle all exceptions, an exception may cause Kite crash
      */
-    onKiteInit(): Promise<any>;
+    onInit(): Promise<any>;
 }

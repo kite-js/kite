@@ -1,4 +1,4 @@
-/**
+/***
  * Copyright (c) 2017 [Arthur Xie]
  * <https://github.com/kite-js/kite>
  *
@@ -12,6 +12,14 @@
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  */
-export declare type Class = {
-    new (...args: any[]): any;
+export declare type Receiver = (data: string) => {
+    [name: string]: string;
 };
+export declare type ReceiverEntity = {
+    contentType: string;
+    receiver: Receiver;
+};
+/**
+ * request data receiver factory
+ */
+export declare type ReceiverProvider = () => ReceiverEntity;

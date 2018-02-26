@@ -46,7 +46,7 @@ export class KiteResponder implements Responder {
             res.setHeader('Content-Type', `${contentType}`);
         }
 
-        res.write(content);
+        res.end(content);
     }
 
     writeError(err: any, res: http.ServerResponse, errorService: ErrorService): void {
@@ -64,7 +64,7 @@ export class KiteResponder implements Responder {
 
         res.setHeader('Content-Type', 'application/json');
 
-        res.write(content);
+        res.end(content);
     }
 
 }

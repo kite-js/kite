@@ -1,4 +1,4 @@
-/**
+/***
  * Copyright (c) 2017 [Arthur Xie]
  * <https://github.com/kite-js/kite>
  *
@@ -20,101 +20,6 @@ import { FilterRule } from './model';
 export declare type InputRules = {
     [name: string]: FilterRule;
 };
-/**
- * Entry Point Configuration
- *
- * useage:
- *
- * ```typescript
- * @Controller()
- * export class AssetUpdateController {
- *      @Entry({
- *          $cleanModel: true,
- *          $inputRules: {
- *              _id: {
- *                  required: true
- *              }
- *          }
- *      })
- *      async exec(asset: Asset, _id: ObjectId) {
- *          delete asset.creationTime;
- *          // ...
- *          // database update
- *      }
- * }
- * ```
- */
-export interface EntryConfig {
-    /**
-     * create an Kite model without default value
-     *
-     * set this value to `true` will cause Kite to create a entry point Kite model by calling
-     * `Object.create(Model.prototype)` instead of `new Model()`, so the constructor of
-     * Kite model will not be called, and all default value settings in constructor will not work.
-     *
-     * + `true` - create a "clean" model
-     * + `false` - create an ordinary model, default is false
-     *
-     * Sometimes people declare some properties with default values in a Kite model,
-     * such as `creationTime: Date = new Date()` - for setting document / table row with current
-     * date time before insert, the default values setting code will be generated in constructor
-     * function by TypeScript compiler, so every time Kite create an model instance by `new Model()`
-     * will create an object with default values, for example:
-     *
-     * ```typescript
-     * @Model()
-     * export class Asset {
-     *      // asset id
-     *      _id: ObjectId;
-     *
-     *      // asset creation time, set to current timestamp
-     *      creationTime: Date = new Date();
-     *
-     *      // asset creator user id
-     *      creatorId: ObjectId;
-     *
-     *      // asset name
-     *      @In({required: true})
-     *      name: string;
-     *
-     *      // asset quantity
-     *      @In({required: true})
-     *      quantity: number;
-     * }
-     * ```
-     *
-     * But default values become useless when coding "update" APIs, assuming update a document with above
-     * model "Asset", if "creationTime" is set to current date time, this value will be updated to database
-     * if no action is taken, the first solution is remove this property from object:
-     * ```typescript
-     * @Controller()
-     * export class AssetUpdateController {
-     *      @Entry()
-     *      async exec(asset: Asset, _id: ObjectId) {
-     *          delete asset.creationTime;
-     *          // ...
-     *          // database update
-     *      }
-     * }
-     * ```
-     *
-     * the second solution is setting "$cleanModel" to `true`:
-     * ```typescript
-     * @Controller()
-     * export class AssetUpdateController {
-     *      @Entry({$cleanModel: true})
-     *      async exec(asset: Asset, _id: ObjectId) {
-     *          // database update
-     *      }
-     * }
-     * ```
-     */
-    $cleanModel?: boolean;
-    /**
-     * Input rules for entry point
-     */
-    $inputRules?: InputRules;
-}
 /**
  * Kite controller entry point decorator.
  *
@@ -171,8 +76,6 @@ export interface EntryConfig {
  *   these objects should support constructor initialization, such as Date `new Date(inputs)` and MongoDB ObjectId `new ObjectId(inputs)`
  * + __Kite model__ - create an model and filter the inputs with declared rules
  * + __[IncomingMessage](https://nodejs.org/api/http.html#http_class_http_incomingmessage)__ - current IncomingMessage (request) object
- * + __[ServerResponse](https://nodejs.org/api/http.html#http_class_http_serverresponse)__ - current ServerResponse (response) object
- * + __"Holder" class__ - a decoded holder object is passed in,
  *
  * ### Basic mappings
  * A shortcut to map client inputs to controllers is define map rules for parameters of entry points.
@@ -190,7 +93,7 @@ export interface EntryConfig {
  * ```
  * the server console will output "
  *
- * > 1000 Tom unknow
+ * `> 1000 Tom unknow`
  *
  * Kite maps "_id" and "name" from URL to parameters of controller entry point,
  * both "_id" and "name" are required fields, if any of them is omitted, Kite will give an error to clients;
@@ -199,7 +102,7 @@ export interface EntryConfig {
  * And, if "country" is given in request, parameter "country" of "UserUpdateController.exec()" is set to a given value,
  * for example http://localhost:4000/UserUpdate?_id=1000&name=Tom&country=US" outputs:
  *
- * > 1000 Tom US
+ * `> 1000 Tom US`
  *
  * Kite treats non-default arguments as "required" fields for entry points, and arguments with default values are treated
  * as optional fields, so you can place the optional arguments any where:
@@ -333,22 +236,40 @@ export interface EntryConfig {
  * }
  * ```
  *
- * ### Access raw `request` and `response` object
- * ```typescript
- * import { IncomingMessage, ServerResponse } from 'http';
- *
- * export class UserUpdateController {
- *     @Entry()
- *     async exec(request: IncomingMessage, response: ServerResponse) {
- *          return {url: ctx.request.url};
- *     }
- * }
- * ```
- *
  */
-export declare function Entry(config?: EntryConfig | InputRules): (target: any, propertyKey: string, descriptor: PropertyDescriptor) => void;
+export declare function Entry(config?: InputRules): (target: any, propertyKey: string, descriptor: PropertyDescriptor) => void;
 /**
  * Test a class has entry point or not
  * @param controller any value
  */
-export declare function hasEntryPoint(controller: any): boolean;
+export declare function hasEntryPoint(controller: object): boolean;
+/**
+ * Get parameter reflection object from a controller
+ * @param controller constroller instance
+ */
+export declare function getEntryParams(controller: object): any;
+/**
+ * Tell Kite only map client input to a Kite model and its children,
+ * without calling the constructor.
+ *
+ * This decorator can be only applied to Kite controller entry point function,
+ * and must be placed after `@Entry()` decorator, for example:
+ * ```typescript
+ * import { Controller, Entry } from 'kite-framework';
+ *
+ * @Controller()
+ * export class TypesController {
+ *     @Entry()
+ *     @MapInputOnly
+ *     async exec(str: string, num: number, bool: boolean, date: Date = undefined) {
+ *         return { values: { str, num, bool, date } };
+ *     }
+ * }
+ * ```
+ */
+export declare function MapInputOnly(target: Object, propertyKey: string, descriptor: PropertyDescriptor): void;
+/**
+ * Test a Kite model is only map client inputs or not
+ * @param target
+ */
+export declare function isMapInputOnly(target: Object): boolean;

@@ -1,4 +1,5 @@
-/**
+/// <reference types="node" />
+/***
  * Copyright (c) 2017 [Arthur Xie]
  * <https://github.com/kite-js/kite>
  *
@@ -12,6 +13,10 @@
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  */
-export declare type Class = {
-    new (...args: any[]): any;
-};
+import { IncomingMessage } from 'http';
+/**
+ * Train Kite data provider
+ */
+export interface Provider {
+    exec(request?: IncomingMessage, controller?: Function, query?: any): any;
+}

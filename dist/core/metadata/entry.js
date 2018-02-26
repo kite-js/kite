@@ -1,5 +1,5 @@
 "use strict";
-/**
+/***
  * Copyright (c) 2017 [Arthur Xie]
  * <https://github.com/kite-js/kite>
  *
@@ -16,10 +16,11 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 require("reflect-metadata");
 const model_1 = require("./model");
-const kite_1 = require("./../../kite");
 const vm = require("vm");
 const http = require("http");
-const MK_ENTRY_POINT = 'kite:entrypoint';
+const MK_ENTRY_POINT = 'kite:entry-point';
+const MK_ENTRY_PARAMS = 'kite:entry-params';
+const MK_MAP_INPUT_ONLY = 'kite:map-input-only';
 /**
  * Kite controller entry point decorator.
  *
@@ -76,8 +77,6 @@ const MK_ENTRY_POINT = 'kite:entrypoint';
  *   these objects should support constructor initialization, such as Date `new Date(inputs)` and MongoDB ObjectId `new ObjectId(inputs)`
  * + __Kite model__ - create an model and filter the inputs with declared rules
  * + __[IncomingMessage](https://nodejs.org/api/http.html#http_class_http_incomingmessage)__ - current IncomingMessage (request) object
- * + __[ServerResponse](https://nodejs.org/api/http.html#http_class_http_serverresponse)__ - current ServerResponse (response) object
- * + __"Holder" class__ - a decoded holder object is passed in,
  *
  * ### Basic mappings
  * A shortcut to map client inputs to controllers is define map rules for parameters of entry points.
@@ -95,7 +94,7 @@ const MK_ENTRY_POINT = 'kite:entrypoint';
  * ```
  * the server console will output "
  *
- * > 1000 Tom unknow
+ * `> 1000 Tom unknow`
  *
  * Kite maps "_id" and "name" from URL to parameters of controller entry point,
  * both "_id" and "name" are required fields, if any of them is omitted, Kite will give an error to clients;
@@ -104,7 +103,7 @@ const MK_ENTRY_POINT = 'kite:entrypoint';
  * And, if "country" is given in request, parameter "country" of "UserUpdateController.exec()" is set to a given value,
  * for example http://localhost:4000/UserUpdate?_id=1000&name=Tom&country=US" outputs:
  *
- * > 1000 Tom US
+ * `> 1000 Tom US`
  *
  * Kite treats non-default arguments as "required" fields for entry points, and arguments with default values are treated
  * as optional fields, so you can place the optional arguments any where:
@@ -238,18 +237,6 @@ const MK_ENTRY_POINT = 'kite:entrypoint';
  * }
  * ```
  *
- * ### Access raw `request` and `response` object
- * ```typescript
- * import { IncomingMessage, ServerResponse } from 'http';
- *
- * export class UserUpdateController {
- *     @Entry()
- *     async exec(request: IncomingMessage, response: ServerResponse) {
- *          return {url: ctx.request.url};
- *     }
- * }
- * ```
- *
  */
 function Entry(config) {
     return function (target, propertyKey, descriptor) {
@@ -275,6 +262,13 @@ function Entry(config) {
         let params = rawParams.replace(/=.*?,(?=[_A-Za-z\.\$])/g, ',').replace(/=.*?$/g, '');
         // make the parameters to independent
         let paramnames = params ? params.split(',') : [];
+        // save parameter name and relative type to object
+        let paramReflection = {};
+        paramnames.forEach((name, index) => {
+            paramReflection[name] = paramtypes[index];
+        });
+        // save parameter names and tyes for reflection (for middleware)
+        Reflect.defineMetadata(MK_ENTRY_PARAMS, paramReflection, target);
         let proxyMakerParamNames = [];
         let proxyMakerParams = [];
         // A dynamically created Kite model for mapping controller's entry point parameters
@@ -294,72 +288,56 @@ function Entry(config) {
         // Here, limit only one Kite model in parameter array of entry point
         // TODO: allow child models mapping in parameter directly ?
         if (numModels > 1) {
-            // tslint:disable-next-line:max-line-length
             throw Error(`Only one Kite model is allowed in parameter list of entry point, please check controller: "${target.constructor.name}"`);
         }
-        let entryParams = [], numGlobalMapping = 0, holderClass = kite_1.Kite.getInstance().getConfig().holderClass;
+        let entryParams = [], numGlobalMapping = 0;
         paramnames.forEach((name, idx) => {
             let type = paramtypes[idx];
             if (type === http.IncomingMessage) {
                 entryParams.push('request');
             }
-            else if (type === http.ServerResponse) {
-                entryParams.push('response');
-            }
-            else if (holderClass && (type === holderClass || type.prototype instanceof holderClass)) {
-                entryParams.push('holder');
-            }
-            else {
-                // Only one Kite model type in parameters, treat it as global mapping type
-                if ((model_1.isKiteModel(type) && numModels === 1) || name.startsWith('$')) {
-                    numGlobalMapping++;
-                    let typename, index;
-                    // type is already cached?
-                    index = proxyMakerParams.indexOf(type);
-                    if (index === -1) {
-                        typename = `_${type.name}`;
-                        if (proxyMakerParamNames.includes(typename)) {
-                            typename += proxyMakerParamNames.length;
-                        }
-                        proxyMakerParamNames.push(typename);
-                        proxyMakerParams.push(type);
+            else if (model_1.isKiteModel(type) && numModels === 1) {
+                numGlobalMapping++;
+                let typename, index;
+                // type is already cached?
+                index = proxyMakerParams.indexOf(type);
+                if (index === -1) {
+                    typename = `_${type.name}`;
+                    if (proxyMakerParamNames.includes(typename)) {
+                        typename += proxyMakerParamNames.length;
+                    }
+                    proxyMakerParamNames.push(typename);
+                    proxyMakerParams.push(type);
+                }
+                else {
+                    typename = proxyMakerParamNames[index];
+                }
+                if (model_1.isKiteModel(type)) {
+                    if (isMapInputOnly(target)) {
+                        entryParams.push(`Object.create(${typename}.prototype)._$filter(inputs, true)`);
                     }
                     else {
-                        typename = proxyMakerParamNames[index];
-                    }
-                    if (model_1.isKiteModel(type)) {
-                        if (config && config.$cleanModel) {
-                            entryParams.push(`Object.create(${typename}.prototype)._$filter(inputs, true)`);
-                        }
-                        else {
-                            entryParams.push(`new ${typename}()._$filter(inputs)`);
-                        }
-                    }
-                    else {
-                        entryParams.push(`new ${typename}(inputs)`);
+                        entryParams.push(`new ${typename}()._$filter(inputs)`);
                     }
                 }
                 else {
-                    Reflect.defineMetadata('design:type', type, _Param.prototype, name);
-                    // by default, all parameters are required fields if no rule be defined, 
-                    // if any parameter has a default value "undefined", treat it as a optional input
-                    let undefRegx = new RegExp(`(^|,)${name}=`);
-                    let required = !undefRegx.test(rawParams);
-                    let rule = {
-                        required
-                    };
-                    // If filter rule available, use user defined, else create one
-                    if (config) {
-                        if (config.$inputRules && config.$inputRules[name]) {
-                            Object.assign(rule, config.$inputRules[name]);
-                        }
-                        else if (config[name]) {
-                            Object.assign(rule, config[name]);
-                        }
-                    }
-                    model_1.In(rule)(_Param.prototype, name);
-                    entryParams.push('param.' + name);
+                    entryParams.push(`new ${typename}(inputs)`);
                 }
+            }
+            else {
+                Reflect.defineMetadata('design:type', type, _Param.prototype, name);
+                // by default, all parameters are required fields if no rule be defined, 
+                // if any argument has a default value, let's treat it as an optional input
+                let defaultValueArg = new RegExp(`(^|,)${name}=`);
+                let rule = {
+                    required: !defaultValueArg.test(rawParams)
+                };
+                // If filter rule available, use user defined, else create one
+                if (config) {
+                    Object.assign(rule, config[name]);
+                }
+                model_1.In(rule)(_Param.prototype, name);
+                entryParams.push('param.' + name);
             }
         });
         let paramExp = '';
@@ -375,7 +353,7 @@ function Entry(config) {
         let proxyMakerParamNameStr = proxyMakerParamNames.join(', ');
         let callParamsStr = entryParams.join(', ');
         let fnsrc = `(function(${proxyMakerParamNameStr}) {
-                return function(inputs, holder, request, response) {
+                return function(inputs, request) {
                     ${paramExp}
                     return this.${propertyKey}(${callParamsStr});
                 }
@@ -394,4 +372,43 @@ function hasEntryPoint(controller) {
     return Reflect.hasMetadata(MK_ENTRY_POINT, controller);
 }
 exports.hasEntryPoint = hasEntryPoint;
+/**
+ * Get parameter reflection object from a controller
+ * @param controller constroller instance
+ */
+function getEntryParams(controller) {
+    return Reflect.getMetadata(MK_ENTRY_PARAMS, controller);
+}
+exports.getEntryParams = getEntryParams;
+/**
+ * Tell Kite only map client input to a Kite model and its children,
+ * without calling the constructor.
+ *
+ * This decorator can be only applied to Kite controller entry point function,
+ * and must be placed after `@Entry()` decorator, for example:
+ * ```typescript
+ * import { Controller, Entry } from 'kite-framework';
+ *
+ * @Controller()
+ * export class TypesController {
+ *     @Entry()
+ *     @MapInputOnly
+ *     async exec(str: string, num: number, bool: boolean, date: Date = undefined) {
+ *         return { values: { str, num, bool, date } };
+ *     }
+ * }
+ * ```
+ */
+function MapInputOnly(target, propertyKey, descriptor) {
+    Reflect.defineMetadata(MK_MAP_INPUT_ONLY, true, target);
+}
+exports.MapInputOnly = MapInputOnly;
+/**
+ * Test a Kite model is only map client inputs or not
+ * @param target
+ */
+function isMapInputOnly(target) {
+    return Reflect.hasMetadata(MK_MAP_INPUT_ONLY, target);
+}
+exports.isMapInputOnly = isMapInputOnly;
 //# sourceMappingURL=entry.js.map

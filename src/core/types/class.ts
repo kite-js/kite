@@ -1,3 +1,4 @@
+import { IncomingMessage } from 'http';
 /**
  * Copyright (c) 2017 [Arthur Xie]
  * <https://github.com/kite-js/kite>
@@ -13,4 +14,4 @@
  * all copies or substantial portions of the Software.
  */
 
-export type Class = { new(...args: any[]): {} };
+export type Class = { new(...args: any[]): any };

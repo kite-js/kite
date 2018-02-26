@@ -2,7 +2,7 @@ import { LogService } from './log.service';
 /**
  * Watch service for watching file (controllers, services, and related files)
  */
-export declare class WatcherService {
+export declare class WatchService {
     private kiteroot;
     private interval;
     /**

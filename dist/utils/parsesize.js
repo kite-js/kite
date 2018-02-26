@@ -44,4 +44,4 @@ function parseSize(input) {
     return size;
 }
 exports.parseSize = parseSize;
-//# sourceMappingURL=parse.size.js.map
+//# sourceMappingURL=parsesize.js.map

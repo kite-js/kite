@@ -13,13 +13,17 @@
  * all copies or substantial portions of the Software.
  */
 
-export type Parser = (data: string) => { [name: string]: string };
+import { IncomingMessage } from 'http';
 
-export type ParserEntity = {
-    contentType: string,
-    parser: Parser
-};
-/**
- * Data hub factory
- */
-export type ParserProvider = () => ParserEntity;
+export interface RequestHandler {
+    /**
+     * http request handle method
+     * if this method exists in a Kite controller, Kite will give the 
+     * request (http.IncomingMessage) to this controller when clients call it
+     * 
+     * @param { http.IncomingMessage } request - raw IncomingMessage object
+     * @param { any } query - any , an object given by Url.parse()
+     * @return a promise, resolved object will be passed to controller entry point
+     */
+    onRequest(request: IncomingMessage, query: any): Promise<any>;
+}

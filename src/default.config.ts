@@ -14,23 +14,19 @@
  */
 import { Config } from './core/types/config';
 import { HttpRouter } from './utils/http.router';
-import { JsonParserProvider } from './utils/json.parser.provider';
-import { XformParserProvider } from './utils/xform.parser.provider';
+import { JsonReceiverProvider } from './utils/json-receiver.provider';
+import { XformReceiverProvider } from './utils/xform-receiver.provider';
 import { KiteResponder } from './utils/kite.responder';
 
 /**
  * Default settings for Kite
  */
 export const DefaultConfig: Config = {
-    hostname: '127.0.0.1',
-    port: 4000,
     maxContentLength: '10M',
-    watch: true,
     log: {
         level: 7
     },
-    // router: new HttpRouter(''),  /* Just because can not determin work dir at this file */
+    receiverProvider: [JsonReceiverProvider, XformReceiverProvider],
     responder: new KiteResponder(),
-    parserProvider: [JsonParserProvider, XformParserProvider]
 
 };

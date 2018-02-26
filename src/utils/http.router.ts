@@ -80,7 +80,7 @@ export class HttpRouter implements Router {
      * @param url an url.Url object
      * @param method http request method
      */
-    map(url: URL.Url, method: string): { id: string, filename: string } {
+    map(url: URL.Url, method: string): string {
         let id = Path.normalize(url.pathname);
         let filename = Path.join(this.rootdir, id) + this.extension;
 
@@ -89,16 +89,7 @@ export class HttpRouter implements Router {
             throw new KiteError(1100, url.pathname);
         }
 
-        // let filename = path + this.extension;
-        // if extension is set to ".js", test "***.controller.js" file
-        // if (this.extension === '.js') {
-        //     let uniformName = path + '.controller.js';
-        //     if (fs.existsSync(uniformName)) {
-        //         filename = uniformName;
-        //     }
-        // }
-
-        return { id, filename };
+        return filename;
     }
 }
 

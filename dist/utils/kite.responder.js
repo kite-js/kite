@@ -47,7 +47,7 @@ class KiteResponder {
         if (!res.getHeader('content-type')) {
             res.setHeader('Content-Type', `${contentType}`);
         }
-        res.write(content);
+        res.end(content);
     }
     writeError(err, res, errorService) {
         let error;
@@ -63,7 +63,7 @@ class KiteResponder {
         res.statusCode = 200;
         let content = JSON.stringify({ error });
         res.setHeader('Content-Type', 'application/json');
-        res.write(content);
+        res.end(content);
     }
 }
 exports.KiteResponder = KiteResponder;

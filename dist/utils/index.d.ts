@@ -13,5 +13,5 @@
  * all copies or substantial portions of the Software.
  */
 export * from './http.router';
-export * from './xform.parser.provider';
-export * from './json.parser.provider';
+export * from './xform-receiver.provider';
+export * from './json-receiver.provider';

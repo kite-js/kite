@@ -15,7 +15,7 @@
 
 import { Router, RouterProvider } from './router';
 import * as http from 'http';
-import { ParserProvider } from './parser';
+import { ReceiverProvider } from './receiver';
 import { Responder } from './responder';
 
 /**
@@ -28,7 +28,7 @@ export interface Config {
      * 
      * See [server.listen](https://nodejs.org/docs/latest/api/http.html#http_server_listen_port_hostname_backlog_callback) for details
      */
-    hostname?: string;
+    // hostname?: string;
 
     /**
      * Port to listen, default set to `4000`.  
@@ -36,7 +36,7 @@ export interface Config {
      * 
      * See [server.listen](https://nodejs.org/docs/latest/api/http.html#http_server_listen_port_hostname_backlog_callback) for details
      */
-    port?: number;
+    // port?: number;
 
     /**
      * [NOTE] Not fully tested, many things to improve, please keep this field to default value.
@@ -62,7 +62,7 @@ export interface Config {
      * 
      * Please note that if `worker` is set, Kite will set this field to `false`, watch service will not work in multi-process mode.
      */
-    watch?: boolean;
+    // watch?: boolean;
 
     /**
      * Max content length, '1M', '2M' ..., default set to '10M'
@@ -72,7 +72,7 @@ export interface Config {
     /**
      * User defined error codes
      * 
-     * _NOTE:_ if user defined error codes has the same keys as Kite predefined errors, Kite will use the errors from user,
+     * _NOTE:_ if user defined error codes contains same key as Kite predefined errors, Kite will use the errors from user,
      * with this trick, you can overwrite Kite's errors in your way (for example rewrite them in your language).
      */
     errors?: any;
@@ -115,11 +115,6 @@ export interface Config {
     }
 
     /**
-     * Holder class
-     */
-    holderClass?: { new(...args: any[]): any };
-
-    /**
      * Router provider
      */
     router?: Router | RouterProvider;
@@ -139,7 +134,7 @@ export interface Config {
      * If Content-Type of client request can not be found in registered parsers, Kite will pass the raw entity-body
      * to controllers (only if entry point of controller is coded to accept inputs).
      */
-    parserProvider?: ParserProvider | ParserProvider[];
+    receiverProvider?: ReceiverProvider | ReceiverProvider[];
 
     /**
      * Kite message responder

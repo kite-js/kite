@@ -1,5 +1,5 @@
 "use strict";
-/**
+/***
  * Copyright (c) 2017 [Arthur Xie]
  * <https://github.com/kite-js/kite>
  *
@@ -16,6 +16,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 require("reflect-metadata");
 const entry_1 = require("./entry");
+const MK_CONTROLLER = 'kite:controller';
 /**
  * Kite controller decorator
  *
@@ -46,12 +47,16 @@ function Controller(metadata) {
         if (!entry_1.hasEntryPoint(constructor.prototype)) {
             throw new Error(`Missing entry point for controller ${constructor.name}`);
         }
-        Reflect.defineMetadata('kite:controller', metadata || {}, constructor);
+        Reflect.defineMetadata(MK_CONTROLLER, metadata || {}, constructor);
     };
 }
 exports.Controller = Controller;
 function getControllerMetadata(target) {
-    return Reflect.getMetadata('kite:controller', target);
+    return Reflect.getMetadata(MK_CONTROLLER, target);
 }
 exports.getControllerMetadata = getControllerMetadata;
+function isKiteController(target) {
+    return Reflect.hasMetadata(MK_CONTROLLER, target);
+}
+exports.isKiteController = isKiteController;
 //# sourceMappingURL=controller.js.map

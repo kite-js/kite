@@ -1,3 +1,4 @@
+"use strict";
 /***
  * Copyright (c) 2017 [Arthur Xie]
  * <https://github.com/kite-js/kite>
@@ -12,14 +13,5 @@
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  */
-export declare type Parser = (data: string) => {
-    [name: string]: string;
-};
-export declare type ParserEntity = {
-    contentType: string;
-    parser: Parser;
-};
-/**
- * Data hub factory
- */
-export declare type ParserProvider = () => ParserEntity;
+Object.defineProperty(exports, "__esModule", { value: true });
+//# sourceMappingURL=provider.js.map

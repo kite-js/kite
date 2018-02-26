@@ -15,6 +15,8 @@
 
 import 'reflect-metadata';
 
+const MK_DEPENDENCIES = 'kite:dependencies';
+
 /**
  * Tell Kite to inject an "injectable" #Injectable# instance for a controller.
  * 
@@ -45,12 +47,12 @@ import 'reflect-metadata';
  */
 export function Inject() {
     return function (target: any, key: string) {
-        let dependencies: Map<string, any> = Reflect.getMetadata('kite:dependencies', target) || new Map<string, any>();
+        let dependencies: Map<string, any> = Reflect.getMetadata(MK_DEPENDENCIES, target) || new Map<string, any>();
         dependencies.set(key, Reflect.getMetadata('design:type', target, key));
-        Reflect.defineMetadata('kite:dependencies', dependencies, target);
+        Reflect.defineMetadata(MK_DEPENDENCIES, dependencies, target);
     }
 }
 
 export function getDependencies(target: Object): Map<string, any> {
-    return Reflect.getMetadata('kite:dependencies', target);
+    return Reflect.getMetadata(MK_DEPENDENCIES, target);
 }

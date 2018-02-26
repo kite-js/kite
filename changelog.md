@@ -1,3 +1,12 @@
+# 0.5.0 pre (2017-02-26)
+- change the entry point @Entry decorator, move "map input only" to new decorator "@MapInputOnly"
+- middleware re-design, return type is not restricted to `promise`, now it can be any type
+- controllers now can handle http incoming message and server response in custom way
+- framework never call `response.end()`, responder should handle the everything
+- __Kite train__
+  - loads configuration / profile from a custom provider
+
+
 # 0.4.3 (2017-10-08)
 - new "clean model" creates both top level model and its child models without calling their constructors
 - improved `Date` type min / max value checking

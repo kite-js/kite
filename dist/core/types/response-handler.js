@@ -14,16 +14,4 @@
  * all copies or substantial portions of the Software.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-// tslint:disable-next-line:no-shadowed-variable
-function JsonParserProvider() {
-    const contentType = 'application/json';
-    const parser = function (data) {
-        return JSON.parse(data);
-    };
-    return {
-        contentType,
-        parser
-    };
-}
-exports.JsonParserProvider = JsonParserProvider;
-//# sourceMappingURL=json.parser.provider.js.map
+//# sourceMappingURL=response-handler.js.map

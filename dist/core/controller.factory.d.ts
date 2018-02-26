@@ -13,39 +13,38 @@
  * all copies or substantial portions of the Software.
  */
 import { LogService } from './log.service';
-import { WatcherService } from './watcher.service';
+import { WatchService } from './watch.service';
+import { Class } from './types/class';
 /**
  * Controller factory
  * This controller factory does the following things:
  * - Creates controllers
- * - Builds inputs filters
  * - Creates dependencies
  */
 export declare class ControllerFactory {
-    private controllers;
-    private dependencies;
     logService: LogService;
-    watcherService: WatcherService;
+    watchService: WatchService;
     workdir: string;
+    private _images;
+    private _controllers;
     /**
-     * Get a "controller" instance
-     *
-     * The first parameter "id" is called "API ID" or "Controller Id", which is provided by router,
-     * "id" is the identifier of a Kite controller, Kite controller factory use this "id" to locate
-     * controller instance from cache, in "HttpRouter", this parameter is set to the relative path
-     * of a controller, for example `/greeting`, `/user/login`. For performance consideration, this
-     * argument should be as short as possible, because shorter string can reduce the searching time
-     * of javascript Map object.
-     *
-     * @param id module id
-     * @param filename Path of controller, node will require this path for controller module(s)
-     * @return Controller instance, which is ready to be called
+     * Get a controller class by given filename,
+     * the filename can be an absolute path or a relative path,
+     * if a relative path is given, Kite will search the working
+     * directory for modules
+     * @param filename controller filename
      */
-    get(id: string, filename: string): Promise<any>;
+    getController(filename: string): Class;
     /**
-     * Dependency injection
-     *
-     * @private
+     * Get controller instance by given controller class and data
+     * @param controller
+     * @param data
      */
-    private injectDependency(target);
+    getInstance(controller: Class, data?: any): Promise<any>;
+    /**
+     * Inject dependencies for an object
+     * @param target
+     * @param pool
+     */
+    private _injectDependency(target, pool, data);
 }

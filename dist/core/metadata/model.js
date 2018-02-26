@@ -1,6 +1,5 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-/**
+/***
  * Copyright (c) 2017 [Arthur Xie]
  * <https://github.com/kite-js/kite>
  *
@@ -14,10 +13,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  */
+Object.defineProperty(exports, "__esModule", { value: true });
 require("reflect-metadata");
 const vm = require("vm");
 const error_1 = require("../error");
 const MK_KITE_MODEL = 'kite:model';
+const MK_KITE_ROOT_MODEL = 'kite:root-model';
 const MK_KITE_INPUTS = 'kite:inputs';
 const ESCAPED_QUOTE = '\\$1';
 const QUOTE_REGEX = /('|"|`)/g;
@@ -217,202 +218,205 @@ function createFilterFn(target, globalRule) {
             continue;
         }
         fnStack.push('{');
-        // String check points: 
-        // if defined values array, input value should in the values list
-        // if defined pattern, check pattern match 
-        // if defined min, max, check for minimal & maximal values
-        // if defined minLen, maxLen, check for minimal length & maximal length
-        if (type === String) {
-            let trim = rule.noTrim ? '' : '.trim()';
-            fnStack.push(`this['${name}'] = String(inputs['${name}'])${trim};`);
-            // if "allowEmpty" is undefined or set to false, check original input for empty string '', null 
-            if (rule.required && !rule.allowEmpty) {
-                fnStack.push(`if (this['${name}'] === '' || inputs['${name}'] === null) { throw new KiteError(1032, '${name}'); }`);
-            }
-            // check allowed values, ignore rule.pattern, rule.min, rule.max
-            if (rule.values) {
-                // let src = toSource(rule.values);
-                let valuesname = `_v${argnames.length}`;
-                argnames.push(valuesname);
-                args.push(rule.values);
-                fnStack.push(`if(!${valuesname}.includes(this['${name}'])) { throw new KiteError(1021, ['${name}','${rule.values}']); } `);
-            }
-            else if (rule.pattern) {
-                // check pattern match, ingore rule.min, rule.max
-                fnStack.push(`if(!(${rule.pattern}).test(this['${name}'])) { throw new KiteError(1022, ['${name}','${rule.pattern}']); }`);
-            }
-            else if (rule.len) {
-                // check for string length(limited length)
-                fnStack.push(`if(this['${name}'].length !== ${rule.len}) { throw new KiteError(1030, ['${name}',${rule.len}]); }`);
+        // resolve template 'Array<T>', 'Array<Array<T>>'
+        function parseArray(tpl) {
+            if (tpl.startsWith('Array<') && tpl.endsWith('>')) {
+                tpl = tpl.replace(/^Array<(.*)>$/, '$1');
+                fnStack.push('input.map( input => ');
+                parseArray(tpl);
+                fnStack.push(')');
             }
             else {
-                if (rule.minLen) {
-                    fnStack.push(`if(this['${name}'].length < ${rule.minLen}) { throw new KiteError(1023, ['${name}',${rule.minLen}]); }`);
+                // if element type is not specified, determin type by template string
+                if (!rule.arrayType.elementType) {
+                    switch (tpl.toLocaleLowerCase()) {
+                        case 'number':
+                            rule.arrayType.elementType = Number;
+                            break;
+                        case 'boolean':
+                            rule.arrayType.elementType = Boolean;
+                            break;
+                        case 'date':
+                            rule.arrayType.elementType = Date;
+                            break;
+                        case 'string':
+                        default:
+                            rule.arrayType.elementType = String;
+                    }
                 }
-                if (rule.maxLen) {
-                    fnStack.push(`if(this['${name}'].length > ${rule.maxLen}) { throw new KiteError(1024, ['${name}',${rule.maxLen}]); }`);
+                let elementTypeStr;
+                switch (rule.arrayType.elementType) {
+                    case Number:
+                        elementTypeStr = 'Number';
+                        break;
+                    case Boolean:
+                        elementTypeStr = 'Boolean';
+                        break;
+                    case String:
+                        elementTypeStr = 'String';
+                        break;
+                    case Date:
+                        elementTypeStr = 'new Date';
+                        break;
+                    default:
+                        let typename = getTypeName(rule.arrayType.elementType);
+                        if (isKiteModel(rule.arrayType.elementType)) {
+                            elementTypeStr = `new ${typename}()._$filter`;
+                        }
+                        else {
+                            elementTypeStr = `new ${typename}`;
+                        }
                 }
-            }
-            // check for string minimal & maximal value
-            if (rule.min && typeof rule.min === 'string') {
-                let quotedMin = rule.min.replace(QUOTE_REGEX, ESCAPED_QUOTE);
-                fnStack.push(`if(this['${name}'] < '${quotedMin}') { throw new KiteError(1026, ['${name}', '${quotedMin}']); }`);
-            }
-            if (rule.max && typeof rule.max === 'string') {
-                let quotedMax = rule.max.replace(QUOTE_REGEX, ESCAPED_QUOTE);
-                fnStack.push(`if(this['${name}'] > '${quotedMax}') { throw new KiteError(1027, ['${name}', '${quotedMax}']); }`);
+                fnStack.push(`${elementTypeStr}(input)`);
             }
         }
-        else if (type === Number) {
+        switch (type) {
+            ////////////////////////////////////////////////////////////////////////////////////////////////
+            // String check points: 
+            // if defined values array, input value should in the values list
+            // if defined pattern, check pattern match 
+            // if defined min, max, check for minimal & maximal values
+            // if defined minLen, maxLen, check for minimal length & maximal length
+            ////////////////////////////////////////////////////////////////////////////////////////////////            
+            case String:
+                let trim = rule.noTrim ? '' : '.trim()';
+                fnStack.push(`this['${name}'] = String(inputs['${name}'])${trim};`);
+                // if "allowEmpty" is undefined or set to false, check original input for empty string '', null 
+                if (rule.required && !rule.allowEmpty) {
+                    fnStack.push(`if (this['${name}'] === '' || inputs['${name}'] === null) { throw new KiteError(1032, '${name}'); }`);
+                }
+                // check allowed values, ignore rule.pattern, rule.min, rule.max
+                if (rule.values) {
+                    // let src = toSource(rule.values);
+                    let valuesname = `_v${argnames.length}`;
+                    argnames.push(valuesname);
+                    args.push(rule.values);
+                    fnStack.push(`if(!${valuesname}.includes(this['${name}'])) { throw new KiteError(1021, ['${name}','${rule.values}']); } `);
+                }
+                else if (rule.pattern) {
+                    // check pattern match, ingore rule.min, rule.max
+                    fnStack.push(`if(!(${rule.pattern}).test(this['${name}'])) { throw new KiteError(1022, ['${name}','${rule.pattern}']); }`);
+                }
+                else if (rule.len) {
+                    // check for string length(limited length)
+                    fnStack.push(`if(this['${name}'].length !== ${rule.len}) { throw new KiteError(1030, ['${name}',${rule.len}]); }`);
+                }
+                else {
+                    if (rule.minLen) {
+                        fnStack.push(`if(this['${name}'].length < ${rule.minLen}) { throw new KiteError(1023, ['${name}',${rule.minLen}]); }`);
+                    }
+                    if (rule.maxLen) {
+                        fnStack.push(`if(this['${name}'].length > ${rule.maxLen}) { throw new KiteError(1024, ['${name}',${rule.maxLen}]); }`);
+                    }
+                }
+                // check for string minimal & maximal value
+                if (rule.min && typeof rule.min === 'string') {
+                    let quotedMin = rule.min.replace(QUOTE_REGEX, ESCAPED_QUOTE);
+                    fnStack.push(`if(this['${name}'] < '${quotedMin}') { throw new KiteError(1026, ['${name}', '${quotedMin}']); }`);
+                }
+                if (rule.max && typeof rule.max === 'string') {
+                    let quotedMax = rule.max.replace(QUOTE_REGEX, ESCAPED_QUOTE);
+                    fnStack.push(`if(this['${name}'] > '${quotedMax}') { throw new KiteError(1027, ['${name}', '${quotedMax}']); }`);
+                }
+                break;
+            ////////////////////////////////////////////////////////////////////////////////////////////////                
             // Number check points:
             // 1. parse number if input is a string
             // 2. if values is defined, input should be one of these values
             // 3. if min is defined, input should great than or equal to "min"
             // 4. if max is defined, input should less than or equal to "max"
-            fnStack.push(`let num = Number(inputs['${name}']);
-                        if(isNaN(num)) {
-                            throw new KiteError(1025, '${name}');
-                        }
-                        this['${name}'] = num;
-                        `);
-            // check values
-            if (rule.values) {
-                let valuesname = `_v${argnames.length}`;
-                argnames.push(valuesname);
-                args.push(rule.values);
-                fnStack.push(`if(!${valuesname}.includes(num)) { throw new KiteError(1021, ['${name}', '${rule.values}']); } `);
-            }
-            else {
-                if (typeof rule.min === 'number') {
-                    fnStack.push(`if(num < ${rule.min}) { throw new KiteError(1026, ['${name}', ${rule.min}]); } `);
+            ////////////////////////////////////////////////////////////////////////////////////////////////            
+            case Number:
+                fnStack.push(`let num = Number(inputs['${name}']); if(isNaN(num)) { throw new KiteError(1025, '${name}'); } this['${name}'] = num; `);
+                // check values
+                if (rule.values) {
+                    let valuesname = `_v${argnames.length}`;
+                    argnames.push(valuesname);
+                    args.push(rule.values);
+                    fnStack.push(`if(!${valuesname}.includes(num)) { throw new KiteError(1021, ['${name}', '${rule.values}']); } `);
                 }
-                if (typeof rule.max === 'number') {
-                    fnStack.push(`if(num > ${rule.max}) { throw new KiteError(1027, ['${name}', ${rule.max}]); } `);
+                else {
+                    if (typeof rule.min === 'number') {
+                        fnStack.push(`if(num < ${rule.min}) { throw new KiteError(1026, ['${name}', ${rule.min}]); } `);
+                    }
+                    if (typeof rule.max === 'number') {
+                        fnStack.push(`if(num > ${rule.max}) { throw new KiteError(1027, ['${name}', ${rule.max}]); } `);
+                    }
                 }
-            }
-        }
-        else if (type === Boolean) {
-            // Boolean
-            fnStack.push(`this['${name}'] = typeof inputs['${name}'] === 'string' ?
-                ['0', '', 'false'].indexOf(inputs['${name}'].toLowerCase()) === -1 :
-                Boolean(inputs['${name}']); `);
-        }
-        else if (type === Date) {
-            fnStack.push(`let date = new Date(inputs['${name}']);
-                if (!date.valueOf()) {
-                    throw new KiteError(1031, '${name}');
-                }`);
-            // validate min & max value of date
-            if (rule.min) {
-                let minDate = rule.min instanceof Date ? rule.min : new Date(rule.min);
-                let argName = '_dateMin' + argnames.length;
-                argnames.push(argName);
-                args.push(minDate);
-                fnStack.push(`if(date < ${argName}) {
-                    throw new KiteError(1026, ['${name}', ${argName}.toISOString()]);
-                }`);
-            }
-            if (rule.max) {
-                let maxDate = rule.max instanceof Date ? rule.max : new Date(rule.max);
-                let argName = '_dateMax' + argnames.length;
-                argnames.push(argName);
-                args.push(maxDate);
-                fnStack.push(`if(date < ${argName}) {
-                    throw new KiteError(1027, ['${name}', ${argName}.toISOString()]);
-                }`);
-            }
-            fnStack.push(`this['${name}'] = date;`);
-        }
-        else if (type === Array) {
+                break;
+            ////////////////////////////////////////////////////////////////////////////////////////////////
+            // Date check points:
+            // 1. create date object by 'new' operator
+            // 2. check min limitation if available
+            // 3. check max limitation if available
+            ////////////////////////////////////////////////////////////////////////////////////////////////            
+            case Date:
+                fnStack.push(`let date = new Date(inputs['${name}']); if (!date.valueOf()) { throw new KiteError(1031, '${name}'); }`);
+                // validate min & max value of date
+                if (rule.min) {
+                    let minDate = rule.min instanceof Date ? rule.min : new Date(rule.min);
+                    let argName = '_dateMin' + argnames.length;
+                    argnames.push(argName);
+                    args.push(minDate);
+                    fnStack.push(`if(date < ${argName}) { throw new KiteError(1026, ['${name}', ${argName}.toISOString()]); }`);
+                }
+                if (rule.max) {
+                    let maxDate = rule.max instanceof Date ? rule.max : new Date(rule.max);
+                    let argName = '_dateMax' + argnames.length;
+                    argnames.push(argName);
+                    args.push(maxDate);
+                    fnStack.push(`if(date < ${argName}) { throw new KiteError(1027, ['${name}', ${argName}.toISOString()]); }`);
+                }
+                fnStack.push(`this['${name}'] = date;`);
+                break;
+            ////////////////////////////////////////////////////////////////////////////////////////////////
+            // Boolean check points
+            // if input is a string, treat '0', '', 'false' as falsy value, else true
+            // else use Boolean() to test input vlue
+            ////////////////////////////////////////////////////////////////////////////////////////////////                
+            case Boolean:
+                fnStack.push(`this['${name}'] = typeof inputs['${name}'] === 'string' ? ['0', '', 'false'].indexOf(inputs['${name}'].toLowerCase()) === -1 : Boolean(inputs['${name}']); `);
+                break;
+            ////////////////////////////////////////////////////////////////////////////////////////////////                
             // Array
             // [ISSUE] https://github.com/Microsoft/TypeScript/issues/7169
             // Since Typescript does not emmit array types to metadata, we don't know array element types here,
             // so we can't parse the raw data to its declared type
-            fnStack.push(`let input = inputs['${name}'];
-                        if (!Array.isArray(input)) {
-                            input = [input];
-                        }`);
-            // not allow empty array
-            if (!rule.allowEmpty) {
-                fnStack.push(`else if (!input.length) { throw new KiteError(1033, '${name}'); }`);
-            }
-            if (rule.arrayType) {
-                // resolve template 'Array<T>', 'Array<Array<T>>'
-                function parseArray(tpl) {
-                    if (tpl.startsWith('Array<') && tpl.endsWith('>')) {
-                        tpl = tpl.replace(/^Array<(.*)>$/, '$1');
-                        fnStack.push('input.map( input => ');
-                        parseArray(tpl);
-                        fnStack.push(')');
-                    }
-                    else {
-                        // if element type is not specified, determin type by template string
-                        if (!rule.arrayType.elementType) {
-                            switch (tpl.toLocaleLowerCase()) {
-                                case 'number':
-                                    rule.arrayType.elementType = Number;
-                                    break;
-                                case 'boolean':
-                                    rule.arrayType.elementType = Boolean;
-                                    break;
-                                case 'date':
-                                    rule.arrayType.elementType = Date;
-                                    break;
-                                case 'string':
-                                default:
-                                    rule.arrayType.elementType = String;
-                            }
-                        }
-                        let elementTypeStr;
-                        switch (rule.arrayType.elementType) {
-                            case Number:
-                                elementTypeStr = 'Number';
-                                break;
-                            case Boolean:
-                                elementTypeStr = 'Boolean';
-                                break;
-                            case String:
-                                elementTypeStr = 'String';
-                                break;
-                            case Date:
-                                elementTypeStr = 'new Date';
-                                break;
-                            default:
-                                let typename = getTypeName(rule.arrayType.elementType);
-                                if (isKiteModel(rule.arrayType.elementType)) {
-                                    elementTypeStr = `new ${typename}()._$filter`;
-                                }
-                                else {
-                                    elementTypeStr = `new ${typename}`;
-                                }
-                        }
-                        fnStack.push(`${elementTypeStr}(input)`);
-                    }
+            ////////////////////////////////////////////////////////////////////////////////////////////////            
+            case Array:
+                fnStack.push(`let input = inputs['${name}']; if (!Array.isArray(input)) { input = [input]; }`);
+                // not allow empty array
+                if (!rule.allowEmpty) {
+                    fnStack.push(`else if (!input.length) { throw new KiteError(1033, '${name}'); }`);
                 }
-                let template = rule.arrayType.template.replace(/\s/g, '');
-                fnStack.push(`this['${name}'] = `);
-                parseArray(template);
-            }
-            else {
-                fnStack.push(`this['${name}'] = input;`);
-            }
-        }
-        else {
-            let typename = getTypeName(type);
-            // If it is a Kite model, create a model object and call _$filter to filter the inputs
-            if (isKiteModel(type)) {
-                fnStack.push(`if (cleanModel) {
-                    this['${name}'] = Object.create(${typename}.prototype);
-                } else {
-                    this['${name}'] = new ${typename}();
+                if (rule.arrayType) {
+                    let template = rule.arrayType.template.replace(/\s/g, '');
+                    fnStack.push(`this['${name}'] = `);
+                    parseArray(template);
                 }
-                this['${name}']._$filter(inputs['${name}']);
-                `);
-            }
-            else {
-                // If it is not a Kite model, pass the input value to constructor and create an object
-                fnStack.push(`this['${name}'] = new ${typename}(typeof inputs === 'object' ? inputs['${name}'] : inputs);`);
-            }
+                else {
+                    fnStack.push(`this['${name}'] = input;`);
+                }
+                break;
+            default:
+                // any other types
+                let typename = getTypeName(type);
+                // If it is a Kite model, create a model object and call _$filter to filter the inputs
+                if (isKiteModel(type)) {
+                    fnStack.push(`if (cleanModel) {
+                        this['${name}'] = Object.create(${typename}.prototype);
+                    } else {
+                        this['${name}'] = new ${typename}();
+                    }
+                    this['${name}']._$filter(inputs['${name}']);
+                    `);
+                }
+                else {
+                    // If it is not a Kite model, pass the input value to constructor and create an object
+                    fnStack.push(`this['${name}'] =
+                        typeof(inputs['${name}'])  === 'object' ?
+                        inputs['${name}'] : new ${typename}(inputs['${name}']);`);
+                }
         }
         fnStack.push('}');
     }

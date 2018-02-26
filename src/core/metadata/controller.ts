@@ -1,4 +1,4 @@
-/**
+/***
  * Copyright (c) 2017 [Arthur Xie]
  * <https://github.com/kite-js/kite>
  * 
@@ -15,6 +15,8 @@
 
 import 'reflect-metadata';
 import { hasEntryPoint } from './entry';
+
+const MK_CONTROLLER = 'kite:controller';
 
 export interface ControllerMetadata {
     [name: string]: any
@@ -51,10 +53,14 @@ export function Controller<T extends ControllerMetadata>(metadata?: T) {
             throw new Error(`Missing entry point for controller ${constructor.name}`);
         }
 
-        Reflect.defineMetadata('kite:controller', metadata || {}, constructor);
+        Reflect.defineMetadata(MK_CONTROLLER, metadata || {}, constructor);
     }
 }
 
 export function getControllerMetadata(target: Object): ControllerMetadata {
-    return Reflect.getMetadata('kite:controller', target);
+    return Reflect.getMetadata(MK_CONTROLLER, target);
+}
+
+export function isKiteController(target: object): boolean {
+    return Reflect.hasMetadata(MK_CONTROLLER, target);
 }

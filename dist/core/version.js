@@ -1,5 +1,5 @@
 "use strict";
-/**
+/***
  * Copyright (c) 2017 [Arthur Xie]
  * <https://github.com/kite-js/kite>
  *
@@ -14,5 +14,5 @@
  * all copies or substantial portions of the Software.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.VERSION = '0.4.3';
+exports.VERSION = '0.5.0';
 //# sourceMappingURL=version.js.map
