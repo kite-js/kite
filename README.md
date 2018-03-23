@@ -1,3 +1,6 @@
+# Languages
+[English](./README.md) | [简体中文](./README.zh-CN.md)
+
 # KiteJS framework
 Next generation, fast, efficient, flexible web API framework.
 

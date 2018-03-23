@@ -1,10 +1,10 @@
 {
     "name": "kite-framework",
-    "version": "0.4.3",
+    "version": "0.5.0",
     "description": "Next generation, fast, flexible HTTP-JSON-RPC framework",
     "scripts": {
         "build": "tsc && cp ./{package.json,README.md} dist/",
-        "pub": "pushd ./dist && npm publish && popd",
+        "pub": "pushd ./dist && npm publish --registry=https://registry.npmjs.org && popd",
         "clean": "rm -rf ./dist"
     },
     "repository": {
