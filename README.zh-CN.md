@@ -4,7 +4,7 @@
 # KiteJS 框架简介
 KiteJS 是一个新一代的、快速、高效、可扩展的 web API 框架。
 
-请参见 [Kite 教程](./docs/tutorial.md) 了解更多实例。
+请参见 [Kite Examples](https://github.com/kite-js/kite-examples) 了解更多实例。
 
 我们同时提供了 [Kite 命令行工具](https://github.com/kite-js/kite-tools)：
 

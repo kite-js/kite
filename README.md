@@ -4,7 +4,7 @@
 # KiteJS framework
 Next generation, fast, efficient, flexible web API framework.
 
-Please visit [Kite Tutorial](./docs/tutorial.md) for more examples.
+Please visit [Kite Examples](https://github.com/kite-js/kite-examples) for more examples.
 
 We also provided [Kite CLI tools](https://github.com/kite-js/kite-tools):
 
