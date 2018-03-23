@@ -37,7 +37,7 @@ kite -p --yes first-kite-app
 + __kite__： Kite 命令行工具名称
 + __-p__ 选项： 创建一个 KiteJS 项目
 + __--yes__ 选项：创建项目过程中不进行任何提示，全部使用默认配置
-+ __first-kite-app__ 选项：要创建的项目名称，这里我们使用 "first-kite-app"
++ __first-kite-app__ 选项：要创建的项目名称，这里我们使用 "first-kite-app"
 
 之后，Kite 命令行工具会创建一个名为 `first-kite-app` 的目录，为其初始化一些文件及子目录，并安装相关的依赖包。
 
@@ -68,7 +68,7 @@ npm start
 
 # 第一个 API
 
-使用 `kite-tools`，你可以方便地创建 Kite API。打开一个新的命令行终端窗口（前一个窗口保存应用服务器运行，不要关闭），在项目目录下录入这行命令：
+使用 `kite-tools`，你可以方便地创建 Kite API。打开一个新的命令行终端窗口（前一个窗口保存应用服务器运行，不要关闭），在项目目录下录入这行命令：
 
 ```sh
 kite -a greet
