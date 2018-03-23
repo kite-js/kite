@@ -77,3 +77,8 @@ main.index .differences em {
   color: #FF5722;
   font-style: normal;
 }
+em {
+  background-color: #ddd;
+  border-radius: 3px;
+  padding: 0 3px;
+}

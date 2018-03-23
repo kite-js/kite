@@ -21,14 +21,18 @@
     <main class="index">
         <div class="slogan">
             <h1>Next generation web framework for building APIs</h1>
-            <h3>Kite is designed to write APIs more efficiently with latest Javascript features</h3>
+            <h3>Kite focus on writing APIs more efficiently with latest Javascript features</h3>
         </div>
         <h2>Current version
-            <a href="https://github.com/kite-js/kite" title="Kite source">0.4.3</a>:</h2>
+            <a href="https://github.com/kite-js/kite" title="Kite source">0.5.0</a>:</h2>
         <ul class="change-logs">
-            <li>new "clean model" creates both top level model and its child models without calling their constructors</li>
-            <li>improved <em>Date</em> type min / max value checking</li>
-            <li>fixed error when "min" "max" or property name contains quote mark</li>
+            <li>change the entry point @Entry decorator, move "map input only" to new decorator "@MapInputOnly"</li>
+            <li>middleware re-design, return type is not restricted to
+                <em>promise</em>, now it can be any type</li>
+            <li>controllers now can handle http incoming message and server response in custom way</li>
+            <li>framework never call
+                <em>response.end()</em>, responder should handle the everything</li>
+            <li>Kite train: controllers / services can work under different configurations</li>
         </ul>
         <h2>Introduction</h2>
         <p>Kite is a web application framework, it's designed for efficient coding of APIs. Here are differences between other
@@ -41,7 +45,7 @@
                 <a href="https://tc39.github.io/proposal-decorators/">Decorators</a>,
                 <a href="https://tc39.github.io/ecmascript-asyncawait/">Async function / await</a>
             </li>
-            <li>Kite applications should be written in TypeScript too (recommended), it makes the source much simple, clear and
+            <li>Kite applications should be written in TypeScript too (recommended), it makes the source more simple, clear and
                 maintainable
             </li>
             <li>
@@ -49,10 +53,6 @@
                 directory, the framework will map to your code,
                 <strong>one api for one source file</strong>
             </li>
-            <li>
-                <em>Built-in input data filter</em>, filters client inputs with rules like: "required/optional", "min/max value",
-                "min/max length", "empty/nonempty string or array", "pattern" without losing performance (Kite generate filter
-                codes for you)!</li>
             <li>
                 <em>Built-in data type convertor</em>, Kite converts input data to your declared types, it can convert input
                 strings to JavaScript "Number", "Boolean", "Date", MongoDB "ObjectId" or any other types</li>
@@ -81,110 +81,189 @@ kite --help
             </pre>
         </p>
         <h2>Quick start</h2>
-        <video width="100%" controls src="media/kite-start-540.mp4"></video>
-        <h2>Installation</h2>
         <p>
-            If you're going to start a Kite application manually, please make sure you've
-            <a href="https://nodejs.org/">Node.js v7.10.0</a> or higher installed. And for development,
-            <a href="https://www.typescriptlang.org/">TypeScript v2.4.0+</a> or higher is required,
-            <a href="https://code.visualstudio.com/">Visual Studio Code</a>
-            is recommended.
+            Create a kite project:
         </p>
-        <p>If everything is ready, then install Kite from npm:</p>
-        <pre><code class="bash">npm i kite-framework</code></pre>
-        <h2>Configuration</h2>
-        <p>Create a file "tsconfig.json" in your project root directory and copy &amp; paste the following content into it,
-            these configuration is for TypeScript compiler:</p>
+        <pre>
+        <code class="bash">
+kite -p --yes first-kite-app
+        </code>
+    </pre>
+        <p>Explanation for the upper command:</p>
+        <ul>
+            <li>kite : Kite CLI tools command name</li>
+            <li>-p option : create and initialize a Kite project</li>
+            <li>--yes option : create without questioning, use default configuration</li>
+            <li>first-kite-app option: application name, here we use "first-kite-app"</li>
+        </ul>
+
+        <p>Then Kite CLI tools will create a folder
+            <em>first-kite-app</em>, initialize the project folder with some files and directories, install NodeJS dependencies
+            as well.</p>
+
+        <h2>Making Kite fly</h2>
+        <p>If the above steps finished without error (generally network problems), now you can enter the project folder, and
+            start Kite application server:</p>
+        <pre>
+            <code class="bash">
+cd first-kite-app
+npm start
+            </code>
+        </pre>
+        <p>After a few seconds waiting for TypeScript compilation / NodeJS running, you'll see a message like:</p>
+        <pre>
+        <code class="bash">
+2018-3-23 10:13:24 [ KITE ] Flying! server listening at 127.0.0.1:4000
+        </code>
+    </pre>
+        <p>which means Kite application server is successfully started, then open a browser window and visit
+            <a href="http://127.0.0.1:4000">127.0.0.1:4000</a>(or
+            <a href="http://localhost:4000">localhost:4000</a>), you will get a message like:</p>
         <pre>
         <code class="json">
-                
-{
-    "compilerOptions": {
-        "moduleResolution": "node",
-        "noImplicitAny": true,
-        "target": "ESNext",
-        "module": "commonjs",
-        "sourceMap": true,
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,
-        "declaration": false,
-        "rootDir": "src",
-        "outDir": "dist",
-        "types": [
-            "node"
-        ],
-        "typeRoots": ["node_modules/@types"]
-    },
-    "exclude": [
-        "node_modules",
-        "dist"
-    ]
-}
-                
+{"error":{"code":1002,"msg":"Resource not found"}}
         </code>
     </pre>
-        <h2>Application server</h2>
-        <p>Create a folder named "src" for holding your ".ts" source files, then create a file "app.server.ts", like this:</p>
+        <p>don't worry about this error message, it's just means the request resource
+            <em>/</em> was not found on server, your application just works great.</p>
+
+        <h2>First API</h2>
+
+        <p>Using
+            <em>kite-tools</em>, you can easily create Kite APIs. Open a new terminal (keep previous terminal running, which
+            servicing your application), under project folder type this command:</p>
+        <pre>
+        <code class="bash">
+kite -a greet
+        </code>
+</pre>
+        <p>Kite CLI tools will generate a file named
+            <em>greet.controller.ts</em> under
+            <em>src/controllers/</em> folder, it looks like this:</p>
         <pre>
         <code class="typescript">
-import { Kite } from 'kite-framework';
+import { Controller, Entry, KiteError, Inject } from 'kite-framework';
 
-Kite.init().fly();
-        </code>
-    </pre>
-        <h2>Hello world</h2>
-        <p>Create a folder "controllers" under "src" for holding APIs, then create your first API source file "greeting.ts":
-        </p>
-        <pre>
-            <code class="typescript">
-import { Controller, Entry } from 'kite-framework';
-                    
 @Controller()
-export class GreetingController {
+export class GreetController {
     @Entry()
     async exec() {
-        return { message: 'Hello world!' };
+        throw new KiteError(1000, 'this api is not implemented');
+    }
+}
+        </code>
+        </pre>
+
+        <p>then run command
+            <em>tsc</em> to compile this TypeScript source:</p>
+        <pre>
+        <code class="bash">
+tsc
+        </code>
+</pre>
+        <p>Now you can try this API by visiting
+            <a href="http://localhost:4000/greet">http://localhost:4000/greet</a>, here is the response:</p>
+
+        <code class="json">
+            {"error":{"code":1000,"msg":"this api is not implemented"}}
+        </code>
+
+        <h3>Hello world! (plain text output)</h3>
+
+        <p>Simply returns a string from APIs will cause the framework outputs content in
+            <em>text/plain</em> type. API source
+            <em>greet.controller.ts</em>
+            example:
+        </p>
+
+        <pre>
+        <code class="typescript">
+import { Controller, Entry, KiteError, Inject } from 'kite-framework'; 
+
+@Controller() export class GreetController { 
+    @Entry()
+    async exec() { 
+        return "hello world!"; 
+    } 
+}
+        </code>
+    </pre>
+
+        <p>Save and run
+            <em>tsc</em> to compile ( boring with typing
+            <em>tsc</em> everytime? open a new terminal and try
+            <em>tsc -w</em>, see
+            <a href="http://www.typescriptlang.org/docs/handbook/compiler-options.html">TypeScript compiler watch mode</a> ).</p>
+
+        <p>Now refresh the page(
+            <a href="http://localhost:4000/greet">http://localhost:4000/greet</a>), response:</p>
+        <pre>
+        <code>
+hello world!
+        </code>
+</pre>
+        <h3>Hello world! (json output)</h3>
+
+        <p>KiteJS is a framework focusing on web APIs, an API is generally output a JSON formatted string, and in JavaScript/NodeJs,
+            why not JSON?</p>
+
+        <p>Returns an object from APIs will cause the framework outputs content in
+            <em>application/json</em> type. API source
+            <em>greet.controller.ts</em>
+            example:
+        </p>
+
+        <pre>
+        <code class="typescript">
+import { Controller, Entry, KiteError, Inject } from 'kite-framework';
+
+@Controller()
+export class GreetController {
+    @Entry()
+    async exec() {
+        return { msg: "hello world!" };
     }
 }
         </code>
     </pre>
-        <h2>Compile &amp; run</h2>
-        <p>Run "tsc" command to compile the project:</p>
-        <pre>
-        <code class="bash">tsc</code>
-    </pre>
-        <p>After this step, your project structure should looks like:</p>
-        <pre>
-        <code class="bash">
-project_home/
-├── src
-│   ├── app.server.ts
-│   └── controllers
-│       └── greeting.ts
-├── dist
-│   ├── app.server.js
-│   └── controllers
-│       └── greeting.js
-└── node_modules
-        </code>
-    </pre>
-        <p>Now run your first Kite application:</p>
-        <pre>
-        <code>node dist/app.server.js</code>
-    </pre>
-        <p>Then open your browser and visit
-            <a href="http://localhost:4000/greeting">http://localhost:4000/greeting</a>, you'll get this response:</p>
+        <p>Compile the source (if not running
+            <em>tsc -w</em>) and refresh the page, response like:</p>
         <pre>
         <code class="json">
-{
-    "message": "Hello world!"
+{"msg":"hello world!"}
+        </code>
+</pre>
+        <h3>Accepting client parameters</h3>
+
+        <p>Declared arguments in Kite entry point function (
+            <em>exec()</em> as of yet) is mapped to client parameters by KiteJS framework at controller loading time.</p>
+
+        <p>Here is an example (create a new controller
+            <em>welcome.controller.ts</em> by kite-tools
+            <em>kite -a welcome</em>):</p>
+
+        <pre>
+        <code class="typescript">
+import { Controller, Entry, KiteError, Inject } from 'kite-framework';
+
+@Controller()
+export class WelcomeController {
+    @Entry()
+    async exec(name: string) {
+        return { msg: `Hello, ${name}!` };
+    }
 }
         </code>
     </pre>
-        <h2>More examples</h2>
-        <p>Please visit this
-            <a href="https://github.com/kite-js/kite/blob/master/docs/tutorial.md">tutorial</a> for more details.
-        </p>
+
+        <p>Compile the source (if not running
+            <em>tsc -w</em>), and visit
+            <a href="http://localhost:4000/welcome?name=Kite">http://localhost:4000/welcome?name=Kite</a>, response like:</p>
+        <pre>
+        <code class="json">
+{"msg":"Hello, Kite!"}
+        </code>
+        </pre>
     </main>
     <footer>
         <p>Copyright &copy; 2017 Arthur Xie.</p>
