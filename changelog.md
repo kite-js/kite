@@ -1,3 +1,6 @@
+# 0.5.1 (2017-03-28)
+- remove cluster support, if you want this feature please look for pagcakges like PM2
+
 # 0.5.0 pre (2017-02-26)
 - change the entry point @Entry decorator, move "map input only" to new decorator "@MapInputOnly"
 - middleware re-design, return type is not restricted to `promise`, now it can be any type

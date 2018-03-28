@@ -26,8 +26,6 @@ const http_router_1 = require("./utils/http.router");
 const watch_service_1 = require("./core/watch.service");
 const URL = require("url");
 const path = require("path");
-const cluster = require("cluster");
-const os = require("os");
 const default_config_1 = require("./default.config");
 const error_codes_1 = require("./core/error.codes");
 const http_1 = require("http");
@@ -94,10 +92,6 @@ class Kite {
         }
         // Combine default configuration with user configuration
         cfg = Object.assign({}, default_config_1.DefaultConfig, cfg);
-        let numCpus = os.cpus().length;
-        if (cfg.workers && cfg.workers > numCpus) {
-            cfg.workers = numCpus;
-        }
         this.maxContentLength = parsesize_1.parseSize(cfg.maxContentLength);
         // concact log filenames with working root directory if they are not a absolute path
         if (typeof cfg.log.out === 'string' && !path.isAbsolute(cfg.log.out)) {
@@ -184,16 +178,6 @@ class Kite {
      * Relase your kite, let it fly
      */
     fly(port = 4000, hostname = 'localhost') {
-        if (this.config.workers && cluster.isMaster) {
-            this.log(`Master process is running #${process.pid}`);
-            for (let i = 0; i < this.config.workers; i++) {
-                cluster.fork();
-            }
-            cluster.on('exit', (worker, code, signal) => {
-                console.log(`Worker #${worker.process.pid} died`);
-            });
-            return;
-        }
         if (this.server && this.server.listening) {
             this.server.close();
         }

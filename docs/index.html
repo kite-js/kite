@@ -24,15 +24,9 @@
             <h3>Kite focus on writing APIs more efficiently with latest Javascript features</h3>
         </div>
         <h2>Current version
-            <a href="https://github.com/kite-js/kite" title="Kite source">0.5.0</a>:</h2>
+            <a href="https://github.com/kite-js/kite" title="Kite source">0.5.1</a>:</h2>
         <ul class="change-logs">
-            <li>change the entry point @Entry decorator, move "map input only" to new decorator "@MapInputOnly"</li>
-            <li>middleware re-design, return type is not restricted to
-                <em>promise</em>, now it can be any type</li>
-            <li>controllers now can handle http incoming message and server response in custom way</li>
-            <li>framework never call
-                <em>response.end()</em>, responder should handle the everything</li>
-            <li>Kite train: controllers / services can work under different configurations</li>
+            <li>Removed cluster support, if you need this feature, please look for packages like PM2</li>
         </ul>
         <h2>Introduction</h2>
         <p>Kite is a web application framework, it's designed for efficient coding of APIs. Here are differences between other

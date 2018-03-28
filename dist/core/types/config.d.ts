@@ -21,27 +21,6 @@ import { Responder } from './responder';
  */
 export interface Config {
     /**
-     * Kite server listen host, etc: `localhost`, default is set to `127.0.0.1`.
-     * To listen to a unix socket, supply a filename instead of port and hostname.
-     *
-     * See [server.listen](https://nodejs.org/docs/latest/api/http.html#http_server_listen_port_hostname_backlog_callback) for details
-     */
-    /**
-     * Port to listen, default set to `4000`.
-     * To listen to a unix socket, supply a filename instead of port and hostname.
-     *
-     * See [server.listen](https://nodejs.org/docs/latest/api/http.html#http_server_listen_port_hostname_backlog_callback) for details
-     */
-    /**
-     * [NOTE] Not fully tested, many things to improve, please keep this field to default value.
-     *
-     * Number of workers, default in `undefined`, set a falsy value tell Kite work in single process mode.
-     *
-     * If the value is set to 1 ~ number of CPUs, Kite will start a master process and specified child processes to handle client request.
-     * If the value is set to a number greater than number of CPU cores, Kite will change it to the number of CPU cores.
-     */
-    workers?: number;
-    /**
      * Watch for file changes, default is `true` watch for file changes. You should set to `false` explicitly in production environment.
      *
      * If any changes happened on Kite controller, service, model or their required child modules, Kite will reload these files.
