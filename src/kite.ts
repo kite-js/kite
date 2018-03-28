@@ -30,7 +30,6 @@ import { Router } from './core/types/router';
 
 import * as URL from 'url';
 import * as path from 'path';
-import * as cluster from 'cluster';
 import * as os from 'os';
 
 import { DefaultConfig } from './default.config';
@@ -137,11 +136,6 @@ export class Kite {
         // Combine default configuration with user configuration
         cfg = Object.assign({}, DefaultConfig, cfg);
 
-        let numCpus = os.cpus().length;
-        if (cfg.workers && cfg.workers > numCpus) {
-            cfg.workers = numCpus;
-        }
-
         this.maxContentLength = parseSize(cfg.maxContentLength);
 
         // concact log filenames with working root directory if they are not a absolute path
@@ -241,20 +235,6 @@ export class Kite {
      * Relase your kite, let it fly
      */
     fly(port: number = 4000, hostname: string = 'localhost') {
-        if (this.config.workers && cluster.isMaster) {
-            this.log(`Master process is running #${process.pid}`);
-
-            for (let i = 0; i < this.config.workers; i++) {
-                cluster.fork();
-            }
-
-            cluster.on('exit', (worker, code, signal) => {
-                console.log(`Worker #${worker.process.pid} died`);
-            });
-
-            return;
-        }
-
         if (this.server && this.server.listening) {
             this.server.close();
         }
