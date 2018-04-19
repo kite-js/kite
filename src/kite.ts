@@ -170,17 +170,17 @@ export class Kite {
         // build data hub from factory
         this.receivers = {};
         if (cfg.receiverProvider) {
-            let parsers: ReceiverProvider[] = [];
+            let receivers: ReceiverProvider[] = [];
 
             if (typeof cfg.receiverProvider === 'function') {
-                parsers.push(cfg.receiverProvider);
+                receivers.push(cfg.receiverProvider);
             } else if (Array.isArray(cfg.receiverProvider)) {
-                parsers = cfg.receiverProvider;
+                receivers = cfg.receiverProvider;
             }
 
-            parsers.forEach(provider => {
-                let { contentType, parser } = provider.call(null);
-                this.receivers[contentType] = parser;
+            receivers.forEach(provider => {
+                let { contentType, receiver } = provider.call(null);
+                this.receivers[contentType] = receiver;
             });
         }
 

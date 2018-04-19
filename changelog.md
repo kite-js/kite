@@ -1,3 +1,7 @@
+
+# 0.5.2 (2018-04-19)
+- fix bug: show "unsupported content type ..." when receive 'POST' data
+
 # 0.5.1 (2017-03-28)
 - remove cluster support, if you want this feature please look for pagcakges like PM2
 
