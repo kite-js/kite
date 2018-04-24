@@ -258,7 +258,7 @@ export class Kite {
                 inputs = url.query, // URL query string
                 filename = this.router.map(url, request.method),    // map to actual filename
                 trainData;
-                // api = await this.controllerFactory.get(filename);       // get controller instance
+            // api = await this.controllerFactory.get(filename);       // get controller instance
             // metadata: ControllerMetadata = getControllerMetadata(api.constructor),
 
             let controller = this.controllerFactory.getController(filename);
@@ -276,12 +276,16 @@ export class Kite {
                 // if there is any message-body sent from client, try to parse it
                 // an entity-body is explicitly forbidden in TRACE, and ingored in GET
 
-                let contentType = <string>request.headers['content-type'] || 'text/plain',
+                let [contentType, charset] = (<string>request.headers['content-type'] || 'text/plain').split(';'),
                     entityBody = await this.getEntityBody(request);
+
+                if (charset) {
+                    charset = charset.split('=')[1];
+                }
 
                 if (this.receivers[contentType]) {
                     try {
-                        let data = this.receivers[contentType](entityBody);
+                        let data = this.receivers[contentType](entityBody, charset);
                         inputs = Object.assign({}, url.query, data);
                     } catch (e) {
                         this.logService.error(e);

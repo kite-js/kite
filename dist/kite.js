@@ -213,10 +213,13 @@ class Kite {
                 request.method !== 'TRACE') {
                 // if there is any message-body sent from client, try to parse it
                 // an entity-body is explicitly forbidden in TRACE, and ingored in GET
-                let contentType = request.headers['content-type'] || 'text/plain', entityBody = await this.getEntityBody(request);
+                let [contentType, charset] = (request.headers['content-type'] || 'text/plain').split(';'), entityBody = await this.getEntityBody(request);
+                if (charset) {
+                    charset = charset.split('=')[1];
+                }
                 if (this.receivers[contentType]) {
                     try {
-                        let data = this.receivers[contentType](entityBody);
+                        let data = this.receivers[contentType](entityBody, charset);
                         inputs = Object.assign({}, url.query, data);
                     }
                     catch (e) {

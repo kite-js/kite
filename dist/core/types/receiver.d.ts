@@ -12,7 +12,7 @@
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  */
-export declare type Receiver = (data: string) => {
+export declare type Receiver = (data: string, encoding?: string) => {
     [name: string]: string;
 };
 export declare type ReceiverEntity = {

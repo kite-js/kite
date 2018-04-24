@@ -1,3 +1,5 @@
+# 0.5.3 (2018-04-24)
+- improved: parsing "Content-Type" with "charset" suffix, like "application/json;charset=UTF-8"
 
 # 0.5.2 (2018-04-19)
 - fix bug: show "unsupported content type ..." when receive 'POST' data

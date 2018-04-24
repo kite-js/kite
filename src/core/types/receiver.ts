@@ -13,7 +13,7 @@
  * all copies or substantial portions of the Software.
  */
 
-export type Receiver = (data: string) => { [name: string]: string };
+export type Receiver = (data: string, encoding?: string) => { [name: string]: string };
 
 export type ReceiverEntity = {
     contentType: string,
