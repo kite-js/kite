@@ -22,4 +22,24 @@ class KiteError {
     }
 }
 exports.KiteError = KiteError;
+/**
+ * A shortcut to `throw new KiteError(code, extra)` when you need to exit a controller.
+ *
+ * Old way:
+ * ```ts
+ * if (error) throw new KiteError('some error');
+ * ```
+ *
+ * New way, simpler, readable:
+ * ```ts
+ * if (error) cut('some error')
+ * ```
+ *
+ * @param code
+ * @param extra
+ */
+function end(code, ...extra) {
+    throw new KiteError(code, extra);
+}
+exports.end = end;
 //# sourceMappingURL=error.js.map

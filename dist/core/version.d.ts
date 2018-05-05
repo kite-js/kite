@@ -12,4 +12,4 @@
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  */
-export declare const VERSION = "0.5.0";
+export declare const VERSION = "0.5.4";

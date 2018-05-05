@@ -1,3 +1,12 @@
+# 0.5.4 (2018-05-05)
+- add short way to exit a controller, function `cut`, now exiting a controller can be more readable:
+```ts
+// old way
+if (error) throw new KiteError(code);
+// new way
+if (error) end(code);
+```
+
 # 0.5.3 (2018-04-24)
 - improved: parsing "Content-Type" with "charset" suffix, like "application/json;charset=UTF-8"
 

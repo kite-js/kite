@@ -23,3 +23,23 @@ export class KiteError {
         Error.captureStackTrace(this);
     }
 }
+
+/**
+ * A shortcut to `throw new KiteError(code, extra)` when you need to exit a controller.
+ * 
+ * Old way:
+ * ```ts
+ * if (error) throw new KiteError('some error');
+ * ```
+ * 
+ * New way, simpler, readable:
+ * ```ts
+ * if (error) cut('some error')
+ * ```
+ * 
+ * @param code 
+ * @param extra 
+ */
+export function end(code: number | string, ...extra: any[]) {
+    throw new KiteError(code, extra);
+}

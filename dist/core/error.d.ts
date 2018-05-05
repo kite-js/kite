@@ -17,3 +17,20 @@ export declare class KiteError {
     extra: string | string[];
     constructor(code: number | string, extra?: string | string[]);
 }
+/**
+ * A shortcut to `throw new KiteError(code, extra)` when you need to exit a controller.
+ *
+ * Old way:
+ * ```ts
+ * if (error) throw new KiteError('some error');
+ * ```
+ *
+ * New way, simpler, readable:
+ * ```ts
+ * if (error) cut('some error')
+ * ```
+ *
+ * @param code
+ * @param extra
+ */
+export declare function end(code: number | string, ...extra: any[]): void;
