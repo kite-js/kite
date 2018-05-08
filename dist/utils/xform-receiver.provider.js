@@ -25,4 +25,3 @@ function XformReceiverProvider() {
     };
 }
 exports.XformReceiverProvider = XformReceiverProvider;
-//# sourceMappingURL=xform-receiver.provider.js.map

@@ -1,3 +1,6 @@
+# 0.5.5 (2018-05-08)
+- Change default string trim behavior: keeps original input strings instead of trims it, auto-trim should be enabled by `KiteConfig.trim = true`
+
 # 0.5.4 (2018-05-05)
 - add short way to exit a controller, function `cut`, now exiting a controller can be more readable:
 ```ts

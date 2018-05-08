@@ -130,4 +130,3 @@ class ControllerFactory {
     }
 }
 exports.ControllerFactory = ControllerFactory;
-//# sourceMappingURL=controller.factory.js.map

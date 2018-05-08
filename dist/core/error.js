@@ -42,4 +42,3 @@ function end(code, ...extra) {
     throw new KiteError(code, extra);
 }
 exports.end = end;
-//# sourceMappingURL=error.js.map

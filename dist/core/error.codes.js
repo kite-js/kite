@@ -44,4 +44,3 @@ exports.ERROR_CODES = {
     1100: 'Invalid request URL: failed to locate resource "%s"',
     1101: 'Invalid request URL: illegal characters detected',
 };
-//# sourceMappingURL=error.codes.js.map

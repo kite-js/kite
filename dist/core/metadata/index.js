@@ -14,4 +14,3 @@ exports.Injectable = injectable_1.Injectable;
 var model_1 = require("./model");
 exports.Model = model_1.Model;
 exports.In = model_1.In;
-//# sourceMappingURL=index.js.map

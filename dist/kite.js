@@ -325,4 +325,3 @@ class Kite {
     }
 }
 exports.Kite = Kite;
-//# sourceMappingURL=kite.js.map

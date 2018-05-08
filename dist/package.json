@@ -1,11 +1,13 @@
 {
     "name": "kite-framework",
-    "version": "0.5.4",
+    "version": "0.5.5",
     "description": "Next generation, fast, flexible HTTP-JSON-RPC framework",
     "scripts": {
+        "setup": "npm install",
         "build": "tsc && cp ./{package.json,README.md} dist/",
         "pub": "pushd ./dist && npm publish --registry=https://registry.npmjs.org && popd",
-        "clean": "rm -rf ./dist"
+        "clean": "rm -rf ./dist",
+        "typedoc": "typedoc --out ./api_docs --mode modules --tsconfig ./tsconfig.json ./src"
     },
     "repository": {
         "type": "git",
@@ -31,6 +33,7 @@
     },
     "devDependencies": {
         "tslint": "^5.6.0",
+        "typedoc": "^0.11.1",
         "typescript": "^2.4.2"
     }
 }

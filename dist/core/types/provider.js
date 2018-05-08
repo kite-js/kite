@@ -14,4 +14,3 @@
  * all copies or substantial portions of the Software.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-//# sourceMappingURL=provider.js.map

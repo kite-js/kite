@@ -341,7 +341,7 @@ export interface FilterRule {
      * `true` - do not trim
      * `false` - trim
      */
-    noTrim?: boolean;
+    trim?: boolean;
 
     /**
      * element type of property, used when source type is Array. if this filter is omitted, Kite will
@@ -568,7 +568,7 @@ function createFilterFn(target: KiteModel, globalRule: FilterRule): void {
             // if defined minLen, maxLen, check for minimal length & maximal length
             ////////////////////////////////////////////////////////////////////////////////////////////////            
             case String:
-                let trim = rule.noTrim ? '' : '.trim()';
+                let trim = rule.trim ? '.trim()' : '';
                 fnStack.push(`this['${name}'] = String(inputs['${name}'])${trim};`);
 
                 // if "allowEmpty" is undefined or set to false, check original input for empty string '', null 

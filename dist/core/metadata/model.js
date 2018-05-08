@@ -279,7 +279,7 @@ function createFilterFn(target, globalRule) {
             // if defined minLen, maxLen, check for minimal length & maximal length
             ////////////////////////////////////////////////////////////////////////////////////////////////            
             case String:
-                let trim = rule.noTrim ? '' : '.trim()';
+                let trim = rule.trim ? '.trim()' : '';
                 fnStack.push(`this['${name}'] = String(inputs['${name}'])${trim};`);
                 // if "allowEmpty" is undefined or set to false, check original input for empty string '', null 
                 if (rule.required && !rule.allowEmpty) {
@@ -491,4 +491,3 @@ function hasModelInputs(cls) {
     return Reflect.hasMetadata(MK_KITE_INPUTS, cls);
 }
 exports.hasModelInputs = hasModelInputs;
-//# sourceMappingURL=model.js.map

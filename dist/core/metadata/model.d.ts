@@ -305,7 +305,7 @@ export interface FilterRule {
      * `true` - do not trim
      * `false` - trim
      */
-    noTrim?: boolean;
+    trim?: boolean;
     /**
      * element type of property, used when source type is Array. if this filter is omitted, Kite will
      * pass the whole input array to the controller.

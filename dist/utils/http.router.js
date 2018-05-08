@@ -81,4 +81,3 @@ function HttpRouterProvider(rootdir, extension = '.js') {
     return new HttpRouter(rootdir, extension);
 }
 exports.HttpRouterProvider = HttpRouterProvider;
-//# sourceMappingURL=http.router.js.map

@@ -25,4 +25,3 @@ function JsonReceiverProvider() {
     };
 }
 exports.JsonReceiverProvider = JsonReceiverProvider;
-//# sourceMappingURL=json-receiver.provider.js.map

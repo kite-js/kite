@@ -59,4 +59,3 @@ function isKiteController(target) {
     return Reflect.hasMetadata(MK_CONTROLLER, target);
 }
 exports.isKiteController = isKiteController;
-//# sourceMappingURL=controller.js.map

@@ -55,4 +55,3 @@ function isInjectable(target) {
     return Reflect.getMetadata(MK_INJECTABLE, target);
 }
 exports.isInjectable = isInjectable;
-//# sourceMappingURL=injectable.js.map

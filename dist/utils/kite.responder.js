@@ -67,4 +67,3 @@ class KiteResponder {
     }
 }
 exports.KiteResponder = KiteResponder;
-//# sourceMappingURL=kite.responder.js.map

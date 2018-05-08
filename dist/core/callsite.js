@@ -40,4 +40,3 @@ function getCallerPath() {
     return Path.dirname(stack[1].getFileName());
 }
 exports.getCallerPath = getCallerPath;
-//# sourceMappingURL=callsite.js.map

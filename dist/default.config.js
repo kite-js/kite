@@ -14,4 +14,3 @@ exports.DefaultConfig = {
     receiverProvider: [json_receiver_provider_1.JsonReceiverProvider, xform_receiver_provider_1.XformReceiverProvider],
     responder: new kite_responder_1.KiteResponder(),
 };
-//# sourceMappingURL=default.config.js.map

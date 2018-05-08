@@ -23,4 +23,3 @@ __export(require("./core/error.service"));
 __export(require("./core/error"));
 __export(require("./core/version"));
 __export(require("./kite"));
-//# sourceMappingURL=index.js.map
