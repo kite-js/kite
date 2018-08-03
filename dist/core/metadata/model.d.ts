@@ -85,7 +85,7 @@ export interface ArrayType {
      * Kite will resolve this template to filter inputs, this field is only used for
      * describing array dimensional formats
      */
-    template: string;
+    template?: string;
     /**
      * element type of array template, can be one of:
      * + Number

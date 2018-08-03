@@ -107,7 +107,7 @@ export interface ArrayType {
      * Kite will resolve this template to filter inputs, this field is only used for
      * describing array dimensional formats
      */
-    template: string;
+    template?: string;
 
     /**
      * element type of array template, can be one of:
@@ -684,7 +684,10 @@ function createFilterFn(target: KiteModel, globalRule: FilterRule): void {
                 }
 
                 if (rule.arrayType) {
-                    let template = rule.arrayType.template.replace(/\s/g, '');
+                    if (!rule.arrayType.template && !rule.arrayType.elementType) {
+                        throw new Error(`At least one of arrayType.template or arrayType.elementType should be specified. Model class: ${target.constructor.name}, property: ${property}`);
+                    }
+                    let template = rule.arrayType.template ? rule.arrayType.template.replace(/\s/g, '') : 'Array<>';
                     fnStack.push(`this['${name}'] = `);
                     parseArray(template);
                 } else {

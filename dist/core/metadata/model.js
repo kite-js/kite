@@ -390,7 +390,10 @@ function createFilterFn(target, globalRule) {
                     fnStack.push(`else if (!input.length) { throw new KiteError(1033, '${name}'); }`);
                 }
                 if (rule.arrayType) {
-                    let template = rule.arrayType.template.replace(/\s/g, '');
+                    if (!rule.arrayType.template && !rule.arrayType.elementType) {
+                        throw new Error(`At least one of arrayType.template or arrayType.elementType should be specified. Model class: ${target.constructor.name}, property: ${property}`);
+                    }
+                    let template = rule.arrayType.template ? rule.arrayType.template.replace(/\s/g, '') : 'Array<>';
                     fnStack.push(`this['${name}'] = `);
                     parseArray(template);
                 }

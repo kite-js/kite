@@ -1,6 +1,6 @@
 "use strict";
 /***
- * Copyright (c) 2017 [Arthur Xie]
+ * Copyright (c) 2017, 2018 [Arthur Xie]
  * <https://github.com/kite-js/kite>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -14,4 +14,4 @@
  * all copies or substantial portions of the Software.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.VERSION = '0.5.5';
+exports.VERSION = '0.5.6';

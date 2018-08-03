@@ -20,6 +20,7 @@ const injectable_1 = require("./metadata/injectable");
 const controller_1 = require("./metadata/controller");
 const path = require("path");
 const fs = require("fs");
+const postconstruct_1 = require("./metadata/postconstruct");
 /**
  * Controller factory
  * This controller factory does the following things:
@@ -117,9 +118,13 @@ class ControllerFactory {
                 pool.set(type, dependency);
                 // inject dependency recursively
                 await this._injectDependency(dependency, pool, data);
-                // Initialize injection target if contains a "init" method, note: this muse be a "async" function
-                if (dependency.onInit) {
-                    await dependency.onInit();
+                // Call post construct
+                let postConsProp = postconstruct_1.getPostConstruct(dependency);
+                if (postConsProp) {
+                    let promise = dependency[postConsProp].call(dependency);
+                    if (promise instanceof Promise) {
+                        await promise;
+                    }
                 }
             }
             // pass the depedency to current object

@@ -13,15 +13,12 @@
  * all copies or substantial portions of the Software.
  */
 
-import 'reflect-metadata';
-
 import { VERSION } from './core/version';
 import { Config } from './core/types/config';
 import { KiteError } from './core/error';
 import { LogService } from './core/log.service';
 import { ErrorService } from './core/error.service';
 import { ControllerFactory } from './core/controller.factory';
-import { ControllerMetadata, getControllerMetadata } from './core/metadata/controller';
 import { getCallerPath } from './core/callsite';
 import { parseSize } from './utils/parsesize';
 import { HttpRouter } from './utils/http.router';
@@ -30,22 +27,18 @@ import { Router } from './core/types/router';
 
 import * as URL from 'url';
 import * as path from 'path';
-import * as os from 'os';
 
 import { DefaultConfig } from './default.config';
-import { Receiver, ReceiverEntity, ReceiverProvider } from './core/types/receiver';
+import { Receiver, ReceiverProvider } from './core/types/receiver';
 import { ERROR_CODES } from './core/error.codes';
 import { Middleware } from './core/types/middleware';
 import { Server, createServer, IncomingMessage, ServerResponse } from 'http';
-import { getEntryParams } from './core/metadata/entry';
 import { RequestHandler } from './core/types/request-handler';
 import { ResponseHandler } from './core/types/response-handler';
 import { Provider } from './core/types/provider';
 
 /**
  * Kite 
- * 
- * TODO: improve cluster processes
  */
 export class Kite {
     private server: Server;
@@ -105,7 +98,7 @@ export class Kite {
         server.on('error', (err) => {
             this.log(`*** ERROR *** ${err.message}`);
             if ((err as any).code === 'EADDRINUSE') {
-                this.log('*** ERROR *** address in use, please change "hostname / port" for Kite, or close the conflicting process');
+                this.log('*** ERROR *** address:port in use, please change "hostname / port" for Kite, or close the conflicting process');
             }
             this.log('EXIT');
             process.exit();
@@ -197,7 +190,6 @@ export class Kite {
             this.controllerFactory.watchService = this.watchService;
         }
 
-        let oldConfig = this.config;
         this.config = cfg;
         Object.seal(this.config);
         Object.freeze(this.config);
@@ -293,7 +285,6 @@ export class Kite {
                     }
                 } else {
                     this.logService.warn(`Unsupported content type "${contentType}"`);
-                    // inputs = entityBody;
                     inputs.$data = entityBody;
                 }
             }

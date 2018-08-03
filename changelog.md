@@ -1,3 +1,7 @@
+# 0.5.6 (2018-07-31)
+- remove `init` interface, use "@PostConstruct" instead
+- model input property `arrayType` descriptor `template` or `elementType` can be optional
+
 # 0.5.5 (2018-05-08)
 - Change default string trim behavior: keeps original input strings instead of trims it, auto-trim should be enabled by `KiteConfig.trim = true`
 

@@ -16,13 +16,13 @@
 import { LogService } from './log.service';
 import { KiteError } from './error';
 import { WatchService } from './watch.service';
-import { Init } from './types/init';
 import { getDependencies } from './metadata/inject';
 import { isInjectable } from './metadata/injectable';
 import { isKiteController } from './metadata/controller';
 import { Class } from './types/class';
 import * as path from 'path';
 import * as fs from 'fs';
+import { getPostConstruct } from './metadata/postconstruct';
 
 interface KiteImage {
     controllers: WeakMap<Class, Object>
@@ -134,7 +134,7 @@ export class ControllerFactory {
         }
 
         // walk each injection target, create injection instance
-        let dependency: Init;
+        let dependency;
         for (let [prop, type] of dependencies) {
             // Get injection target from cache, if not exist, create one
             dependency = pool.get(type);
@@ -151,9 +151,14 @@ export class ControllerFactory {
                 pool.set(type, dependency);
                 // inject dependency recursively
                 await this._injectDependency(dependency, pool, data);
-                // Initialize injection target if contains a "init" method, note: this muse be a "async" function
-                if (dependency.onInit) {
-                    await dependency.onInit();
+
+                // Call post construct
+                let postConsProp = getPostConstruct(dependency);
+                if (postConsProp) {
+                    let promise = dependency[postConsProp].call(dependency);
+                    if (promise instanceof Promise) {
+                        await promise;
+                    }
                 }
             }
 

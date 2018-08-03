@@ -186,7 +186,8 @@ Compile the source (if not running `tsc -w`), and visit
 
 __Note__
 
-Variable type declaration is strongly recommended in KiteJS, this improves coding efficiency, and also saves the time of dynamical loading stage of
+Variable type declaration is strongly recommended in KiteJS, this improves coding efficiency, and also
+saves the time of dynamical loading stage of
 the framework. If you ommitted type declaration from parameter, it'll be treated as "string" defaultly.
 
 # Why KiteJS? What's the differences between ExpressJS / KoaJS

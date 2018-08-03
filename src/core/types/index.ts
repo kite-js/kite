@@ -14,7 +14,6 @@
  */
 
 export * from './config';
-export * from './init';
 export * from './router';
 export * from './provider';
 export * from './receiver';

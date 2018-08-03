@@ -1,4 +1,4 @@
-/**
+/***
  * Copyright (c) 2017 [Arthur Xie]
  * <https://github.com/kite-js/kite>
  * 
@@ -14,7 +14,6 @@
  */
 
 import * as fs from 'fs';
-import * as http from 'http';
 
 export const LogFlags = {
     none: 0,

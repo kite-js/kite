@@ -1,4 +1,4 @@
-/**
+/***
  * Copyright (c) 2017 [Arthur Xie]
  * <https://github.com/kite-js/kite>
  * 
@@ -13,10 +13,24 @@
  * all copies or substantial portions of the Software.
  */
 
+/**
+ * Kite error classs
+ */
 export class KiteError {
     code: number | string;
     extra: string | string[];
 
+    /**
+     * Kite error class
+     * 
+     * A Kite error will be catched by Kite error handler, and shows an error message by 
+     * Kite error handler. An error code is used as a key to locate the error message,
+     * an error message can be a normal string or template string, if a template string
+     * is provided, Kite error handler will try to replace the placeholders like `printf`
+     * 
+     * @param code error code
+     * @param extra extra string / strings
+     */
     constructor(code: number | string, extra?: string | string[]) {
         this.code = code;
         this.extra = extra;

@@ -1,5 +1,5 @@
 /***
- * Copyright (c) 2017 [Arthur Xie]
+ * Copyright (c) 2017, 2018 [Arthur Xie]
  * <https://github.com/kite-js/kite>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,4 +12,4 @@
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  */
-export declare const VERSION = "0.5.5";
+export declare const VERSION = "0.5.6";

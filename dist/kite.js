@@ -14,7 +14,6 @@
  * all copies or substantial portions of the Software.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-require("reflect-metadata");
 const version_1 = require("./core/version");
 const error_1 = require("./core/error");
 const log_service_1 = require("./core/log.service");
@@ -31,8 +30,6 @@ const error_codes_1 = require("./core/error.codes");
 const http_1 = require("http");
 /**
  * Kite
- *
- * TODO: improve cluster processes
  */
 class Kite {
     constructor(config = {}) {
@@ -65,7 +62,7 @@ class Kite {
         server.on('error', (err) => {
             this.log(`*** ERROR *** ${err.message}`);
             if (err.code === 'EADDRINUSE') {
-                this.log('*** ERROR *** address in use, please change "hostname / port" for Kite, or close the conflicting process');
+                this.log('*** ERROR *** address:port in use, please change "hostname / port" for Kite, or close the conflicting process');
             }
             this.log('EXIT');
             process.exit();
@@ -144,7 +141,6 @@ class Kite {
             this.watchService.logService = this.logService;
             this.controllerFactory.watchService = this.watchService;
         }
-        let oldConfig = this.config;
         this.config = cfg;
         Object.seal(this.config);
         Object.freeze(this.config);
@@ -229,7 +225,6 @@ class Kite {
                 }
                 else {
                     this.logService.warn(`Unsupported content type "${contentType}"`);
-                    // inputs = entityBody;
                     inputs.$data = entityBody;
                 }
             }

@@ -1,5 +1,5 @@
 "use strict";
-/**
+/***
  * Copyright (c) 2017 [Arthur Xie]
  * <https://github.com/kite-js/kite>
  *
@@ -18,8 +18,8 @@ const util = require("util");
 class ErrorService {
     /**
      *
-     * @param code 错误代码
-     * @param extra 附加错误消息
+     * @param code error code
+     * @param extra error extra message
      */
     getError(code, extra) {
         let msg = this.errors[code];
