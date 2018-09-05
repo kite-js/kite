@@ -1,8 +1,20 @@
 # 语言
 [English](./README.md) | [简体中文](./README.zh-CN.md)
 
+# 旧版本提示
+Kite framework 仍然处于初期开发阶段，一些特性可能会在将来的版本中移除或修改，如果你正在使用某个版本的框架开发、运行系统出现了框架兼容性错误，例如：在一台机器上开发运行没有问题，但到另一台机器上却失败，
+请在 `package.json` 指定框架的版本，作如下修改（需要重新安装依赖包`npm install`）：
+```json
+{
+  "dependencies": {
+    "kite-framework": "=0.5.5"
+  }
+}
+
+```
+
 # KiteJS 框架简介
-KiteJS 是一个新一代的、快速、高效、可扩展的 web API 框架。
+一套简单的、清晰的 WEB API 开发框架。
 
 请参见 [Kite Examples](https://github.com/kite-js/kite-examples) 了解更多实例。
 

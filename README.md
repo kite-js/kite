@@ -1,8 +1,24 @@
 # Languages
 [English](./README.md) | [简体中文](./README.zh-CN.md)
 
+# For old versions
+Kite framework is not stable yet, features may be added or modified in future releases, 
+if you're trying sketch project with the framework behind and confronting some errors, 
+for example, everthing works perfectly on one machine but failed after project is moved 
+to another machine, please specify a version in `package.json` like this 
+( reinstall dependencies `npm install` required ):
+
+```json
+{
+  "dependencies": {
+    "kite-framework": "=0.5.5"
+  }
+}
+
+```
+
 # KiteJS framework
-Next generation, fast, efficient, flexible web API framework.
+A Simple, clear web API framework.
 
 Please visit [Kite Examples](https://github.com/kite-js/kite-examples) for more examples.
 
@@ -46,7 +62,7 @@ Then Kite CLI tools will create a folder `first-kite-app`, initialize the projec
 
 # Making Kite fly
 
-If the above steps finished without error (generally network problems),
+If the above steps finished without error,
 now you can enter the project folder, and start Kite application server:
 
 ```sh
