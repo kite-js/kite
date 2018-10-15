@@ -1,3 +1,15 @@
+# 0.5.7 (2018-10-15)
+- Supports callback function on `Kite.fly()`:
+```ts
+new Kite().fly(4000, 'localhost', () => {
+    // callback when server is started, extra init work
+});
+```
+- Supports start one or more services in startup stage
+```ts
+new Kite().start(StartupService, StartupService2);
+```
+
 # 0.5.6 (2018-07-31)
 - remove `init` interface, use "@PostConstruct" instead
 - model input property `arrayType` descriptor `template` or `elementType` can be optional

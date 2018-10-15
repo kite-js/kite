@@ -1,6 +1,7 @@
 import { Config } from './core/types/config';
 import { Middleware } from './core/types/middleware';
 import { Provider } from './core/types/provider';
+import { Class } from './core/types/class';
 /**
  * Kite
  */
@@ -34,7 +35,7 @@ export declare class Kite {
      * @param flag - true (default), Kite work in watch mode, suggested in dev mode
      *             - false, turn off watch suggested set to `false` in production
      */
-    watch(flag?: boolean): this;
+    watch(flag?: boolean): Kite;
     /**
      * Watch configuration file
      * @param filename
@@ -42,8 +43,11 @@ export declare class Kite {
     private watchConfigFile(filename);
     /**
      * Relase your kite, let it fly
+     * @param port server listen port
+     * @param host server listen host
+     * @param callback optional, if callback is provided, it wil be called after server
      */
-    fly(port?: number, hostname?: string): this;
+    fly(port?: number, host?: string, callback?: Function): Kite;
     /**
      * Request listener, process all requests here
      * @param { IncomingMessage } request
@@ -59,7 +63,21 @@ export declare class Kite {
      * Add a middleware to Kite
      * @param middleware middleware function
      */
-    use(middleware: Middleware): this;
+    use(middleware: Middleware): Kite;
+    /**
+     * @since 0.5.7
+     *
+     * Start a service in Kite boot / fly stage, call this method to start any number of services
+     * and inject dependencies when Kite starting, the services will be started immediately
+     * after calling this method.
+     *
+     * eg:
+     * ```ts
+     * new Kite().start(Service1, Service2);
+     * ```
+     * @param services any number of service classes
+     */
+    start(...services: Class[]): Kite;
     /**
      * Set train kite data provider.
      *
@@ -67,5 +85,5 @@ export declare class Kite {
      * the return value must be a "injectable" object
      * @param provider Provider instance
      */
-    provider(provider: Provider): this;
+    provider(provider: Provider): Kite;
 }

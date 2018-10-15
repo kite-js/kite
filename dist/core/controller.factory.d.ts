@@ -26,6 +26,11 @@ export declare class ControllerFactory {
      */
     getInstance(controller: Class, data?: any): Promise<any>;
     /**
+     * Start a service and put it into dependencies pool
+     * @param service Service class
+     */
+    startService(service: Class): Promise<any>;
+    /**
      * Inject dependencies for an object
      * @param target
      * @param pool

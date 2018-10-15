@@ -1,6 +1,6 @@
 {
     "name": "kite-framework",
-    "version": "0.5.6",
+    "version": "0.5.7",
     "description": "Next generation, fast, flexible HTTP-JSON-RPC framework",
     "scripts": {
         "setup": "npm install",

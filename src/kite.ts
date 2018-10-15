@@ -36,6 +36,7 @@ import { Server, createServer, IncomingMessage, ServerResponse } from 'http';
 import { RequestHandler } from './core/types/request-handler';
 import { ResponseHandler } from './core/types/response-handler';
 import { Provider } from './core/types/provider';
+import { Class } from './core/types/class';
 
 /**
  * Kite 
@@ -206,7 +207,7 @@ export class Kite {
      * @param flag - true (default), Kite work in watch mode, suggested in dev mode
      *             - false, turn off watch suggested set to `false` in production
      */
-    watch(flag: boolean = true) {
+    watch(flag: boolean = true): Kite {
         this.watchService.setEnabled(flag);
         return this;
     }
@@ -225,15 +226,21 @@ export class Kite {
 
     /**
      * Relase your kite, let it fly
+     * @param port server listen port
+     * @param host server listen host 
+     * @param callback optional, if callback is provided, it wil be called after server 
      */
-    fly(port: number = 4000, hostname: string = 'localhost') {
+    fly(port: number = 4000, host: string = 'localhost', callback?: Function): Kite {
         if (this.server && this.server.listening) {
             this.server.close();
         }
 
-        this.server.listen(port, hostname, () => {
+        this.server.listen(port, host, () => {
             let { address, port } = this.server.address();
             this.log(`Flying! server listening at ${address}:${port}`, '\x1b[33m');
+            if (callback) {
+                callback()
+            }
         });
 
         return this;
@@ -371,9 +378,29 @@ export class Kite {
      * Add a middleware to Kite
      * @param middleware middleware function
      */
-    use(middleware: Middleware) {
+    use(middleware: Middleware): Kite {
         this.middlewares.add(middleware);
         // return `this` for chain
+        return this;
+    }
+
+    /**
+     * @since 0.5.7
+     * 
+     * Start a service in Kite boot / fly stage, call this method to start any number of services 
+     * and inject dependencies when Kite starting, the services will be started immediately
+     * after calling this method. 
+     * 
+     * eg:
+     * ```ts
+     * new Kite().start(Service1, Service2);
+     * ```
+     * @param services any number of service classes
+     */
+    start(...services: Class[]): Kite {
+        for (let i = 0; i < services.length; i++) {
+            this.controllerFactory.startService(services[i]);
+        }
         return this;
     }
 
@@ -384,7 +411,7 @@ export class Kite {
      * the return value must be a "injectable" object
      * @param provider Provider instance
      */
-    provider(provider: Provider) {
+    provider(provider: Provider): Kite {
         this._provider = provider;
         return this;
     }

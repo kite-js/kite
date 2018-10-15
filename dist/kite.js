@@ -172,14 +172,20 @@ class Kite {
     }
     /**
      * Relase your kite, let it fly
+     * @param port server listen port
+     * @param host server listen host
+     * @param callback optional, if callback is provided, it wil be called after server
      */
-    fly(port = 4000, hostname = 'localhost') {
+    fly(port = 4000, host = 'localhost', callback) {
         if (this.server && this.server.listening) {
             this.server.close();
         }
-        this.server.listen(port, hostname, () => {
+        this.server.listen(port, host, () => {
             let { address, port } = this.server.address();
             this.log(`Flying! server listening at ${address}:${port}`, '\x1b[33m');
+            if (callback) {
+                callback();
+            }
         });
         return this;
     }
@@ -305,6 +311,25 @@ class Kite {
     use(middleware) {
         this.middlewares.add(middleware);
         // return `this` for chain
+        return this;
+    }
+    /**
+     * @since 0.5.7
+     *
+     * Start a service in Kite boot / fly stage, call this method to start any number of services
+     * and inject dependencies when Kite starting, the services will be started immediately
+     * after calling this method.
+     *
+     * eg:
+     * ```ts
+     * new Kite().start(Service1, Service2);
+     * ```
+     * @param services any number of service classes
+     */
+    start(...services) {
+        for (let i = 0; i < services.length; i++) {
+            this.controllerFactory.startService(services[i]);
+        }
         return this;
     }
     /**

@@ -95,7 +95,7 @@ export class ControllerFactory {
      * @param data 
      */
     async getInstance(controller: Class, data: any = undefined): Promise<any> {
-        // get image by data
+        // get image by data (for kite train)
         let image = this._images.get(data);
         if (!image) {
             image = {
@@ -113,6 +113,39 @@ export class ControllerFactory {
         }
 
         return instance;
+    }
+
+    /**
+     * Start a service and put it into dependencies pool
+     * @param service Service class
+     */
+    async startService(service: Class): Promise<any> {
+        const trainData: any = undefined;
+        let image = this._images.get(trainData);
+        if (!image) {
+            image = {
+                controllers: new WeakMap(),
+                dependencies: new WeakMap()
+            };
+            this._images.set(trainData, image);
+        }
+
+        let instance: any = image.dependencies.get(service);
+        if (!instance) {
+            instance = new service;
+            image.dependencies.set(service, instance);
+            // inject dependencies if this service depend on other services
+            await this._injectDependency(instance, image.dependencies, trainData);
+
+            // call post constructor
+            let postConsProp = getPostConstruct(instance);
+            if (postConsProp) {
+                let postconsResult = instance[postConsProp].call(instance);
+                if (postconsResult instanceof Promise) {
+                    await postconsResult;
+                }
+            }
+        }
     }
 
     /**
@@ -140,9 +173,10 @@ export class ControllerFactory {
                     throw new Error(`${target.constructor.name}.${prop} is announced with "@Inject()" but target "${type.name}" is not injectable`);
                 }
 
+                // inject train data if necessary
                 dependency = data && data instanceof type ? data : new type();
 
-                // Cache it, so chained injection could find this instance if there are dependence on each other
+                // Cache it, so chained injection could find this instance if there depend on each other
                 pool.set(type, dependency);
                 // inject dependency recursively
                 await this._injectDependency(dependency, pool, data);
@@ -150,9 +184,9 @@ export class ControllerFactory {
                 // Call post construct
                 let postConsProp = getPostConstruct(dependency);
                 if (postConsProp) {
-                    let promise = dependency[postConsProp].call(dependency);
-                    if (promise instanceof Promise) {
-                        await promise;
+                    let postconsResult = dependency[postConsProp].call(dependency);
+                    if (postconsResult instanceof Promise) {
+                        await postconsResult;
                     }
                 }
             }
