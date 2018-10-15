@@ -13,7 +13,6 @@
  * all copies or substantial portions of the Software.
  */
 
-import { LogService } from './log.service';
 import { KiteError } from './error';
 import { WatchService } from './watch.service';
 import { getDependencies } from './metadata/inject';
@@ -36,15 +35,6 @@ interface KiteImage {
  * - Creates dependencies
  */
 export class ControllerFactory {
-
-    // Controller cache
-    // private controllers = new Map();
-
-    // dependencies cache
-    // private dependencies = new WeakMap();
-
-    logService: LogService;
-
     watchService: WatchService;
 
     workdir: string;
@@ -65,11 +55,16 @@ export class ControllerFactory {
         if (!controller) {
             const fullname = path.isAbsolute(filename) ? filename : path.join(this.workdir, filename);
 
-            if (!fs.existsSync(fullname)) {
-                throw new KiteError(1002);
-            }
+            let mod;
+            try {
+                mod = require(fullname);
+            } catch (error) {
+                if (error.code === 'MODULE_NOT_FOUND') {
+                    throw new KiteError(1002);
+                }
 
-            const mod = require(fullname);
+                throw error;
+            }
 
             // find the first "@Controller" decorated module, treat it as a "Controller"
             const keys = Object.keys(mod);
@@ -142,7 +137,7 @@ export class ControllerFactory {
                 // Is target type injectable ?
                 if (!isInjectable(type)) {
                     // tslint:disable-next-line:max-line-length
-                    throw new Error(`${target.constructor.name}.${prop} is annonced with "@Inject()" but target "${type.name}" is not injectable`);
+                    throw new Error(`${target.constructor.name}.${prop} is announced with "@Inject()" but target "${type.name}" is not injectable`);
                 }
 
                 dependency = data && data instanceof type ? data : new type();

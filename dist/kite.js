@@ -135,7 +135,7 @@ class Kite {
             this.controllerFactory = new controller_factory_1.ControllerFactory();
             this.controllerFactory.workdir = this.workdir;
         }
-        this.controllerFactory.logService = this.logService;
+        // this.controllerFactory.logService = this.logService;
         if (!this.watchService) {
             this.watchService = new watch_service_1.WatchService(__dirname);
             this.watchService.logService = this.logService;

@@ -13,11 +13,10 @@
  * all copies or substantial portions of the Software.
  */
 
-import { ReceiverProvider } from '../core/types/receiver';
 import * as querystring from 'querystring';
 
 // tslint:disable-next-line:no-shadowed-variable
-export function XformReceiverProvider<ParserProvider>() {
+export function XformReceiverProvider() {
     return {
         contentType: 'application/x-www-form-urlencoded',
         receiver: function (data: string) {

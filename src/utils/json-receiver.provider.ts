@@ -13,9 +13,9 @@
  * all copies or substantial portions of the Software.
  */
 
-import { ReceiverProvider } from '../core/types/receiver';
 
-export function JsonReceiverProvider<ParserProvider>() {
+
+export function JsonReceiverProvider() {
     const contentType = 'application/json';
     const receiver = function (data: string) {
         return JSON.parse(data);

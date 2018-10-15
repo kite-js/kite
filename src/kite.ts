@@ -182,7 +182,7 @@ export class Kite {
             this.controllerFactory.workdir = this.workdir;
         }
 
-        this.controllerFactory.logService = this.logService;
+        // this.controllerFactory.logService = this.logService;
 
         if (!this.watchService) {
             this.watchService = new WatchService(__dirname);

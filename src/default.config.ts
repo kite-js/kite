@@ -13,7 +13,6 @@
  * all copies or substantial portions of the Software.
  */
 import { Config } from './core/types/config';
-import { HttpRouter } from './utils/http.router';
 import { JsonReceiverProvider } from './utils/json-receiver.provider';
 import { XformReceiverProvider } from './utils/xform-receiver.provider';
 import { KiteResponder } from './utils/kite.responder';

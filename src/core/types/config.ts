@@ -14,7 +14,6 @@
  */
 
 import { Router, RouterProvider } from './router';
-import * as http from 'http';
 import { ReceiverProvider } from './receiver';
 import { Responder } from './responder';
 

@@ -15,7 +15,6 @@
 
 import 'reflect-metadata';
 import { FilterRule, Model, In, isKiteModel, hasModelInputs } from './model';
-import { Kite } from './../../kite';
 import * as vm from 'vm';
 import * as http from 'http';
 import { Class } from '../types/class';

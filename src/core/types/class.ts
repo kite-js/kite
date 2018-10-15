@@ -1,4 +1,3 @@
-import { IncomingMessage } from 'http';
 /**
  * Copyright (c) 2017 [Arthur Xie]
  * <https://github.com/kite-js/kite>

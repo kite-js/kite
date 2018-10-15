@@ -18,7 +18,6 @@ require("reflect-metadata");
 const vm = require("vm");
 const error_1 = require("../error");
 const MK_KITE_MODEL = 'kite:model';
-const MK_KITE_ROOT_MODEL = 'kite:root-model';
 const MK_KITE_INPUTS = 'kite:inputs';
 const ESCAPED_QUOTE = '\\$1';
 const QUOTE_REGEX = /('|"|`)/g;

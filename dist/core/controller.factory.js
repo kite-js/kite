@@ -19,7 +19,6 @@ const inject_1 = require("./metadata/inject");
 const injectable_1 = require("./metadata/injectable");
 const controller_1 = require("./metadata/controller");
 const path = require("path");
-const fs = require("fs");
 const postconstruct_1 = require("./metadata/postconstruct");
 /**
  * Controller factory
@@ -29,8 +28,6 @@ const postconstruct_1 = require("./metadata/postconstruct");
  */
 class ControllerFactory {
     constructor() {
-        // Controller cache
-        // private controllers = new Map();
         this._images = new Map();
         this._controllers = new Map();
     }
@@ -45,10 +42,16 @@ class ControllerFactory {
         let controller = this._controllers.get(filename);
         if (!controller) {
             const fullname = path.isAbsolute(filename) ? filename : path.join(this.workdir, filename);
-            if (!fs.existsSync(fullname)) {
-                throw new error_1.KiteError(1002);
+            let mod;
+            try {
+                mod = require(fullname);
             }
-            const mod = require(fullname);
+            catch (error) {
+                if (error.code === 'MODULE_NOT_FOUND') {
+                    throw new error_1.KiteError(1002);
+                }
+                throw error;
+            }
             // find the first "@Controller" decorated module, treat it as a "Controller"
             const keys = Object.keys(mod);
             for (let i = 0; i < keys.length; i++) {
@@ -111,7 +114,7 @@ class ControllerFactory {
                 // Is target type injectable ?
                 if (!injectable_1.isInjectable(type)) {
                     // tslint:disable-next-line:max-line-length
-                    throw new Error(`${target.constructor.name}.${prop} is annonced with "@Inject()" but target "${type.name}" is not injectable`);
+                    throw new Error(`${target.constructor.name}.${prop} is announced with "@Inject()" but target "${type.name}" is not injectable`);
                 }
                 dependency = data && data instanceof type ? data : new type();
                 // Cache it, so chained injection could find this instance if there are dependence on each other

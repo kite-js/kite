@@ -1,4 +1,4 @@
-export declare function JsonReceiverProvider<ParserProvider>(): {
+export declare function JsonReceiverProvider(): {
     contentType: string;
     receiver: (data: string) => any;
 };

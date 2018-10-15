@@ -14,7 +14,7 @@
  */
 
 import { KiteError } from './../core/error';
-import { Router, RouterProvider } from './../';
+import { Router } from './../';
 import * as URL from 'url';
 import * as Path from 'path';
 import * as fs from 'fs';
