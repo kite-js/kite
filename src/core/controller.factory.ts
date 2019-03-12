@@ -43,6 +43,10 @@ export class ControllerFactory {
 
     private _controllers = new Map<string, Class>();
 
+    private _injectionPromises = new WeakMap<Object, Promise<any>>();
+
+    private _postConstPromises = new WeakMap<Object, Promise<any>>();
+
     /**
      * Get a controller class by given filename,
      * the filename can be an absolute path or a relative path,
@@ -106,9 +110,16 @@ export class ControllerFactory {
         }
 
         let instance = image.controllers.get(controller);
-        if (!instance) {
+        if (instance) {
+            // wait for injection finishing
+            if (this._injectionPromises.has(controller)) {
+                await this._injectionPromises.get(controller);
+            }
+        } else {
             instance = new controller();
-            await this._injectDependency(instance, image.dependencies, data);
+            let injectionPromise = this._injectDependency(instance, image.dependencies, data);
+            this._injectionPromises.set(controller, injectionPromise);
+            await injectionPromise;
             image.controllers.set(controller, instance);
         }
 
@@ -153,7 +164,7 @@ export class ControllerFactory {
      * @param target 
      * @param pool 
      */
-    private async _injectDependency(target: Object, pool: WeakMap<Object, any>, data: any) {
+    private async _injectDependency(target: Object, pool: WeakMap<Object, any>, data: any): Promise<any> {
 
         // Get inject types
         let dependencies = getDependencies(target);
@@ -166,7 +177,13 @@ export class ControllerFactory {
         for (let [prop, type] of dependencies) {
             // Get injection target from cache, if not exist, create one
             dependency = pool.get(type);
-            if (!dependency) {
+            if (dependency) {
+                if (this._injectionPromises.has(type)) {
+                    await this._injectionPromises.get(type);
+                } else if (this._postConstPromises.has(type)) {
+                    await this._postConstPromises.get(type);
+                }
+            } else {
                 // Is target type injectable ?
                 if (!isInjectable(type)) {
                     // tslint:disable-next-line:max-line-length
@@ -179,14 +196,19 @@ export class ControllerFactory {
                 // Cache it, so chained injection could find this instance if there depend on each other
                 pool.set(type, dependency);
                 // inject dependency recursively
-                await this._injectDependency(dependency, pool, data);
+                let injectionPromise = this._injectDependency(dependency, pool, data);
+                this._injectionPromises.set(type, injectionPromise);
+                await injectionPromise;
+                this._injectionPromises.delete(type);
 
                 // Call post construct
                 let postConsProp = getPostConstruct(dependency);
                 if (postConsProp) {
                     let postconsResult = dependency[postConsProp].call(dependency);
                     if (postconsResult instanceof Promise) {
+                        this._postConstPromises.set(type, postconsResult);
                         await postconsResult;
+                        this._postConstPromises.delete(type);
                     }
                 }
             }

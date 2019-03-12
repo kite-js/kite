@@ -1,3 +1,6 @@
+# 0.5.8 (2019-03-11)
+- [ Fix ] Exception thrown from async-init service (injectable module) when the service called from 2+ controllers at the same time
+
 # 0.5.7 (2018-10-15)
 - Supports callback function on `Kite.fly()`:
 ```ts

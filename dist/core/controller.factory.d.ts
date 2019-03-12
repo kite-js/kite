@@ -11,6 +11,8 @@ export declare class ControllerFactory {
     workdir: string;
     private _images;
     private _controllers;
+    private _injectionPromises;
+    private _postConstPromises;
     /**
      * Get a controller class by given filename,
      * the filename can be an absolute path or a relative path,
