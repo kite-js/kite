@@ -14,6 +14,7 @@
  * all copies or substantial portions of the Software.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.HttpRouterProvider = exports.HttpRouter = void 0;
 const error_1 = require("./../core/error");
 const Path = require("path");
 /**

@@ -14,6 +14,7 @@
  * all copies or substantial portions of the Software.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getCallerPath = void 0;
 const Path = require("path");
 /**
  * Get the caller's path from error stack

@@ -14,6 +14,7 @@
  * all copies or substantial portions of the Software.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.WatchService = void 0;
 const fs = require("fs");
 const path = require("path");
 /**

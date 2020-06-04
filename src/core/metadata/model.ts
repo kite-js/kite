@@ -17,7 +17,6 @@ import 'reflect-metadata';
 import * as vm from 'vm';
 import { KiteError } from '../error';
 import { Class } from '../types/class';
-import { ArrayType } from './model';
 
 const MK_KITE_MODEL = 'kite:model';
 const MK_KITE_INPUTS = 'kite:inputs';

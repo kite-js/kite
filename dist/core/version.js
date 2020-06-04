@@ -14,4 +14,5 @@
  * all copies or substantial portions of the Software.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.VERSION = '0.5.8';
+exports.VERSION = void 0;
+exports.VERSION = '0.5.9';

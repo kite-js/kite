@@ -14,6 +14,7 @@
  * all copies or substantial portions of the Software.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.isKiteController = exports.getControllerMetadata = exports.Controller = void 0;
 require("reflect-metadata");
 const entry_1 = require("./entry");
 const MK_CONTROLLER = 'kite:controller';

@@ -14,7 +14,8 @@
  * all copies or substantial portions of the Software.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-const _1 = require("../");
+exports.KiteResponder = void 0;
+const __1 = require("../");
 class KiteResponder {
     constructor() {
         this.html = /^[\w\n\r]*<[a-z!]/m;
@@ -51,7 +52,7 @@ class KiteResponder {
     }
     writeError(err, res, errorService) {
         let error;
-        if (err instanceof _1.KiteError) {
+        if (err instanceof __1.KiteError) {
             error = errorService.getError(err.code, err.extra);
         }
         else if (typeof err === 'number' || typeof err === 'string') {

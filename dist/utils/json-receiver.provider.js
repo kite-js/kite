@@ -14,6 +14,7 @@
  * all copies or substantial portions of the Software.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.JsonReceiverProvider = void 0;
 function JsonReceiverProvider() {
     const contentType = 'application/json';
     const receiver = function (data) {

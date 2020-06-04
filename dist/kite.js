@@ -14,6 +14,7 @@
  * all copies or substantial portions of the Software.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Kite = void 0;
 const version_1 = require("./core/version");
 const error_1 = require("./core/error");
 const log_service_1 = require("./core/log.service");

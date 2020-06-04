@@ -14,6 +14,7 @@
  * all copies or substantial portions of the Software.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.XformReceiverProvider = void 0;
 const querystring = require("querystring");
 // tslint:disable-next-line:no-shadowed-variable
 function XformReceiverProvider() {

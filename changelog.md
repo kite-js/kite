@@ -1,3 +1,8 @@
+# 0.5.9 (2020-06-04)
+- [ NOTICE ] This version requires TypeScript >= 3.7 to run !
+- [ Fix ] Fixed compilation error on TypeScript >= 3.7
+- [ Add ] `assert()` function for assertion, `end()` will be deprecated
+
 # 0.5.8 (2019-03-11)
 - [ Fix ] Exception thrown from async-init service (injectable module) when the service called from 2+ controllers at the same time
 

@@ -37,6 +37,7 @@ import { RequestHandler } from './core/types/request-handler';
 import { ResponseHandler } from './core/types/response-handler';
 import { Provider } from './core/types/provider';
 import { Class } from './core/types/class';
+import { AddressInfo } from 'net';
 
 /**
  * Kite 
@@ -236,7 +237,7 @@ export class Kite {
         }
 
         this.server.listen(port, host, () => {
-            let { address, port } = this.server.address();
+            let { address, port } = this.server.address() as AddressInfo;
             this.log(`Flying! server listening at ${address}:${port}`, '\x1b[33m');
             if (callback) {
                 callback()

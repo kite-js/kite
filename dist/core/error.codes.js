@@ -14,6 +14,7 @@
  * all copies or substantial portions of the Software.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.ERROR_CODES = void 0;
 exports.ERROR_CODES = {
     1000: '%s',
     1001: 'Service is not available',

@@ -14,6 +14,7 @@
  * all copies or substantial portions of the Software.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.parseSize = void 0;
 const SIZE_REGEX = /^(\d+(\.\d+)?)\s*(b|k|m|g)$/i;
 function parseSize(input) {
     let size;

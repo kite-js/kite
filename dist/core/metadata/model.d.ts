@@ -14,7 +14,6 @@
  */
 import 'reflect-metadata';
 import { Class } from '../types/class';
-import { ArrayType } from './model';
 /**
  * Annotate classes as Kite models
  *

@@ -32,7 +32,9 @@ export declare class KiteError {
     constructor(code: number | string, extra?: string | string[]);
 }
 /**
- * A shortcut to `throw new KiteError(code, extra)` when you need to exit a controller.
+ * [DEPRECATE] A shortcut to `throw new KiteError(code, extra)` when you need to exit a controller.
+ *
+ * THIS FUNCTION WILL BE DEPRECATED IN FUTURE VERSION
  *
  * Old way:
  * ```ts
@@ -48,3 +50,10 @@ export declare class KiteError {
  * @param extra
  */
 export declare function end(code: number | string, ...extra: any[]): void;
+/**
+ * A replacement of end() function, end() function will be deprecated
+ * @param condition
+ * @param code
+ * @param extra
+ */
+export declare function assert(condition: any, code: number | string, ...extra: any[]): asserts condition;

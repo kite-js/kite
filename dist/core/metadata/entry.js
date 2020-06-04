@@ -14,6 +14,7 @@
  * all copies or substantial portions of the Software.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.isMapInputOnly = exports.MapInputOnly = exports.getEntryParams = exports.hasEntryPoint = exports.Entry = void 0;
 require("reflect-metadata");
 const model_1 = require("./model");
 const vm = require("vm");
@@ -296,7 +297,7 @@ function Entry(config) {
             if (type === http.IncomingMessage) {
                 entryParams.push('request');
             }
-            else if (model_1.isKiteModel(type) && numModels === 1) {
+            else if (model_1.isKiteModel(type) && numModels === 1) { // Only one Kite model type in parameters, treat it as global mapping type
                 numGlobalMapping++;
                 let typename, index;
                 // type is already cached?

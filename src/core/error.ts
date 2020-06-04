@@ -39,7 +39,9 @@ export class KiteError {
 }
 
 /**
- * A shortcut to `throw new KiteError(code, extra)` when you need to exit a controller.
+ * [DEPRECATE] A shortcut to `throw new KiteError(code, extra)` when you need to exit a controller.
+ * 
+ * THIS FUNCTION WILL BE DEPRECATED IN FUTURE VERSION
  * 
  * Old way:
  * ```ts
@@ -56,4 +58,16 @@ export class KiteError {
  */
 export function end(code: number | string, ...extra: any[]) {
     throw new KiteError(code, extra);
+}
+
+/**
+ * A replacement of end() function, end() function will be deprecated
+ * @param condition 
+ * @param code 
+ * @param extra 
+ */
+export function assert(condition: any, code: number | string, ...extra: any[]): asserts condition {
+    if (!condition) {
+        throw new KiteError(code, extra);
+    }
 }

@@ -14,6 +14,7 @@
  * all copies or substantial portions of the Software.
  **/
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getDependencies = exports.Inject = void 0;
 require("reflect-metadata");
 const MK_DEPENDENCIES = 'kite:dependencies';
 /**

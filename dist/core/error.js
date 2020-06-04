@@ -14,6 +14,7 @@
  * all copies or substantial portions of the Software.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.assert = exports.end = exports.KiteError = void 0;
 /**
  * Kite error classs
  */
@@ -37,7 +38,9 @@ class KiteError {
 }
 exports.KiteError = KiteError;
 /**
- * A shortcut to `throw new KiteError(code, extra)` when you need to exit a controller.
+ * [DEPRECATE] A shortcut to `throw new KiteError(code, extra)` when you need to exit a controller.
+ *
+ * THIS FUNCTION WILL BE DEPRECATED IN FUTURE VERSION
  *
  * Old way:
  * ```ts
@@ -56,3 +59,15 @@ function end(code, ...extra) {
     throw new KiteError(code, extra);
 }
 exports.end = end;
+/**
+ * A replacement of end() function, end() function will be deprecated
+ * @param condition
+ * @param code
+ * @param extra
+ */
+function assert(condition, code, ...extra) {
+    if (!condition) {
+        throw new KiteError(code, extra);
+    }
+}
+exports.assert = assert;

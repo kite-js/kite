@@ -14,6 +14,7 @@
  * all copies or substantial portions of the Software.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.ErrorService = void 0;
 const util = require("util");
 class ErrorService {
     /**

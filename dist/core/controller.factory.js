@@ -14,6 +14,7 @@
  * all copies or substantial portions of the Software.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.ControllerFactory = void 0;
 const error_1 = require("./error");
 const inject_1 = require("./metadata/inject");
 const injectable_1 = require("./metadata/injectable");

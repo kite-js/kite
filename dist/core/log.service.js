@@ -14,6 +14,7 @@
  * all copies or substantial portions of the Software.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.LogService = exports.LogFlags = void 0;
 const fs = require("fs");
 exports.LogFlags = {
     none: 0,

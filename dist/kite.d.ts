@@ -1,3 +1,17 @@
+/***
+ * Copyright (c) 2017 [Arthur Xie]
+ * <https://github.com/kite-js/kite>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ */
 import { Config } from './core/types/config';
 import { Middleware } from './core/types/middleware';
 import { Provider } from './core/types/provider';
@@ -27,7 +41,7 @@ export declare class Kite {
      *
      * @private
      */
-    private _init(config);
+    private _init;
     /**
      * Set watch mode
      * Watch mode allows you code & test APIs smoothly without restarting Kite server.
@@ -40,7 +54,7 @@ export declare class Kite {
      * Watch configuration file
      * @param filename
      */
-    private watchConfigFile(filename);
+    private watchConfigFile;
     /**
      * Relase your kite, let it fly
      * @param port server listen port
@@ -53,12 +67,12 @@ export declare class Kite {
      * @param { IncomingMessage } request
      * @param { ServerResponse } response
      */
-    private onRequest(request, response);
+    private onRequest;
     /**
      * get request data
      */
-    private getEntityBody(request);
-    private log(msg, color?);
+    private getEntityBody;
+    private log;
     /**
      * Add a middleware to Kite
      * @param middleware middleware function

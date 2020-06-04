@@ -14,6 +14,7 @@
  * all copies or substantial portions of the Software.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.hasModelInputs = exports.isKiteModel = exports.In = exports.Model = void 0;
 require("reflect-metadata");
 const vm = require("vm");
 const error_1 = require("../error");
