@@ -1,3 +1,17 @@
+# 0.5.10 (2020-10-12)
+- [ Add ] Experimental pre-destruct function now available for service module
+```typescript
+export class SomeService {
+  @PreDestroy()
+  destroy() {
+    // some action like db dis-connection
+  }
+}
+```
+- [ Improve ] `config.router` will be deprecated, use `kite.route()` instead
+- [ Improve ] Performance enhanced
+
+
 # 0.5.9 (2020-06-04)
 - [ NOTICE ] This version requires TypeScript >= 3.7 to run !
 - [ Fix ] Fixed compilation error on TypeScript >= 3.7

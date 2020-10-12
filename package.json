@@ -1,7 +1,7 @@
 {
     "name": "kite-framework",
-    "version": "0.5.9",
-    "description": "Next generation, fast, flexible HTTP-JSON-RPC framework",
+    "version": "0.5.10",
+    "description": "Modern, fast, flexible HTTP-JSON-RPC framework",
     "scripts": {
         "setup": "npm install",
         "build": "tsc && cp ./{package.json,README.md} dist/",
@@ -16,7 +16,8 @@
     "keywords": [
         "Typescript",
         "RPC",
-        "framework"
+        "framework",
+        "kite"
     ],
     "engines": {
         "node": ">=8.0.0"

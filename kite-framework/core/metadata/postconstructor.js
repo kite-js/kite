@@ -1,5 +1,6 @@
+"use strict";
 /***
- * Copyright (c) 2018 [Arthur Xie]
+ * Copyright (c) 2018-2020 [Arthur Xie]
  * <https://github.com/kite-js/kite>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,7 +13,10 @@
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  */
-import 'reflect-metadata';
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getPostConstructor = exports.PostConstruct = void 0;
+require("reflect-metadata");
+const MK_POST_CONSTRUCTOR = 'kite:post-constructor';
 /**
  * Annoate a post-constructor function for a service.
  *
@@ -32,9 +36,24 @@ import 'reflect-metadata';
  * @param target
  * @param propertyKey
  */
-export declare function PostConstruct(target: any, propertyKey: string): void;
+function PostConstruct(target, propertyKey) {
+    // If more than one post constructor be annotated, throw an error
+    if (Reflect.hasMetadata(MK_POST_CONSTRUCTOR, target)) {
+        // tslint:disable-next-line:max-line-length
+        throw new Error(`Only one post constructor is allowed for "${target.constructor.name}", please remove "@PostConstruct" from method "${propertyKey}"`);
+    }
+    if (typeof target[propertyKey] !== 'function') {
+        throw new Error(`A post constructor must be a function, please check "${target.constructor.name}.${propertyKey}"`);
+    }
+    Reflect.defineMetadata(MK_POST_CONSTRUCTOR, propertyKey, target);
+}
+exports.PostConstruct = PostConstruct;
 /**
  * Get post construct method name from service
  * @param target service instance
  */
-export declare function getPostConstruct(target: object): any;
+function getPostConstructor(target) {
+    const prop = Reflect.getMetadata(MK_POST_CONSTRUCTOR, target);
+    return target[prop];
+}
+exports.getPostConstructor = getPostConstructor;

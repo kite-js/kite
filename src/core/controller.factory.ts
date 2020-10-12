@@ -20,13 +20,8 @@ import { isInjectable } from './metadata/injectable';
 import { isKiteController } from './metadata/controller';
 import { Class } from './types/class';
 import * as path from 'path';
-import * as fs from 'fs';
-import { getPostConstruct } from './metadata/postconstruct';
-
-interface KiteImage {
-    controllers: WeakMap<Class, Object>
-    dependencies: WeakMap<Object, Object>
-}
+import { getPostConstructor } from './metadata/postconstructor';
+import { getDestructor } from './metadata/predestructor';
 
 /**
  * Controller factory
@@ -39,13 +34,14 @@ export class ControllerFactory {
 
     workdir: string;
 
-    private _images = new Map<any, KiteImage>();
+    // private _images = new Map<any, KiteImage>();
+    private _images = new Map<any, WeakMap<Class, Object>>();
 
-    private _controllers = new Map<string, Class>();
+    private _controllers = { } as any;
 
-    private _injectionPromises = new WeakMap<Object, Promise<any>>();
+    // private _injectionPromises = new WeakMap<Object, Promise<any>>();
 
-    private _postConstPromises = new WeakMap<Object, Promise<any>>();
+    // private _postConstPromises = new WeakMap<Object, Promise<any>>();
 
     /**
      * Get a controller class by given filename,
@@ -55,7 +51,7 @@ export class ControllerFactory {
      * @param filename controller filename
      */
     getController(filename: string): Class {
-        let controller = this._controllers.get(filename);
+        let controller = this._controllers[filename];
         if (!controller) {
             const fullname = path.isAbsolute(filename) ? filename : path.join(this.workdir, filename);
 
@@ -83,10 +79,10 @@ export class ControllerFactory {
                 throw new Error(`No @Controller annotation was found at "${fullname}"`);
             }
 
-            this._controllers.set(filename, controller);
+            this._controllers[filename] = controller;
             // watch this file
             this.watchService.watch(fullname, () => {
-                this._controllers.delete(filename);
+                delete this._controllers[filename];
             });
         }
 
@@ -96,31 +92,25 @@ export class ControllerFactory {
     /**
      * Get controller instance by given controller class and data
      * @param controller 
-     * @param data 
+     * @param scope 
      */
-    async getInstance(controller: Class, data: any = undefined): Promise<any> {
+    async getInstance(controller: Class, scope: any = undefined): Promise<any> {
         // get image by data (for kite train)
-        let image = this._images.get(data);
+        let image = this._images.get(scope);
         if (!image) {
-            image = {
-                controllers: new WeakMap(),
-                dependencies: new WeakMap()
-            };
-            this._images.set(data, image);
+            // image = {
+            //     controllers: new WeakMap(),
+            //     dependencies: new WeakMap()
+            // };
+            image = new WeakMap();
+            this._images.set(scope, image);
         }
 
-        let instance = image.controllers.get(controller);
-        if (instance) {
-            // wait for injection finishing
-            if (this._injectionPromises.has(controller)) {
-                await this._injectionPromises.get(controller);
-            }
-        } else {
+        let instance = image.get(controller);
+
+        if (!instance) {
             instance = new controller();
-            let injectionPromise = this._injectDependency(instance, image.dependencies, data);
-            this._injectionPromises.set(controller, injectionPromise);
-            await injectionPromise;
-            image.controllers.set(controller, instance);
+            await this._injectDependencies(instance, image, scope)
         }
 
         return instance;
@@ -130,41 +120,44 @@ export class ControllerFactory {
      * Start a service and put it into dependencies pool
      * @param service Service class
      */
-    async startService(service: Class): Promise<any> {
-        const trainData: any = undefined;
-        let image = this._images.get(trainData);
+    async startService(...services: Class[]): Promise<any> {
+        const scope: any = undefined;
+        let image = this._images.get(scope);
         if (!image) {
-            image = {
-                controllers: new WeakMap(),
-                dependencies: new WeakMap()
-            };
-            this._images.set(trainData, image);
+            // image = {
+            //     controllers: new WeakMap(),
+            //     dependencies: new WeakMap()
+            // };
+            image = new WeakMap();
+            this._images.set(scope, image);
         }
 
-        let instance: any = image.dependencies.get(service);
-        if (!instance) {
-            instance = new service;
-            image.dependencies.set(service, instance);
-            // inject dependencies if this service depend on other services
-            await this._injectDependency(instance, image.dependencies, trainData);
+        for (let i = 0; i < services.length; i++) {
+            const service = services[i];
+            await this._startService(service, image, scope);
 
-            // call post constructor
-            let postConsProp = getPostConstruct(instance);
-            if (postConsProp) {
-                let postconsResult = instance[postConsProp].call(instance);
-                if (postconsResult instanceof Promise) {
-                    await postconsResult;
-                }
-            }
+            // if a auto start service is changed in watching mode, restart the service automatically
+            // let filename = this.getSourceFilename(service);
+            // this.watchService.watch(filename, () => {
+            //     process.on('exit', function () {
+            //         require('child_process').spawn(process.argv.shift(), process.argv, {
+            //             cwd: process.cwd(),
+            //             detached : true,
+            //             stdio: 'inherit'
+            //         });
+            //     });
+            //     process.exit();
+            // });
         }
     }
+
 
     /**
      * Inject dependencies for an object
      * @param target 
      * @param pool 
      */
-    private async _injectDependency(target: Object, pool: WeakMap<Object, any>, data: any): Promise<any> {
+    private async _injectDependencies(target: Object, pool: WeakMap<Class, Object>, scope: any): Promise<any> {
 
         // Get inject types
         let dependencies = getDependencies(target);
@@ -173,45 +166,9 @@ export class ControllerFactory {
         }
 
         // walk each injection target, create injection instance
-        let dependency;
-        for (let [prop, type] of dependencies) {
+        for (let [prop, service] of dependencies) {
             // Get injection target from cache, if not exist, create one
-            dependency = pool.get(type);
-            if (dependency) {
-                if (this._injectionPromises.has(type)) {
-                    await this._injectionPromises.get(type);
-                } else if (this._postConstPromises.has(type)) {
-                    await this._postConstPromises.get(type);
-                }
-            } else {
-                // Is target type injectable ?
-                if (!isInjectable(type)) {
-                    // tslint:disable-next-line:max-line-length
-                    throw new Error(`${target.constructor.name}.${prop} is announced with "@Inject()" but target "${type.name}" is not injectable`);
-                }
-
-                // inject train data if necessary
-                dependency = data && data instanceof type ? data : new type();
-
-                // Cache it, so chained injection could find this instance if there depend on each other
-                pool.set(type, dependency);
-                // inject dependency recursively
-                let injectionPromise = this._injectDependency(dependency, pool, data);
-                this._injectionPromises.set(type, injectionPromise);
-                await injectionPromise;
-                this._injectionPromises.delete(type);
-
-                // Call post construct
-                let postConsProp = getPostConstruct(dependency);
-                if (postConsProp) {
-                    let postconsResult = dependency[postConsProp].call(dependency);
-                    if (postconsResult instanceof Promise) {
-                        this._postConstPromises.set(type, postconsResult);
-                        await postconsResult;
-                        this._postConstPromises.delete(type);
-                    }
-                }
-            }
+            let dependency = await this._startService(service, pool, scope);
 
             // pass the depedency to current object
             Object.defineProperty(target, prop, {
@@ -220,4 +177,64 @@ export class ControllerFactory {
         }
     }
 
+
+    /**
+     * Start a service
+     * @param service service class
+     * @param pool 
+     * @param scope 
+     */
+    private async _startService(service: Class, pool: WeakMap<Class, Object>, scope: any) {
+        let instance: any = pool.get(service);
+        if (!instance) {
+            // Is target type injectable ?
+            if (!isInjectable(service)) {
+                // tslint:disable-next-line:max-line-length
+                throw new Error(`"${service.name}" is not injectable`);
+            }
+
+            instance = new service();
+
+            // Cache it, so chained injection could find this instance if they are depended on each other
+            pool.set(service, instance);
+            // inject dependency recursively
+            await this._injectDependencies(instance, pool, scope);
+
+            // Call post constructor
+            let postConstructor = getPostConstructor(instance);
+            if (postConstructor) {
+                await postConstructor.call(instance);
+            }
+
+            // if there is a destructor, set watch
+            let destructor = getDestructor(instance);
+            if (destructor) {
+                let serviceFilename = this.getSourceFilename(service);
+                if (serviceFilename) {
+                    this.watchService.watch(serviceFilename, () => {
+                        destructor.call(instance);
+                    });
+                }
+            }
+        }
+
+        return instance;
+    }
+
+    /**
+     * Get source file name by given Class
+     * @param cls 
+     */
+    private getSourceFilename(cls: Class) {
+        let cache = require.cache;
+        for (let key of Object.keys(cache)) {
+            let mod = cache[key];
+            let exports = mod.exports;
+            for (let exp of Object.keys(exports)) {
+                if (exports[exp] === cls) {
+                    return key;
+                }
+            }
+        }
+    }
 }

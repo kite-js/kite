@@ -14,6 +14,7 @@
  **/
 
 import 'reflect-metadata';
+import { Class } from '../types/class';
 
 const MK_DEPENDENCIES = 'kite:dependencies';
 
@@ -53,6 +54,6 @@ export function Inject() {
     }
 }
 
-export function getDependencies(target: Object): Map<string, any> {
+export function getDependencies(target: Object): Map<string, Class> {
     return Reflect.getMetadata(MK_DEPENDENCIES, target);
 }

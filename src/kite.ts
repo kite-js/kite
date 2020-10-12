@@ -146,13 +146,11 @@ export class Kite {
         this.logService = new LogService(cfg.log.level, cfg.log.out, cfg.log.err);
 
         // set default router
-        if (typeof cfg.router === 'object' && cfg.router.map) {
-            this.router = cfg.router;
-        } else if (typeof cfg.router === 'function') {
-            this.router = cfg.router.call(null);
+        if (cfg.router) {
+            this.log('** warning ** config.router will be deprecated, use kite.route() instead');
+            this.route(cfg.router);
         } else {
-            let rootdir = path.join(this.workdir, 'controllers');
-            this.router = new HttpRouter(rootdir);
+            this.route();
         }
 
         // built-in errors
@@ -189,6 +187,7 @@ export class Kite {
         if (!this.watchService) {
             this.watchService = new WatchService(__dirname);
             this.watchService.logService = this.logService;
+            this.watchService.setWorkDir(this.workdir);
             this.controllerFactory.watchService = this.watchService;
         }
 
@@ -229,7 +228,7 @@ export class Kite {
      * Relase your kite, let it fly
      * @param port server listen port
      * @param host server listen host 
-     * @param callback optional, if callback is provided, it wil be called after server 
+     * @param callback optional, if callback is provided, it wil be called after kite application server started
      */
     fly(port: number = 4000, host: string = 'localhost', callback?: Function): Kite {
         if (this.server && this.server.listening) {
@@ -257,18 +256,18 @@ export class Kite {
             let url = URL.parse(request.url, true),
                 inputs = url.query, // URL query string
                 filename = this.router.map(url, request.method),    // map to actual filename
-                trainData;
+                scope;
             // api = await this.controllerFactory.get(filename);       // get controller instance
             // metadata: ControllerMetadata = getControllerMetadata(api.constructor),
 
             let controller = this.controllerFactory.getController(filename);
             if (this._provider) {
-                trainData = this._provider.exec(request, controller, inputs);
+                scope = this._provider.exec(request, controller, inputs);
             }
-            let api: any = await this.controllerFactory.getInstance(controller, trainData);
+            let api: any = await this.controllerFactory.getInstance(controller, scope);
 
             // if api handle http request it self, skip "input" parsing
-            if ((api as RequestHandler).onRequest) {
+            if ('onRequest' in api) {
                 inputs = await (api as RequestHandler).onRequest(request, url.query);
             } else if ((request.headers['content-length'] || request.headers['transfer-encoding']) &&
                 request.method !== 'GET' &&
@@ -399,21 +398,40 @@ export class Kite {
      * @param services any number of service classes
      */
     start(...services: Class[]): Kite {
-        for (let i = 0; i < services.length; i++) {
-            this.controllerFactory.startService(services[i]);
-        }
+        this.controllerFactory.startService(...services);
         return this;
     }
 
     /**
-     * Set train kite data provider.
+     * Set train kite data provider (scope).
      * 
      * If a provider is given, Kite will invoke the `exec()` method when request comes, 
      * the return value must be a "injectable" object
      * @param provider Provider instance
      */
-    provider(provider: Provider): Kite {
+    useProvider(provider: Provider): Kite {
         this._provider = provider;
+        return this;
+    }
+
+    /**
+     * @since 0.5.10
+     * 
+     * Set kite router
+     * 
+     * if router is not given, a built-in http router will be used
+     * @param router A `Router` instance or a function that resolves router
+     */
+    route(router?: Router | Function): Kite {
+        if (typeof router === 'object' && router.map) {
+            this.router = router;
+        } else if (typeof router === 'function') {
+            this.router = router.call(null);
+        } else {
+            let rootdir = path.join(this.workdir, 'controllers');
+            this.router = new HttpRouter(rootdir, '.controller.js');
+        }
+
         return this;
     }
 }

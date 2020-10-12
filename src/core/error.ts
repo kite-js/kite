@@ -56,7 +56,7 @@ export class KiteError {
  * @param code 
  * @param extra 
  */
-export function end(code: number | string, ...extra: any[]) {
+export function end(code: number | string, ...extra: any[]): never {
     throw new KiteError(code, extra);
 }
 

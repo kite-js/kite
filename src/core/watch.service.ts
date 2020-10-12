@@ -33,6 +33,11 @@ export class WatchService {
 
     private node_modules = path.sep + 'node_modules' + path.sep;
 
+    /**
+     * Application working dir, for showing shorter changed filenames
+     */
+    private workDir: string;
+
     logService: LogService;
 
     /**
@@ -97,9 +102,15 @@ export class WatchService {
             return;
         }
 
+        const workdirLen = this.workDir && this.workDir.length;
+        const dirname = path.parse(this.workDir).name;
 
-        fs.watchFile(filename, { interval: this.interval }, (curr, prev) => {
-            this.logService.info(`Change detected at "${filename}"`);
+        fs.watchFile(filename, { interval: this.interval }, () => {
+            let shortfn = filename;
+            if (workdirLen && filename.startsWith(this.workDir)) {
+                shortfn = dirname + filename.substr(workdirLen);
+            }
+            this.logService.info(`Change detected at "${shortfn}"`);
             this.clearCache(filename);
         });
 
@@ -120,11 +131,10 @@ export class WatchService {
         let removeList: Set<string> = new Set();
         removeList.add(filename);
 
-        let keys: string[] = Object.keys(require.cache);
 
         let findRelated = (filenames: string[]) => {
             let removeWork: Set<string> = new Set();
-            keys.forEach(key => {
+            for (const key of Object.keys(require.cache)) {
                 let mod = require.cache[key] as NodeModule;
                 // Only find managed files
                 if (!this.watching.has(mod.filename) || removeList.has(mod.filename)) {
@@ -139,7 +149,7 @@ export class WatchService {
                     }
                     return true;
                 });
-            });
+            }
 
             if (removeWork.size) {
                 findRelated(Array.from(removeWork));
@@ -148,17 +158,17 @@ export class WatchService {
 
         findRelated([filename]);
 
-        removeList.forEach(fn => {
-            let watching = this.watching;
-            let callback = this.watching.get(fn);
+        for (const moduleFilename of removeList) {
+            let callback = this.watching.get(moduleFilename);
 
-            this.watching.delete(fn);
-            delete require.cache[fn];
-            fs.unwatchFile(fn);
+            this.watching.delete(moduleFilename);
+            delete require.cache[moduleFilename];
+            fs.unwatchFile(moduleFilename);
             if (callback) {
-                callback(fn);
+                callback(moduleFilename);
             }
-        });
+        }
+
     }
 
     /**
@@ -166,5 +176,9 @@ export class WatchService {
      */
     printWatching() {
         console.log(this.watching.keys());
+    }
+
+    setWorkDir(dir: string) {
+        this.workDir = dir;
     }
 }
