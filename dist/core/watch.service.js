@@ -93,11 +93,9 @@ class WatchService {
             this.clearCache(filename);
         });
         this.watching.set(filename, callback);
-        if (require.cache[filename]) {
-            require.cache[filename].children.forEach((mod) => {
-                this.watch(mod.filename);
-            });
-        }
+        require.cache[filename].children.forEach((mod) => {
+            this.watch(mod.filename);
+        });
     }
     /**
      * Clear node require cache, it's also search for parent modules, if parent modules are being watched, remove them too
@@ -108,21 +106,34 @@ class WatchService {
         removeList.add(filename);
         let findRelated = (filenames) => {
             let removeWork = new Set();
-            for (const key of Object.keys(require.cache)) {
-                let mod = require.cache[key];
-                // Only find managed files
-                if (!this.watching.has(mod.filename) || removeList.has(mod.filename)) {
-                    return;
+            for (const filename of this.watching.keys()) {
+                if (removeList.has(filename)) {
+                    continue;
                 }
-                mod.children.every(child => {
+                require.cache[filename].children.every(child => {
                     if (filenames.includes(child.filename)) {
-                        removeWork.add(mod.filename);
-                        removeList.add(mod.filename);
+                        removeWork.add(filename);
+                        removeList.add(filename);
                         return false;
                     }
                     return true;
                 });
             }
+            // for (const key of Object.keys(require.cache)) {
+            //     let mod = require.cache[key] as NodeModule;
+            //     // Only find managed files
+            //     if (!this.watching.has(mod.filename) || removeList.has(mod.filename)) {
+            //         continue;
+            //     }
+            //     mod.children.every(child => {
+            //         if (filenames.includes(child.filename)) {
+            //             removeWork.add(mod.filename);
+            //             removeList.add(mod.filename);
+            //             return false;
+            //         }
+            //         return true;
+            //     });
+            // }
             if (removeWork.size) {
                 findRelated(Array.from(removeWork));
             }
